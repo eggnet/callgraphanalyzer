@@ -1,5 +1,6 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class File {
@@ -13,6 +14,9 @@ public class File {
 	
 	
 	public File() {
+		fileImports = new ArrayList<String>();
+		fileClazzes = new ArrayList<Clazz>();
+		fileInterfaces = new ArrayList<Clazz>();
 	}
 
 	public File(List<String> fileImports, String filePackage,
@@ -34,7 +38,17 @@ public class File {
         	clazz.print();
 	}
 	
+	public void addFileImport(String fileImport) {
+		this.fileImports.add(fileImport);
+	}
 	
+	public void addClazz(Clazz clazz) {
+		this.fileClazzes.add(clazz);
+	}
+	
+	public void addInterface(Clazz clazz) {
+		this.fileInterfaces.add(clazz);
+	}
 
 	public String getFileName() {
 		return fileName;
@@ -50,10 +64,6 @@ public class File {
 	
 	public void setFileImports(List<String> fileImports) {
 		this.fileImports = fileImports;
-	}
-	
-	public void addFileImport(String fileImport) {
-		this.fileImports.add(fileImport);
 	}
 	
 	public String getFilePackage() {

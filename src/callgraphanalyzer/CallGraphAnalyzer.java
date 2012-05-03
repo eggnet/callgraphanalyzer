@@ -1,10 +1,7 @@
 package callgraphanalyzer;
 
-import java.io.IOException;
-
-import db.DbConnection;
-import models.File;
 import models.CallGraph;
+import db.DbConnection;
 
 public class CallGraphAnalyzer {
 	

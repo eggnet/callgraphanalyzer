@@ -13,8 +13,10 @@ import models.*;
 
 public class Parser {
 	
+	CallGraph callGraph;
+	
 	public Parser() {
-		
+		callGraph = new CallGraph();
 	}
 	
 	/**
@@ -39,6 +41,17 @@ public class Parser {
 		// Setting this causes considerable run time damage
 		parser.setResolveBindings(true);
 		CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+		
+		
+		// Visit the syntax tree
+		Visitor visitor= new Visitor(callGraph, file);
+		unit.accept(visitor);
+		
+		// Commit that visitor
+		visitor.commitFile();
+		
+		// Print the visitor's call graph
+		visitor.getCallGraph().print();
 	}
 	
 	private String readFileToString(String filePath) throws IOException {

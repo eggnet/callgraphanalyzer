@@ -2,18 +2,21 @@ package models;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Clazz {
 	
 	private String 				name;
 	private boolean 			isInterface;
 	private List<Method> 		methods;
-	private ArrayList<Clazz> 	interfaces;
+	private List<Clazz> 		interfaces;
 	private Clazz 				superClazz;
 	private List<Clazz> 		subClazzes;
 
 	public Clazz() {
+		methods = new ArrayList<Method>();
+		interfaces = new ArrayList<Clazz>();
+		subClazzes = new ArrayList<Clazz>();
+		
 	}
 
 	public Clazz(String name, boolean isInterface, List<Method> methods,
@@ -33,12 +36,20 @@ public class Clazz {
 		System.out.println("    Implements: ");
 		for(Clazz interf: interfaces)
 			System.out.println("      " + interf.getName());
-		System.out.println("    Super Class: " + superClazz.getName());
+		System.out.print("    Super Class: ");
+		if(superClazz != null)
+			System.out.println(superClazz.getName());
+		else
+			System.out.println("none");
 		System.out.println("    Sub Classes: ");
 		for(Clazz clazz: subClazzes)
 			System.out.println("      " + clazz.getName());
 		for(Method m: methods)
 			m.print();
+	}
+	
+	public void addMethod(Method m) {
+		this.methods.add(m);
 	}
 
 	public String getName() {
@@ -65,7 +76,7 @@ public class Clazz {
 		this.methods = methods;
 	}
 
-	public ArrayList<Clazz> getInterfaces() {
+	public List<Clazz> getInterfaces() {
 		return interfaces;
 	}
 

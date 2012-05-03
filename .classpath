@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="libs"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/TechnicalDependencyExtractor/libs/org.eclipse.jdt.core_3.6.1.v_A68_R36x.jar"/>
 	<classpathentry kind="lib" path="libs/java-diff-utils-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.core.contenttype_3.4.100.v20100505-1235.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.core.jobs_3.5.1.R36x_v20100824.jar"/>

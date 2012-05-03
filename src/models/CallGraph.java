@@ -25,15 +25,15 @@ public class CallGraph {
 	}
 	
 	public void addFile(File file) {
-		// TODO Need unique identifier
+		files.put(file.getFileName(), file);
 	}
 	
 	public void addClazz(Clazz clazz) {
-		// TODO Need unique identifier
+		clazzes.put(clazz.getName(), clazz);
 	}
 	
 	public void addMethod(Method method) {
-		// TODO Need unique identifier
+		methods.put(method.getName(), method);
 	}
 	
 	public File containsFile(String name) {

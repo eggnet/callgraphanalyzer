@@ -1,5 +1,8 @@
+package callgraphanalyzer;
+
 import java.io.IOException;
 import callgraphanalyzer.CallGraphAnalyzer;
+import parser.*;
 
 public class Main {
 
@@ -9,7 +12,12 @@ public class Main {
 	 * @param [dbname] [commit_before] [commit_after] 
 	 */
 	public static void main(String[] args) {
-		System.out.println("callGraphAnalyzer tool developed by eggnet.");
+		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
+		
+		Parser parser = new Parser();
+		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
+		
+		System.out.println("Done");
 		
 		try {
 			System.out.println(args.length);

@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import callgraphanalyzer.Resources;
-import java.util.Map;
 
 public class DbConnection {
 

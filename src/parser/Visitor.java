@@ -1,4 +1,4 @@
-//package parser;
+package parser;
 
 import java.util.List;
 import java.util.Stack;
@@ -27,11 +27,12 @@ public class Visitor extends ASTVisitor {
 	private Clazz currentClazz;
 	private Method currentMethod;
 	
-	public Visitor(CallGraph callGraph) {
+	public Visitor(CallGraph callGraph, String fileName) {
 		this.callGraph = callGraph;
 		clazzStack = new Stack<Clazz>();
 		
 		file = new File();
+		file.setFileName(fileName);
 	}
 	
 	/**
@@ -67,7 +68,10 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(TypeDeclaration node) {
+		System.out.println("FOUND CLASS");
+		System.out.println(node.getName().getIdentifier());
 		currentClazz = callGraph.containsClazz(node.getName().getIdentifier());
+		System.out.println(currentClazz);
 		if(currentClazz == null) {
 			Clazz clazz = new Clazz();
 			clazzStack.push(clazz);
@@ -86,8 +90,12 @@ public class Visitor extends ASTVisitor {
 	 * the call graph as we have finished parsing it)
 	 */
 	@Override
-	public void endVisit(TypeDeclarationStatement node) {
-		callGraph.addClazz(clazzStack.pop());
+	public void endVisit(TypeDeclaration node) {
+		System.out.println("END OF CLASS");
+		// Add to call graph
+		callGraph.addClazz(clazzStack.peek());
+		// Add to file
+		file.addClazz(clazzStack.pop());
 	}
 	
 	/**
@@ -96,6 +104,7 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
+		System.out.println("FOUND METHOD");
 		currentMethod = callGraph.containsMethod(node.getName().getIdentifier());
 		if(currentMethod == null) {
 			Method m = new Method();
@@ -133,7 +142,14 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public void endVisit(MethodDeclaration node) {
+		// Add method to the call graph
 		callGraph.addMethod(currentMethod);
+		// Add method to the current class
+		clazzStack.peek().addMethod(currentMethod);
+	}
+	
+	public void commitFile() {
+		callGraph.addFile(file);
 	}
 
 	public CallGraph getCallGraph() {
