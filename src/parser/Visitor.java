@@ -3,17 +3,17 @@ package parser;
 import java.util.List;
 import java.util.Stack;
 
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
+import models.CallGraph;
+import models.Clazz;
+import models.File;
+import models.Method;
+
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
-
-import models.*;
 
 public class Visitor extends ASTVisitor {
 	
@@ -68,10 +68,7 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		System.out.println("FOUND CLASS");
-		System.out.println(node.getName().getIdentifier());
 		currentClazz = callGraph.containsClazz(node.getName().getIdentifier());
-		System.out.println(currentClazz);
 		if(currentClazz == null) {
 			Clazz clazz = new Clazz();
 			clazzStack.push(clazz);
@@ -91,7 +88,6 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public void endVisit(TypeDeclaration node) {
-		System.out.println("END OF CLASS");
 		// Add to call graph
 		callGraph.addClazz(clazzStack.peek());
 		// Add to file
@@ -104,7 +100,6 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		System.out.println("FOUND METHOD");
 		currentMethod = callGraph.containsMethod(node.getName().getIdentifier());
 		if(currentMethod == null) {
 			Method m = new Method();
