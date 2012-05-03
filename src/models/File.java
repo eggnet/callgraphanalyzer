@@ -3,6 +3,8 @@ package models;
 import java.util.List;
 
 public class File {
+	
+	public String		fileName;
 
 	public List<String> fileImports;
 	public String 		filePackage;
@@ -21,6 +23,16 @@ public class File {
 		this.fileClazzes = fileClazzes;
 		this.fileInterfaces = fileInterfaces;
 	}
+	
+	
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 
 	public List<String> getFileImports() {
 		return fileImports;
@@ -28,6 +40,10 @@ public class File {
 	
 	public void setFileImports(List<String> fileImports) {
 		this.fileImports = fileImports;
+	}
+	
+	public void addFileImport(String fileImport) {
+		this.fileImports.add(fileImport);
 	}
 	
 	public String getFilePackage() {

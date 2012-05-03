@@ -7,10 +7,11 @@ import java.util.Map;
 public class Method {
 	public String name;
 	public Clazz clazz;
-	public ArrayList<Method> methodCalls;
+	public List<Method> methodCalls;
 	
 	
 	public Method() {
+		methodCalls = new ArrayList<Method>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
