@@ -6,12 +6,12 @@ import java.util.Map;
 
 public class Clazz {
 	
-	public String 			name;
-	public boolean 			isInterface;
-	public List<Method> 	methods;
-	public ArrayList<Clazz> interfaces;
-	public Clazz 			superClazz;
-	public List<Clazz> 		subClazzes;
+	private String 				name;
+	private boolean 			isInterface;
+	private List<Method> 		methods;
+	private ArrayList<Clazz> 	interfaces;
+	private Clazz 				superClazz;
+	private List<Clazz> 		subClazzes;
 
 	public Clazz() {
 	}
@@ -25,6 +25,21 @@ public class Clazz {
 		this.interfaces = interfaces;
 		this.superClazz = superClazz;
 		this.subClazzes = subClazzes;
+	}
+	
+	public void print() {
+		System.out.println("  CLASS: " + name);
+		System.out.println("    Interface: " + isInterface);
+		System.out.println("    Implements: ");
+		for(Clazz interf: interfaces)
+			System.out.println("      " + interf.getName());
+		System.out.println("    Super Class: " + superClazz.getName());
+		System.out.println("    Sub Classes: ");
+		for(Clazz clazz: subClazzes)
+			System.out.println("      " + clazz.getName());
+		System.out.println("    ");
+		for(Method m: methods)
+			m.print();
 	}
 
 	public String getName() {
