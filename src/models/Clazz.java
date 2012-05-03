@@ -37,7 +37,6 @@ public class Clazz {
 		System.out.println("    Sub Classes: ");
 		for(Clazz clazz: subClazzes)
 			System.out.println("      " + clazz.getName());
-		System.out.println("    ");
 		for(Method m: methods)
 			m.print();
 	}
