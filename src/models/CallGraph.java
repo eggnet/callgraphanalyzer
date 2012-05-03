@@ -1,11 +1,13 @@
 package models;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class CallGraph {
-	private Map<String, File> files;
-	private Map<String, Clazz> clazzes;
+	
+	private Map<String, File> 	files;
+	private Map<String, Clazz> 	clazzes;
 	private Map<String, Method> methods;
 	
 	public CallGraph() {
@@ -44,6 +46,18 @@ public class CallGraph {
 	
 	public Method containsMethod(String name) {
 		return methods.get(name);
+	}
+	
+	public void print() {
+		Iterator it = files.entrySet().iterator();
+		
+		while (it.hasNext()) {
+	        Map.Entry pairs = (Map.Entry)it.next();
+	        File currentFile = (File) pairs.getValue();
+	        currentFile.print();
+	        
+	        it.remove(); // avoids a ConcurrentModificationException
+	    }
 	}
 
 	public Map<String, Clazz> getClazzes() {

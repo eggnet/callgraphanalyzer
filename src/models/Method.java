@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Method {
-	public String name;
-	public Clazz clazz;
-	public List<Method> methodCalls;
+	
+	private String		 	name;
+	private Clazz 			clazz;
+	private List<Method> 	methodCalls;
 	
 	
 	public Method() {
@@ -19,6 +20,16 @@ public class Method {
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
 	}
+	
+	public void addMethodCall(Method m) {
+		if(!methodCalls.contains(m))
+			this.methodCalls.add(m);
+	}
+	
+	public void print() {
+		
+	}
+	
 	public String getName() {
 		return name;
 	}
@@ -31,12 +42,10 @@ public class Method {
 	public void setClazz(Clazz clazz) {
 		this.clazz = clazz;
 	}
-	public ArrayList<Method> getMethodCalls() {
+	public List<Method> getMethodCalls() {
 		return methodCalls;
 	}
 	public void setMethodCalls(ArrayList<Method> methodCalls) {
 		this.methodCalls = methodCalls;
 	}
-
-	
 }

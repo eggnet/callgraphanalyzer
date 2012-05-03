@@ -4,12 +4,12 @@ import java.util.List;
 
 public class File {
 	
-	public String		fileName;
+	private String			fileName;
 
-	public List<String> fileImports;
-	public String 		filePackage;
-	public List<Clazz> 	fileClazzes;
-	public List<Clazz> 	fileInterfaces;
+	private List<String> 	fileImports;
+	private String 			filePackage;
+	private List<Clazz> 	fileClazzes;
+	private List<Clazz> 	fileInterfaces;
 	
 	
 	public File() {
@@ -22,6 +22,16 @@ public class File {
 		this.filePackage = filePackage;
 		this.fileClazzes = fileClazzes;
 		this.fileInterfaces = fileInterfaces;
+	}
+	
+	public void print() {
+		System.out.println("FILE: " + fileName);
+        System.out.println("  Package: " + filePackage);
+        System.out.println("  Imports: ");
+        for(String imp: fileImports)
+        	System.out.println("    " + imp);
+        for(Clazz clazz: fileClazzes)
+        	clazz.print();
 	}
 	
 	

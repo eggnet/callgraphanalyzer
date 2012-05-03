@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
@@ -95,16 +96,44 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		Method m = new Method();
-		m.setName(node.getName().getIdentifier());
-		m.setClazz(currentClazz);
-		m.clazz= cl;			
-		m.methodCalls= new ArrayList<Method>();
-		m.astNode= node;
-
-		currentMethod= m;
+		currentMethod = callGraph.containsMethod(node.getName().getIdentifier());
+		if(currentMethod == null) {
+			Method m = new Method();
+			currentMethod = m;
+		}
+		currentMethod.setName(node.getName().getIdentifier());
+		currentMethod.setClazz(currentClazz);
 
 		return super.visit(node);
+	}
+	
+	/**
+	 * This function overrides what to do when we reach
+	 * a method invocation statement
+	 */
+	@Override
+	public boolean visit(MethodInvocation node) {
+		Method testMethod;
+		testMethod = callGraph.containsMethod(node.getName().getIdentifier());
+		if(testMethod == null) {
+			Method m = new Method();
+			m.setName(node.getName().getIdentifier());
+			testMethod = m;
+		}
+		
+		currentMethod.addMethodCall(testMethod);
+		callGraph.addMethod(testMethod);
+
+		return super.visit(node);
+	}
+	
+	/**
+	 * This method overrides what to do when we reach
+	 * the end of a method declaration
+	 */
+	@Override
+	public void endVisit(MethodDeclaration node) {
+		callGraph.addMethod(currentMethod);
 	}
 
 	public CallGraph getCallGraph() {
