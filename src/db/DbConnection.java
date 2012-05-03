@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import callgraphanalyzer.Resources;
+import java.util.Map;
 
 public class DbConnection {
 
@@ -61,13 +62,13 @@ public class DbConnection {
 	
 	/**
 	 * Connects to the given database.  
-	 * @param connectionString
+	 * @param dbName
 	 * @return true if successful
 	 */
-	public boolean connect(String connectionString)
+	public boolean connect(String dbName)
 	{
 		try {
-			conn = DriverManager.getConnection(connectionString, Resources.dbUser, Resources.dbPassword);
+			conn = DriverManager.getConnection(Resources.dbUrl + dbName.toLowerCase(), Resources.dbUser, Resources.dbPassword);
 		} 
 		catch (SQLException e) 
 		{
@@ -77,7 +78,7 @@ public class DbConnection {
 		return true;
 	}
 	
-	/*
+	/**
 	 * Close all connection
 	 */
 	public boolean close()
@@ -93,5 +94,10 @@ public class DbConnection {
 		}
 	}
 	
+	//todo
+	public boolean getCommitFiles(String commitID)
+	{
+		return false;
+	}
 	
 }
