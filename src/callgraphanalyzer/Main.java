@@ -33,8 +33,8 @@ public class Main {
 		resolver.resolveMethods();
 		
 		callGraph.print();
-		
 		/*Comparator compare = new Comparator("master", db, args[2], args[3]);
+		Comparator compare = new Comparator("master", db, args[2], args[3]);
 		// testing differ
 		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
 		filediffer differ = new filediffer("file1", "file2");
