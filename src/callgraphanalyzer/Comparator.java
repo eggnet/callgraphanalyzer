@@ -1,7 +1,6 @@
 package callgraphanalyzer;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,7 @@ public class Comparator {
 		this.db = db;
 		this.CommitOneFileTree = new HashMap<String, String>();
 		this.CommitTwoFileTree = new HashMap<String, String>();
+		this.getFilesTreeForCommit(CommitIDOne);
 	}
 
 	public boolean getChangedFilesForCommit(String commitID)
@@ -37,6 +37,7 @@ public class Comparator {
 	 */
 	public boolean getFilesTreeForCommit(String commitID)
 	{
+		Map<String, String> CommitFileTree = new HashMap<String, String>();
 		List<CommitsTO> commitsBefore = db.getCommitsBefore(commitID);
 		Set<String> requiredFiles = commitsBefore.get(0).getFile_structure();	// First commit;
 		while(true) {
@@ -51,9 +52,9 @@ public class Comparator {
 					currentChangedFile = i.next();
 					System.out.println(currentChangedFile);
 					if (requiredFiles.contains(currentChangedFile) &&
-							!this.CommitOneFileTree.containsKey(currentChangedFile))
+							!CommitFileTree.containsKey(currentChangedFile))
 					{
-						this.CommitOneFileTree.put(currentChangedFile, commit.getCommit_id());
+						CommitFileTree.put(currentChangedFile, commit.getCommit_id());
 					}
 				}
 			}
