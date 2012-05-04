@@ -96,7 +96,7 @@ public class Resolver {
 		
 		for(Clazz clazz: callGraph.getAllClazzes()) {
 			for(String imp: imports) {
-				if(clazz.getName().equals(imp))
+				if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
 					clazzes.add(clazz);
 			}
 		}
