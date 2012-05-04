@@ -4,6 +4,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
+
+import differ.diff_match_patch;
+import differ.diff_match_patch.Diff;
+import differ.diff_match_patch.LinesToCharsResult;
 
 ////////////////////////////////////////////////////////////////
 // Compare two files to get all the changes out (deleted, added, modified lines)
@@ -11,10 +16,16 @@ public class filediffer {
 	private String fileContent1;
 	private String fileContent2;
 	private String diffContent;
+	private diff_match_patch myDiffer = new diff_match_patch();
 	
 	private List<String> changedMethods = new ArrayList<String>();
 	private List<String> changedClasses = new ArrayList<String>();
 	
+	/**
+	 * fileDiffer constructor
+	 * @param filecontent1: raw file from old commit
+	 * @param filecontent2: raw file from new commit
+	 */
 	public filediffer(String filecontent1, String filecontent2) {
 		this.fileContent1 = filecontent1;
 		this.fileContent2 = filecontent2;
@@ -28,10 +39,34 @@ public class filediffer {
 		//		+ Line added
 		//		- Line deleted
 		//		= Line modified
+		LinkedList<Diff> diffObjects = myDiffer.diff_main(fileContent1, fileContent2);
+		myDiffer.diff_cleanupSemantic(diffObjects);
+		myDiffer.diff_cleanupMerge(diffObjects);
 		
-		
+		// Print diff objects
+		for(Diff mydiff : diffObjects)
+		{
+			System.out.println(mydiff.toString());
+		}
 	}
-	
+
+	/**
+	 * Diff the two files by line number
+	 */
+	public void diffFilesLineMode()
+	{
+		// convert diff object to set of lines
+		LinesToCharsResult result = myDiffer.diff_linesToChars(fileContent1, fileContent2);
+		LinkedList<Diff> diffObjects = myDiffer.diff_main(result.chars1, result.chars2, false);
+		myDiffer.diff_charsToLines(diffObjects, result.lineArray);
+		
+		myDiffer.diff_cleanupSemantic(diffObjects);
+		myDiffer.diff_cleanupMerge(diffObjects);
+		for(Diff mydiff : diffObjects)
+		{
+			System.out.println(mydiff.toString());
+		}
+	}
 	/**
 	 * @return the functions, class and other changes
 	 */

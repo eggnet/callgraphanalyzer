@@ -1,9 +1,9 @@
 package callgraphanalyzer;
 
+import models.CallGraph;
+import parser.Parser;
+import parser.Resolver;
 import db.DbConnection;
-import differ.filediffer;
-import parser.*;
-import models.*;
 
 public class Main {
 
@@ -13,16 +13,23 @@ public class Main {
 	 * @param [dbname] [commit_before] [commit_after] 
 	 */
 	public static void main(String[] args) {
-		/*System.out.println("CallGraphAnalyzer tool developed by eggnet.");
+		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		DbConnection db = DbConnection.getInstance();
 		db.connect(args[0]);
-		db.setBranchName(args[1]);*/
+		db.setBranchName(args[1]);
 		
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
+<<<<<<< HEAD
 		parser.parseFileFromFile("/home/jordan/Documents/testproject/src/test/A.java");
 		parser.parseFileFromFile("/home/jordan/Documents/testproject/src/pak/B.java");
 		
+=======
+
+		parser.parseFileFromString("src/test/A.java", db.getRawFile("src/test/A.java", "118038c324f6be1f4d427879515eed60d02f6aff")); // testing
+		parser.parseFileFromString("src/test/B.java", db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
+
+>>>>>>> 2590bee98cc2afffc0019ccb033e008c80accd7c
 		callGraph.print();
 		
 		System.out.println();
@@ -33,13 +40,10 @@ public class Main {
 		resolver.resolveMethods();
 		
 		callGraph.print();
-		/*Comparator compare = new Comparator("master", db, args[2], args[3]);
-		Comparator compare = new Comparator("master", db, args[2], args[3]);
-		// testing differ
-		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
-		filediffer differ = new filediffer("file1", "file2");
-		differ.setDiffcontent(rawFile);
-		differ.getChanges();*/
+		
+		Comparator compare = new Comparator("master", db, args[2], args[3], new CallGraphAnalyzer());
+		compare.CompareCommits();
+
 		try {
 			System.out.println(args.length);
 			if (args.length < 4 )
