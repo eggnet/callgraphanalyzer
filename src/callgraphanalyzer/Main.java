@@ -1,7 +1,6 @@
 package callgraphanalyzer;
 
 import db.DbConnection;
-import parser.Parser;
 import differ.filediffer;
 
 public class Main {
@@ -17,9 +16,15 @@ public class Main {
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
 		
-		Parser parser = new Parser();
-		parser.parseFile("/Users/braden/testproject/src/test/A.java");
-
+		/*CallGraph callGraph = new CallGraph();
+		Parser parser = new Parser(callGraph);
+		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
+		parser.parseFile("/home/jordan/Documents/testproject/src/test/B.java");
+		Resolver resolver = new Resolver(callGraph);
+		resolver.resolveMethods();*/
+		
+		//callGraph.print();
+		
 		Comparator compare = new Comparator("master", db, args[2], args[3]);
 		// testing differ
 		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
