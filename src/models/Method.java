@@ -33,6 +33,11 @@ public class Method {
 			this.unresolvedMethods.add(m);
 	}
 	
+	public void removeUnresolvedMethod(String m) {
+		if(unresolvedMethods.contains(m))
+			this.unresolvedMethods.remove(m);
+	}
+	
 	public void print() {
 		System.out.println("    METHOD: " + name);
 		System.out.println("      Calls: ");

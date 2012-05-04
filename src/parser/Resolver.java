@@ -46,6 +46,7 @@ public class Resolver {
 				resolved = clazz.hasUnresolvedMethod(unresolved);
 				if(resolved != null) {
 					method.addMethodCall(resolved);
+					method.removeUnresolvedMethod(unresolved);
 					return true;
 				}
 			}

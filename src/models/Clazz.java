@@ -56,7 +56,7 @@ public class Clazz {
 	public Method hasUnresolvedMethod(String m) {
 		for(Method method: methods) {
 			String unresolved = method.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf("."), unresolved.length()-1);
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
 			
 			if(m.equals(unresolved)) {
 				System.out.println("Found " + m + " in class " + this.getName());
