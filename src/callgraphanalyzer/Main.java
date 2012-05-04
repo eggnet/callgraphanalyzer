@@ -1,11 +1,6 @@
 package callgraphanalyzer;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-
 import parser.Parser;
-import db.DbConnection;
 
 public class Main {
 
@@ -21,7 +16,7 @@ public class Main {
 		parser.parseFile("/Users/braden/testproject/src/test/A.java");
 
 		Comparator compare = new Comparator();
-		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");
+		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
 		try {
 			System.out.println(args.length);
 			if (args.length < 3 )
