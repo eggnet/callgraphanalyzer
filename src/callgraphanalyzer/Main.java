@@ -20,11 +20,15 @@ public class Main {
 		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
 		
 		// testing differ
-		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
-		filediffer differ = new filediffer("file1", "file2");
-		differ.setDiffcontent(rawFile);
+		String rawFile1 = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
+		compare.getFilesForCommit("9a50295ca418ee8a67ecc0d6fc9cb9a437017dad");
+		String rawFile2  = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
 		
-		differ.getChanges();
+		filediffer differ = new filediffer(rawFile1, rawFile2);
+		differ.diffFiles();
+		
+		//differ.setDiffcontent(rawFile);
+		//differ.getChanges();
 		
 		try {
 			System.out.println(args.length);
