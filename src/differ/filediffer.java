@@ -28,8 +28,6 @@ public class filediffer {
 		//		+ Line added
 		//		- Line deleted
 		//		= Line modified
-		
-		
 	}
 	
 	/**

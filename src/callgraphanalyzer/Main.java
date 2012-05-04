@@ -1,7 +1,9 @@
 package callgraphanalyzer;
 
+import models.CallGraph;
+import parser.Parser;
+import parser.Resolver;
 import db.DbConnection;
-import differ.filediffer;
 
 public class Main {
 
@@ -16,22 +18,20 @@ public class Main {
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
 		
-		/*CallGraph callGraph = new CallGraph();
+		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
-		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
-		parser.parseFile("/home/jordan/Documents/testproject/src/test/B.java");
+		parser.parseFile(db.getRawFile("src/test/A.java", "ea276fbd7e46f84e02574823169cc06982542f0f")); // testing
+		parser.parseFile(db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
 		Resolver resolver = new Resolver(callGraph);
-		resolver.resolveMethods();*/
+		resolver.resolveMethods();
 		
-		//callGraph.print();
+		callGraph.print();
 		
-		Comparator compare = new Comparator("master", db, args[2], args[3]);
-		
+		Comparator compare = new Comparator("master", db, args[2], args[3], new CallGraphAnalyzer());
+		compare.CompareCommits();
 		// testing differ
-		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
-		filediffer differ = new filediffer("file1", "file2");
-		differ.setDiffcontent(rawFile);
-		differ.getChanges();
+		//String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
+		//filediffer differ = new filediffer("file1", "file2");
 		try {
 			System.out.println(args.length);
 			if (args.length < 4 )

@@ -36,6 +36,10 @@ public class Comparator {
 	public boolean CompareCommits()
 	{
 		// TODO @braden
+		differ = new filediffer(db.getRawFile("src/test/A.java", "446b06282e9f98896b5552f7e21edc52c58d6dde"),
+								db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));
+		differ.setDiffcontent(db.getRawFile("src/test/C.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));
+		differ.getChanges();
 		return true;
 	}
 	
