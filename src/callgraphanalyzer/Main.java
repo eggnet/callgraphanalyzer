@@ -1,6 +1,7 @@
 package callgraphanalyzer;
 
-import parser.Parser;
+import parser.*;
+import models.CallGraph;
 
 public class Main {
 
@@ -12,11 +13,17 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		
-		Parser parser = new Parser();
-		parser.parseFile("/Users/braden/testproject/src/test/A.java");
+		CallGraph callGraph = new CallGraph();
+		Parser parser = new Parser(callGraph);
+		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
+		parser.parseFile("/home/jordan/Documents/testproject/src/test/B.java");
+		Resolver resolver = new Resolver(callGraph);
+		resolver.resolveMethods();
+		
+		callGraph.print();
 
-		Comparator compare = new Comparator();
-		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
+		//Comparator compare = new Comparator();
+		//compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
 		try {
 			System.out.println(args.length);
 			if (args.length < 3 )

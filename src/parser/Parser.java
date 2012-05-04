@@ -13,10 +13,10 @@ import models.*;
 
 public class Parser {
 	
-	CallGraph callGraph;
+	private CallGraph callGraph;
 	
-	public Parser() {
-		callGraph = new CallGraph();
+	public Parser(CallGraph callGraph) {
+		this.callGraph = callGraph;
 	}
 	
 	/**
@@ -49,9 +49,6 @@ public class Parser {
 		
 		// Commit that visitor
 		visitor.commitFile();
-		
-		// Print the visitor's call graph
-		visitor.getCallGraph().print();
 	}
 	
 	private String readFileToString(String filePath) throws IOException {
@@ -69,5 +66,13 @@ public class Parser {
 
 		reader.close();
 		return  fileData.toString();	
+	}
+
+	public CallGraph getCallGraph() {
+		return callGraph;
+	}
+
+	public void setCallGraph(CallGraph callGraph) {
+		this.callGraph = callGraph;
 	}
 }

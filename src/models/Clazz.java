@@ -11,6 +11,7 @@ public class Clazz {
 	private List<Clazz> 		interfaces;
 	private Clazz 				superClazz;
 	private List<Clazz> 		subClazzes;
+	private File				file;
 
 	public Clazz() {
 		methods = new ArrayList<Method>();
@@ -50,6 +51,20 @@ public class Clazz {
 	
 	public void addMethod(Method m) {
 		this.methods.add(m);
+	}
+	
+	public Method hasUnresolvedMethod(String m) {
+		for(Method method: methods) {
+			String unresolved = method.getName();
+			unresolved = unresolved.substring(unresolved.lastIndexOf("."), unresolved.length()-1);
+			
+			if(m.equals(unresolved)) {
+				System.out.println("Found " + m + " in class " + this.getName());
+				return method;
+			}
+		}
+		
+		return null;
 	}
 
 	public String getName() {
@@ -99,8 +114,15 @@ public class Clazz {
 	public void setSubClazzes(List<Clazz> subClazzes) {
 		this.subClazzes = subClazzes;
 	}
-	
-	
-	
+
+	public File getFile() {
+		return file;
 	}
+
+	public void setFile(File file) {
+		this.file = file;
+	}
+	
+	
+}
 

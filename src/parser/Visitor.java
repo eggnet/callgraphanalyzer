@@ -1,5 +1,6 @@
 package parser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
@@ -9,18 +10,18 @@ import models.File;
 import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class Visitor extends ASTVisitor {
 	
 	private CallGraph callGraph;
-	
-	private List<Clazz> allClazzes;
-	private List<Method> allMethods;
 	
 	private File file;
 	private Stack<Clazz> clazzStack;
@@ -68,14 +69,14 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		currentClazz = callGraph.containsClazz(node.getName().getIdentifier());
+		currentClazz = callGraph.containsClazz(file.getFilePackage() + "." + node.getName().getIdentifier());
 		if(currentClazz == null) {
 			Clazz clazz = new Clazz();
 			clazzStack.push(clazz);
 			currentClazz = clazz;
 		}
 		
-		currentClazz.setName(node.getName().getIdentifier());
+		currentClazz.setName(file.getFilePackage() + "." + node.getName().getIdentifier());
 		currentClazz.setInterface(node.isInterface());
 
 		return super.visit(node);
@@ -88,6 +89,8 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public void endVisit(TypeDeclaration node) {
+		// Add it to the current file
+		clazzStack.peek().setFile(file);
 		// Add to call graph
 		callGraph.addClazz(clazzStack.peek());
 		// Add to file
@@ -100,12 +103,27 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		currentMethod = callGraph.containsMethod(node.getName().getIdentifier());
+		// Get the method's parameter
+		List<SingleVariableDeclaration> parametersList =  node.parameters();
+		List<String> parameters = new ArrayList<String>();
+		for(SingleVariableDeclaration v: parametersList) {
+			parameters.add(v.getType().toString());
+		}
+		
+		// Get the unique name
+		String uniqueMethod = currentClazz.getName() + "." + node.getName().getIdentifier()+ "(";
+		for(String s: parameters)
+			uniqueMethod += s + ", ";
+		if(!parameters.isEmpty())
+			uniqueMethod = uniqueMethod.substring(0, uniqueMethod.length()-2);
+		uniqueMethod += ")";
+		
+		currentMethod = callGraph.containsMethod(uniqueMethod);
 		if(currentMethod == null) {
 			Method m = new Method();
 			currentMethod = m;
 		}
-		currentMethod.setName(node.getName().getIdentifier());
+		currentMethod.setName(uniqueMethod);
 		currentMethod.setClazz(currentClazz);
 
 		return super.visit(node);
@@ -117,17 +135,50 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
-		Method testMethod;
-		testMethod = callGraph.containsMethod(node.getName().getIdentifier());
-		if(testMethod == null) {
-			Method m = new Method();
-			m.setName(node.getName().getIdentifier());
-			testMethod = m;
+		// Get the method's parameter
+		List<Type> parametersList =  node.typeArguments();
+		List<String> parameters = new ArrayList<String>();
+		for(Type t: parametersList) {
+			parameters.add(t.toString());
 		}
 		
-		currentMethod.addMethodCall(testMethod);
-		callGraph.addMethod(testMethod);
+		// Get the stub name
+		String stubName = node.getName().getIdentifier() + "(";
+		for(String s: parameters)
+			stubName += s + ", ";
+		if(!parameters.isEmpty())
+			stubName = stubName.substring(0, stubName.length()-2);
+		stubName += ")";
+		
+		currentMethod.addUnresolvedMethod(stubName);
 
+		return super.visit(node);
+	}
+	
+	/**
+	 * This function overrides what to do when we reach
+	 * a class instance creation statement
+	 */
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		// Get the constructor's parameters
+		List<Type> parametersList =  node.typeArguments();
+		List<String> parameters = new ArrayList<String>();
+		for(Type t: parametersList) {
+			parameters.add(t.toString());
+		}
+		
+		// Get the stub name
+		String stubName = node.getType().toString()  + "(";
+		for(String s: parameters)
+			stubName += s + ", ";
+		if(!parameters.isEmpty())
+			stubName = stubName.substring(0, stubName.length()-2);
+		stubName += ")";
+		
+		currentMethod.addUnresolvedMethod(stubName);
+		
+		
 		return super.visit(node);
 	}
 	
@@ -146,31 +197,4 @@ public class Visitor extends ASTVisitor {
 	public void commitFile() {
 		callGraph.addFile(file);
 	}
-
-	public CallGraph getCallGraph() {
-		return callGraph;
-	}
-
-	public void setCallGraph(CallGraph callGraph) {
-		this.callGraph = callGraph;
-	}
-
-	public List<Clazz> getAllClazzes() {
-		return allClazzes;
-	}
-
-	public void setAllClazzes(List<Clazz> allClazzes) {
-		this.allClazzes = allClazzes;
-	}
-
-	public List<Method> getAllMethods() {
-		return allMethods;
-	}
-
-	public void setAllMethods(List<Method> allMethods) {
-		this.allMethods = allMethods;
-	}
-	
-	
-
 }
