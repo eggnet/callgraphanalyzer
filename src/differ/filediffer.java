@@ -4,6 +4,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
+
+import differ.diff_match_patch;
+import differ.diff_match_patch.Diff;
 
 ////////////////////////////////////////////////////////////////
 // Compare two files to get all the changes out (deleted, added, modified lines)
@@ -11,6 +15,7 @@ public class filediffer {
 	private String fileContent1;
 	private String fileContent2;
 	private String diffContent;
+	private diff_match_patch myDiffer = new diff_match_patch();
 	
 	private List<String> changedMethods = new ArrayList<String>();
 	private List<String> changedClasses = new ArrayList<String>();
@@ -28,6 +33,25 @@ public class filediffer {
 		//		+ Line added
 		//		- Line deleted
 		//		= Line modified
+		LinkedList<Diff> diffObjects = myDiffer.diff_main(fileContent1, fileContent2);
+		myDiffer.diff_cleanupSemantic(diffObjects);
+		myDiffer.diff_cleanupMerge(diffObjects);
+		
+		// convert diff object to set of lines
+		List<String> mylines = new ArrayList<String>();
+		myDiffer.diff_charsToLines(diffObjects, mylines);
+		// Print diff objects
+		for(Diff mydiff : diffObjects)
+		{
+			System.out.println(mydiff.toString());
+		}
+		
+		// Print lines
+		for(String line : mylines)
+		{
+			System.out.println(line);
+		}
+		
 	}
 	
 	/**
