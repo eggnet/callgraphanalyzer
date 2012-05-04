@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class CallGraph {
 	
@@ -51,24 +52,20 @@ public class CallGraph {
 	}
 	
 	public List<File> getAllFiles() {
-		List<File> file = new ArrayList<File>();
-		Iterator it = files.entrySet().iterator();
+		List<File> files = new ArrayList<File>();
 		
-		while(it.hasNext()) {
-			Map.Entry pairs = (Map.Entry)it.next();
-			file.add((File)pairs.getValue());
+		for(Map.Entry<String, File> entry: this.files.entrySet()) {
+			files.add(entry.getValue());
 		}
 		
-		return file;
+		return files;
 	}
 	
 	public List<Clazz> getAllClazzes() {
 		List<Clazz> clazzes = new ArrayList<Clazz>();
-		Iterator it = clazzes.iterator();
 		
-		while(it.hasNext()) {
-			Map.Entry pairs = (Map.Entry)it.next();
-			clazzes.add((Clazz)pairs.getValue());
+		for(Map.Entry<String, Clazz> entry: this.clazzes.entrySet()) {
+			clazzes.add(entry.getValue());
 		}
 		
 		return clazzes;

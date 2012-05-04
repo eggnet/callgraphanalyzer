@@ -20,8 +20,16 @@ public class Main {
 		
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
+
 		parser.parseFile(db.getRawFile("src/test/A.java", "ea276fbd7e46f84e02574823169cc06982542f0f")); // testing
 		parser.parseFile(db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
+		
+		callGraph.print();
+		
+		System.out.println();
+		System.out.println();
+		System.out.println("Resolving the fuck out of this CallGraph");
+		
 		Resolver resolver = new Resolver(callGraph);
 		resolver.resolveMethods();
 		
@@ -29,9 +37,7 @@ public class Main {
 		
 		Comparator compare = new Comparator("master", db, args[2], args[3], new CallGraphAnalyzer());
 		compare.CompareCommits();
-		// testing differ
-		//String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
-		//filediffer differ = new filediffer("file1", "file2");
+
 		try {
 			System.out.println(args.length);
 			if (args.length < 4 )
