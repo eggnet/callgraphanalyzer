@@ -8,16 +8,19 @@ public class Method {
 	private String		 	name;
 	private Clazz 			clazz;
 	private List<Method> 	methodCalls;
+	private List<String>	unresolvedMethods;
 	
 	
 	public Method() {
 		methodCalls = new ArrayList<Method>();
+		unresolvedMethods = new ArrayList<String>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
 		this.name = name;
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
+		unresolvedMethods = new ArrayList<String>();
 	}
 	
 	public void addMethodCall(Method m) {
@@ -25,11 +28,24 @@ public class Method {
 			this.methodCalls.add(m);
 	}
 	
+	public void addUnresolvedMethod(String m) {
+		if(!unresolvedMethods.contains(m))
+			this.unresolvedMethods.add(m);
+	}
+	
+	public void removeUnresolvedMethod(String m) {
+		if(unresolvedMethods.contains(m))
+			this.unresolvedMethods.remove(m);
+	}
+	
 	public void print() {
 		System.out.println("    METHOD: " + name);
 		System.out.println("      Calls: ");
 		for(Method m: methodCalls)
 			System.out.println("        " + m.getName());
+		System.out.println("      Unresolved Calls: ");
+		for(String m: unresolvedMethods)
+			System.out.println("        " + m);
 	}
 	
 	public String getName() {
@@ -50,4 +66,13 @@ public class Method {
 	public void setMethodCalls(ArrayList<Method> methodCalls) {
 		this.methodCalls = methodCalls;
 	}
+
+	public List<String> getUnresolvedMethods() {
+		return unresolvedMethods;
+	}
+
+	public void setUnresolvedMethods(List<String> unresolvedMethods) {
+		this.unresolvedMethods = unresolvedMethods;
+	}
+	
 }

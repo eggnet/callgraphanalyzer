@@ -1,6 +1,9 @@
 package callgraphanalyzer;
 
-import models.CallGraph;
+import java.util.ArrayList;
+import java.util.List;
+
+import models.*;
 import db.DbConnection;
 
 public class CallGraphAnalyzer {
@@ -71,6 +74,17 @@ public class CallGraphAnalyzer {
 		
 		// Read all commits from DB, inset to callgraph
 		
+	}
+	
+	private List<Method> retrieveMethodCalls(String method, CallGraph callGraph) {
+		List<Method> calls = new ArrayList<Method>();
+		Method m = callGraph.containsMethod(method);
+		if(m != null) {
+			for(Method call: m.getMethodCalls())
+				calls.add(call);
+		}
+		
+		return calls;
 	}
 		
 

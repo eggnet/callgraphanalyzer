@@ -1,8 +1,11 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class CallGraph {
 	
@@ -48,6 +51,26 @@ public class CallGraph {
 		return methods.get(name);
 	}
 	
+	public List<File> getAllFiles() {
+		List<File> files = new ArrayList<File>();
+		
+		for(Map.Entry<String, File> entry: this.files.entrySet()) {
+			files.add(entry.getValue());
+		}
+		
+		return files;
+	}
+	
+	public List<Clazz> getAllClazzes() {
+		List<Clazz> clazzes = new ArrayList<Clazz>();
+		
+		for(Map.Entry<String, Clazz> entry: this.clazzes.entrySet()) {
+			clazzes.add(entry.getValue());
+		}
+		
+		return clazzes;
+	}
+	
 	public void print() {
 		Iterator it = files.entrySet().iterator();
 		
@@ -55,8 +78,6 @@ public class CallGraph {
 	        Map.Entry pairs = (Map.Entry)it.next();
 	        File currentFile = (File) pairs.getValue();
 	        currentFile.print();
-	        
-	        it.remove(); // avoids a ConcurrentModificationException
 	    }
 	}
 
