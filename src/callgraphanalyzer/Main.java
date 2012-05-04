@@ -1,5 +1,6 @@
 package callgraphanalyzer;
 
+import db.DbConnection;
 import parser.Parser;
 
 public class Main {
@@ -12,16 +13,20 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		
+		DbConnection db = DbConnection.getInstance();
+		db.connect(args[0]);
+		db.setBranchName(args[1]);
+		
 		Parser parser = new Parser();
 		parser.parseFile("/Users/braden/testproject/src/test/A.java");
 
-		Comparator compare = new Comparator();
-		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
+		Comparator compare = new Comparator("master", db);
+		compare.getFilesTreeForCommit(args[2]);
 		try {
 			System.out.println(args.length);
-			if (args.length < 3 )
+			if (args.length < 4 )
 			{
-				System.out.println("Retry: callGraphAnalyzer [dbname] [commit_before] [commit_after]");
+				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_before] [commit_after]");
 				throw new ArrayIndexOutOfBoundsException();
 			}
 			else
