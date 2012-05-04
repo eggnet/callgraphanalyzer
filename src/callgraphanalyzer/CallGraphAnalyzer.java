@@ -2,6 +2,7 @@ package callgraphanalyzer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import models.*;
 import db.DbConnection;
@@ -76,15 +77,17 @@ public class CallGraphAnalyzer {
 		
 	}
 	
+	/**
+	 * This function will return all the methods that call the 
+	 * given method.
+	 * @param method
+	 * @param callGraph
+	 * @return
+	 */
 	private List<Method> retrieveMethodCalls(String method, CallGraph callGraph) {
-		List<Method> calls = new ArrayList<Method>();
 		Method m = callGraph.containsMethod(method);
-		if(m != null) {
-			for(Method call: m.getMethodCalls())
-				calls.add(call);
-		}
 		
-		return calls;
+		return m.getCalledBy();
 	}
 		
 

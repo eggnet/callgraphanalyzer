@@ -78,6 +78,14 @@ public class Visitor extends ASTVisitor {
 		
 		currentClazz.setName(file.getFilePackage() + "." + node.getName().getIdentifier());
 		currentClazz.setInterface(node.isInterface());
+		
+		Type t = node.getSuperclassType();
+		if(t != null)
+			currentClazz.addUnresolvedSuperClazz(t.toString());
+		
+		List<Type> interfaces = node.superInterfaceTypes();
+		for(Type i: interfaces)
+			currentClazz.addUnresolvedInterface(i.toString());
 
 		return super.visit(node);
 	}

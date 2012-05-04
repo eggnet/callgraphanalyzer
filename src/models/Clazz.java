@@ -5,18 +5,24 @@ import java.util.List;
 
 public class Clazz {
 	
+	private File				file;
 	private String 				name;
 	private boolean 			isInterface;
 	private List<Method> 		methods;
-	private List<Clazz> 		interfaces;
-	private Clazz 				superClazz;
 	private List<Clazz> 		subClazzes;
-	private File				file;
+	
+	private List<Clazz> 		interfaces;
+	private List<String> 		unresolvedInterfaces;
+	
+	private Clazz 				superClazz;
+	private String 				unresolvedSuperClazz;
 
 	public Clazz() {
 		methods = new ArrayList<Method>();
 		interfaces = new ArrayList<Clazz>();
+		unresolvedInterfaces = new ArrayList<String>();
 		subClazzes = new ArrayList<Clazz>();
+		unresolvedSuperClazz = "";
 		
 	}
 
@@ -29,19 +35,26 @@ public class Clazz {
 		this.interfaces = interfaces;
 		this.superClazz = superClazz;
 		this.subClazzes = subClazzes;
+		
+		unresolvedInterfaces = new ArrayList<String>();
+		unresolvedSuperClazz = "";
 	}
 	
 	public void print() {
 		System.out.println("  CLASS: " + name);
 		System.out.println("    Interface: " + isInterface);
 		System.out.println("    Implements: ");
+		System.out.println("    Unresolved Interfaces: ");
+		for(String i: unresolvedInterfaces)
+			System.out.println("      " + i);
 		for(Clazz interf: interfaces)
 			System.out.println("      " + interf.getName());
 		System.out.print("    Super Class: ");
 		if(superClazz != null)
 			System.out.println(superClazz.getName());
 		else
-			System.out.println("none");
+			System.out.println("");
+		System.out.println("    Unresolved Super Class: " + unresolvedSuperClazz);
 		System.out.println("    Sub Classes: ");
 		for(Clazz clazz: subClazzes)
 			System.out.println("      " + clazz.getName());
@@ -65,6 +78,22 @@ public class Clazz {
 		}
 		
 		return null;
+	}
+	
+	public void addUnresolvedInterface(String i) {
+		this.unresolvedInterfaces.add(i);
+	}
+	
+	public void removeUnresolvedInterface(String i) {
+		this.unresolvedInterfaces.remove(i);
+	}
+	
+	public void addUnresolvedSuperClazz(String s) {
+		this.unresolvedSuperClazz = s;
+	}
+	
+	public void removeUnresolvedSuperClazz() {
+		this.unresolvedSuperClazz = "";
 	}
 
 	public String getName() {

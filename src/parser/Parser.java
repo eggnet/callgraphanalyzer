@@ -19,6 +19,7 @@ public class Parser {
 		this.callGraph = callGraph;
 	}
 	
+	
 	public void parseFileFromFile(String file) {
 		// Get the file's contents
 		String fileData;

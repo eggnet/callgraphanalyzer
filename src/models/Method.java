@@ -7,12 +7,15 @@ public class Method {
 	
 	private String		 	name;
 	private Clazz 			clazz;
+	
 	private List<Method> 	methodCalls;
+	private List<Method>	calledBy;
 	private List<String>	unresolvedMethods;
 	
 	
 	public Method() {
 		methodCalls = new ArrayList<Method>();
+		calledBy = new ArrayList<Method>();
 		unresolvedMethods = new ArrayList<String>();
 	}
 	
@@ -20,7 +23,13 @@ public class Method {
 		this.name = name;
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
+		calledBy = new ArrayList<Method>();
 		unresolvedMethods = new ArrayList<String>();
+	}
+	
+	public void addCalledBy(Method m) {
+		if(!calledBy.contains(m))
+			this.calledBy.add(m);
 	}
 	
 	public void addMethodCall(Method m) {
@@ -74,5 +83,15 @@ public class Method {
 	public void setUnresolvedMethods(List<String> unresolvedMethods) {
 		this.unresolvedMethods = unresolvedMethods;
 	}
+
+	public List<Method> getCalledBy() {
+		return calledBy;
+	}
+
+	public void setCalledBy(List<Method> calledBy) {
+		this.calledBy = calledBy;
+	}
+	
+	
 	
 }

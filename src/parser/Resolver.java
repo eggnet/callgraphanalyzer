@@ -13,6 +13,10 @@ public class Resolver {
 		this.callGraph = callGraph;
 	}
 	
+	public void resolveAll() {
+		resolveMethods();
+	}
+	
 	public boolean resolveMethods() {
 		for(File file: callGraph.getAllFiles()) {
 			resolveFileMethodCalls(file);
@@ -37,15 +41,23 @@ public class Resolver {
 	public boolean resolveMethodCalls(Method method) {
 		// Get all classes in the package
 		List<Clazz> pkgClazzes = getClazzesInPackage(method.getClazz().getFile().getFilePackage());
+		// Get all classes that are imported
+		List<Clazz> impClazzes = getClazzesInImports(method.getClazz().getFile().getFileImports());
+		
+		// Combine the two lists to search over all reachable clazzes
+		List<Clazz> clazzes = pkgClazzes;
+		for(Clazz clazz: impClazzes)
+			clazzes.add(clazz);
 		
 		
-		// Resolve all the method calls
+		// Resolve all the method calls if they are in the project's classes
 		Method resolved;
 		for(String unresolved: method.getUnresolvedMethods()) {
-			for(Clazz clazz: pkgClazzes) {
+			for(Clazz clazz: clazzes) {
 				resolved = clazz.hasUnresolvedMethod(unresolved);
 				if(resolved != null) {
 					method.addMethodCall(resolved);
+					resolved.addCalledBy(method);
 					method.removeUnresolvedMethod(unresolved);
 					return true;
 				}
@@ -79,12 +91,14 @@ public class Resolver {
 	 * @param imports
 	 * @return
 	 */
-	public List<Clazz> getClazzesInImports(String imports) {
+	public List<Clazz> getClazzesInImports(List<String> imports) {
 		List<Clazz> clazzes = new ArrayList<Clazz>();
 		
 		for(Clazz clazz: callGraph.getAllClazzes()) {
-			if(clazz.getFile().getFilePackage().equals(imports))
-				clazzes.add(clazz);
+			for(String imp: imports) {
+				if(clazz.getName().equals(imp))
+					clazzes.add(clazz);
+			}
 		}
 		
 		return clazzes;
