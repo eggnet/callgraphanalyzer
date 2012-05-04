@@ -105,7 +105,6 @@ public class filediffer {
 		if(!found)
 			System.out.println("No match found");		
 	}
-	
 			
 	public String getFilecontent1() {
 		return fileContent1;

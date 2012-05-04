@@ -8,21 +8,37 @@ import java.util.Set;
 
 import db.CommitsTO;
 import db.DbConnection;
+import differ.filediffer;
 public class Comparator {
 	private DbConnection db;
+	private filediffer differ;
+	private CallGraphAnalyzer cga;
 	public Map<String, String> FileMap;
 	public Map<String, String> CommitOneFileTree;
 	public Map<String, String> CommitTwoFileTree;
 	public String CurrentBranch;
 	public String CurrentBranchID;
 	
-	public Comparator(String branchName, DbConnection db, String CommitIDOne, String CommitIDTwo) {
+	/**
+	 * Constructs a new Comparator class.  This class connects the FileDiffer {@link #differ} and the CallGraphAnalyzer {@link #cga}
+	 * @param branchName Name of the branch
+	 * @param db Name of the Database.
+	 * @param CommitIDOne SHA-1 Hash of the commit in question.
+	 * @param CommitIDTwo SHA-1 Hash of the second commit.
+	 */
+	public Comparator(String branchName, DbConnection db, String CommitIDOne, String CommitIDTwo, CallGraphAnalyzer cga) {
 		this.db = db;
-		this.CommitOneFileTree = new HashMap<String, String>();
-		this.CommitTwoFileTree = new HashMap<String, String>();
-		this.getFilesTreeForCommit(CommitIDOne);
+		this.CommitOneFileTree = this.getFilesTreeForCommit(CommitIDOne);
+		this.CommitTwoFileTree = this.getFilesTreeForCommit(CommitIDTwo);
+		this.cga = cga;
 	}
 
+	public boolean CompareCommits()
+	{
+		// TODO @braden
+		return true;
+	}
+	
 	public boolean getChangedFilesForCommit(String commitID)
 	{
 		FileMap = db.getCommitChangedFiles(commitID);
@@ -35,7 +51,7 @@ public class Comparator {
 	 * @param commitID
 	 * @return true when successful
 	 */
-	public boolean getFilesTreeForCommit(String commitID)
+	public Map<String, String> getFilesTreeForCommit(String commitID)
 	{
 		Map<String, String> CommitFileTree = new HashMap<String, String>();
 		List<CommitsTO> commitsBefore = db.getCommitsBefore(commitID);
@@ -60,7 +76,7 @@ public class Comparator {
 			}
 			if (!db.isPaging) break;
 		}
-		return true;
+		return CommitFileTree;
 	}
 	
 }
