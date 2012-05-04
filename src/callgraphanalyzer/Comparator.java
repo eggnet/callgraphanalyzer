@@ -62,8 +62,8 @@ public class Comparator {
 				// File is still present, might be modified.
 				// TODO @triet parse that shit!
 				System.out.println(newKey + " was modified.");
-				differ = new filediffer(db.getRawFile(newKey, oldCommit.getCommit_id()),
-						db.getRawFile(newKey, newCommit.getCommit_id()));
+				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
+						db.getRawFile(newKey, newCommitFileTree.get(newKey)));
 				differ.setDiffcontent(db.getRawFile("src/test/C.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));
 				differ.getChanges();
 			}

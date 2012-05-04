@@ -214,7 +214,7 @@ public class DbConnection {
 	{
 		HashSet<String> filepaths = new HashSet<String>();
 		try {
-			String sql = "SELECT file_structure FROM commits where commit_id=? and branch_id=?;";
+			String sql = "SELECT file_structure FROM commits where commit_id=? and (branch_id=? OR branch_id is NULL);";
 			String[] params = {commitID, this.branchID};
 			ResultSet rs = execPreparedQuery(sql, params);
 			rs.next();
@@ -242,7 +242,7 @@ public class DbConnection {
 		isPaging = true;
 		List<CommitsTO> commitsList = new ArrayList<CommitsTO>();
 		try {
-			String sql = "SELECT * FROM commits where branch_id=? and commit_date <= (SELECT commit_date FROM commits WHERE commit_id=? and branch_id=?);";
+			String sql = "SELECT * FROM commits where (branch_id=? OR branch_id is NULL) and commit_date <= (SELECT commit_date FROM commits WHERE commit_id=? and (branch_id=? OR branch_id is NULL));";
 			String[] params = {this.branchID, commitID, this.branchID};
 			this.savedResultSet = execPreparedQuery(sql, params);
 			CommitsTO commit;
@@ -321,7 +321,7 @@ public class DbConnection {
 		CommitsTO commit = new CommitsTO();
 		try {
 			String[] params = {commitID, this.branchID};
-			ResultSet rs = execPreparedQuery("SELECT * from commits where commit_id=? and branch_id=?;", params);
+			ResultSet rs = execPreparedQuery("SELECT * from commits where commit_id=? and (branch_id=? OR branch_id is NULL);", params);
 			rs.next();
 			commit.setAuthor(rs.getString("author"));
 			commit.setAuthor_email(rs.getString("author_email"));
