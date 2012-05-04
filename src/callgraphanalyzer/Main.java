@@ -1,6 +1,7 @@
 package callgraphanalyzer;
 
 import parser.Parser;
+import differ.filediffer;
 
 public class Main {
 
@@ -12,11 +13,19 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		
-		Parser parser = new Parser();
-		parser.parseFile("/Users/braden/testproject/src/test/A.java");
+		//Parser parser = new Parser();
+		//parser.parseFile("/Users/braden/testproject/src/test/A.java");
 
 		Comparator compare = new Comparator();
 		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");		// Testing with a certain commit 
+		
+		// testing differ
+		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
+		filediffer differ = new filediffer("file1", "file2");
+		differ.setDiffcontent(rawFile);
+		
+		differ.getChanges();
+		
 		try {
 			System.out.println(args.length);
 			if (args.length < 3 )
