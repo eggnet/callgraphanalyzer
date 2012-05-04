@@ -2,6 +2,7 @@ package callgraphanalyzer;
 
 import db.DbConnection;
 import parser.Parser;
+import differ.filediffer;
 
 public class Main {
 
@@ -12,7 +13,6 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
-		
 		DbConnection db = DbConnection.getInstance();
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
@@ -20,8 +20,12 @@ public class Main {
 		Parser parser = new Parser();
 		parser.parseFile("/Users/braden/testproject/src/test/A.java");
 
-		Comparator compare = new Comparator("master", db);
-		compare.getFilesTreeForCommit(args[2]);
+		Comparator compare = new Comparator("master", db, args[2], args[3]);
+		// testing differ
+		String rawFile = compare.FileMap.get("src/fi/hut/soberit/agilefant/model/Team.java");
+		filediffer differ = new filediffer("file1", "file2");
+		differ.setDiffcontent(rawFile);
+		differ.getChanges();
 		try {
 			System.out.println(args.length);
 			if (args.length < 4 )

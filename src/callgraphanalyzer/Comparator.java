@@ -17,7 +17,7 @@ public class Comparator {
 	public String CurrentBranch;
 	public String CurrentBranchID;
 	
-	public Comparator(String branchName, DbConnection db) {
+	public Comparator(String branchName, DbConnection db, String CommitIDOne, String CommitIDTwo) {
 		this.db = db;
 		this.CommitOneFileTree = new HashMap<String, String>();
 		this.CommitTwoFileTree = new HashMap<String, String>();
