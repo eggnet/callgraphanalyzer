@@ -321,7 +321,7 @@ public class DbConnection {
 		CommitsTO commit = new CommitsTO();
 		try {
 			String[] params = {commitID, this.branchID};
-			ResultSet rs = execPreparedQuery("SELECT * from commmits where commit_id=? and branch_id=?;", params);
+			ResultSet rs = execPreparedQuery("SELECT * from commits where commit_id=? and branch_id=?;", params);
 			rs.next();
 			commit.setAuthor(rs.getString("author"));
 			commit.setAuthor_email(rs.getString("author_email"));
@@ -330,8 +330,8 @@ public class DbConnection {
 			commit.setCommit_date(rs.getDate("commit_date"));
 			commit.setCommit_id(rs.getString("commit_id"));
 			commit.setId(rs.getInt("id"));
-			commit.setChanged_files(new HashSet<String>((Collection<String>)rs.getArray("changed_files").getArray()));
-			commit.setFile_structure(new HashSet<String>((Collection<String>)rs.getArray("file_structure").getArray()));
+			commit.setChanged_files(new HashSet<String>(Arrays.asList((String[]) rs.getArray("changed_files").getArray())));
+			commit.setFile_structure(new HashSet<String>(Arrays.asList((String[]) rs.getArray("file_structure").getArray())));
 			return commit;
 		}
 		catch(SQLException e)

@@ -19,32 +19,38 @@ public class Parser {
 		this.callGraph = callGraph;
 	}
 	
-	/**
-	 * This function takes a String file path and will parse
-	 * that file using ASTParser
-	 * @param file
-	 */
-	public void parseFile(String file) {
+	public void parseFileFromFile(String file) {
 		// Get the file's contents
 		String fileData;
 		try {
 			fileData = readFileToString(file);
-		} catch (IOException e) {
+		} 
+		catch (IOException e) {
 			System.err.println("Could not read the file " + file);
 			return;
 		}
+		
+		parseFileFromString(file, fileData);
+	}
+	
+	/**
+	 * This function takes a String will parse
+	 * that String (raw file) using ASTParser
+	 * @param file
+	 */
+	public void parseFileFromString(String fileName, String file) {
 		// Create parse for JRE 1.0 - 1.6
 		ASTParser parser= ASTParser.newParser(AST.JLS3);
 		// Parser expects pointer to Java file
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(fileData.toCharArray());
+		parser.setSource(file.toCharArray());
 		// Setting this causes considerable run time damage
 		parser.setResolveBindings(true);
 		CompilationUnit unit = (CompilationUnit) parser.createAST(null);
 		
 		
 		// Visit the syntax tree
-		Visitor visitor= new Visitor(callGraph, file);
+		Visitor visitor= new Visitor(callGraph, fileName);
 		unit.accept(visitor);
 		
 		// Commit that visitor
@@ -58,7 +64,6 @@ public class Parser {
 		char[] buf = new char[10];
 		int numRead = 0;
 		while ((numRead = reader.read(buf)) != -1) {
-			System.out.println(numRead);
 			String readData = String.valueOf(buf, 0, numRead);
 			fileData.append(readData);
 			buf = new char[1024];

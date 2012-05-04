@@ -21,9 +21,9 @@ public class Main {
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
 
-		parser.parseFile(db.getRawFile("src/test/A.java", "ea276fbd7e46f84e02574823169cc06982542f0f")); // testing
-		parser.parseFile(db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
-		
+		parser.parseFileFromString("src/test/A.java", db.getRawFile("src/test/A.java", "118038c324f6be1f4d427879515eed60d02f6aff")); // testing
+		parser.parseFileFromString("src/test/B.java", db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
+
 		callGraph.print();
 		
 		System.out.println();
