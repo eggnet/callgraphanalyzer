@@ -1,8 +1,11 @@
 package callgraphanalyzer;
 
-import java.io.IOException;
-import callgraphanalyzer.CallGraphAnalyzer;
-import parser.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import parser.Parser;
+import db.DbConnection;
 
 public class Main {
 
@@ -15,10 +18,10 @@ public class Main {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		
 		Parser parser = new Parser();
-		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
-		
-		System.out.println("Done");
-		
+		parser.parseFile("/Users/braden/testproject/src/test/A.java");
+
+		Comparator compare = new Comparator();
+		compare.getFilesForCommit("1737517d34bca762356077a47539169820923af8");
 		try {
 			System.out.println(args.length);
 			if (args.length < 3 )

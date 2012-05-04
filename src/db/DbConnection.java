@@ -2,7 +2,11 @@ package db;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import callgraphanalyzer.Resources;
 
@@ -59,6 +63,48 @@ public class DbConnection {
 		return true;
 	}
 	
+	public boolean execPrepared(String sql, String[] params)
+	{
+		try {
+			PreparedStatement s = conn.prepareStatement(sql);
+			for (int i = 1;i <= params.length;i++)
+			{
+				s.setString(i, params[i-1]);
+			}
+			s.execute();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Executes the given query with escaped values in String[] params in place of
+	 * ? characters in sql.
+	 * @param sql ex. "SELECT * FROM something where my_column=?"
+	 * @param params ex. {"braden's work"}
+	 * @return Query ResultSet on success, null otherwise
+	 */
+	public ResultSet execPreparedQuery(String sql, String[] params)
+	{
+		try {
+			PreparedStatement s = conn.prepareStatement(sql);
+			for (int i = 1;i <= params.length;i++)
+			{
+				s.setString(i, params[i-1]);
+			}
+			return s.executeQuery();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	/**
 	 * Connects to the given database.  
 	 * @param dbName
@@ -93,10 +139,29 @@ public class DbConnection {
 		}
 	}
 	
-	//todo
-	public boolean getCommitFiles(String commitID)
+	/**
+	 * Returns a HashMap<(filePath), (fileContents)>
+	 * @param commitID
+	 * @return
+	 */
+	public Map<String, String> getCommitFiles(String commitID)
 	{
-		return false;
+		Map<String, String> files = new HashMap<String, String>();
+		try {
+			String sql = "SELECT file_id, raw_file FROM files where commit_id=?;";
+			String[] params = {commitID};
+			ResultSet rs = execPreparedQuery(sql, params);
+			while(rs.next())
+			{
+				files.put(rs.getString("file_id"), rs.getString("raw_file"));
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+		return files;
 	}
 	
 }
