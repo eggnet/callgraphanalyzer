@@ -20,8 +20,8 @@ public class Main {
 		
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
-		parser.parseFile("/home/jordan/Documents/testproject/src/test/A.java");
-		parser.parseFile("/home/jordan/Documents/testproject/src/test/B.java");
+		parser.parseFileFromFile("/home/jordan/Documents/testproject/src/test/A.java");
+		parser.parseFileFromFile("/home/jordan/Documents/testproject/src/test/B.java");
 		
 		callGraph.print();
 		
