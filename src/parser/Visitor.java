@@ -102,6 +102,9 @@ public class Visitor extends ASTVisitor {
 		// Add to call graph
 		callGraph.addClazz(clazzStack.peek());
 		// Add to file
+		// Add to file - interfaces if needed
+		if(clazzStack.peek().isInterface())
+			file.addInterface(clazzStack.peek());
 		file.addClazz(clazzStack.pop());
 	}
 	

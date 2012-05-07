@@ -14,6 +14,7 @@ public class Resolver {
 	}
 	
 	public void resolveAll() {
+		resolveClazzes();
 		resolveMethods();
 	}
 	
@@ -67,6 +68,56 @@ public class Resolver {
 		return false;
 	}
 	
+	public boolean resolveClazzes() {
+		for(Clazz clazz: callGraph.getAllClazzes()) {
+			resolveClazz(clazz);
+		}
+		return true;
+	}
+	
+	public void resolveClazz(Clazz clazz) {
+		// Get all classes in the package
+		List<File> pkgFiles = getFilesInPackage(clazz.getFile().getFilePackage());
+		// Get all classes that are imported
+		List<File> impFiles = getFilesInImports(clazz.getFile().getFileImports());
+
+		// Combine the two lists to search over all reachable clazzes
+		List<File> files = pkgFiles;
+		for(File file: impFiles)
+			files.add(file);
+
+		// Resolve the clazz's super clazz if any
+		if(clazz.getUnresolvedSuperClazz() != "") {
+			Clazz resolvedSuperClazz = null;
+			for(File file: files) {
+				//Resolve the super clazz
+				resolvedSuperClazz = file.hasUnresolvedClazz(clazz.getUnresolvedSuperClazz());
+				if(resolvedSuperClazz != null) {
+					clazz.setSuperClazz(resolvedSuperClazz);
+					resolvedSuperClazz.addSubClazz(clazz);
+					clazz.removeUnresolvedSuperClazz();
+					return;
+				}
+			}
+		}
+		
+		// Resolve the clazz's interfaces
+		if(clazz.getUnresolvedInterfaces().size() != 0) {
+			// Resolve all the interfaces for this clazz
+			Clazz resolvedInterface;
+			for(String unresolved: clazz.getUnresolvedInterfaces()) {
+				for(File file: files) {
+					resolvedInterface = file.hasUnresolvedInterface(unresolved);
+					if(resolvedInterface != null) {
+						clazz.addInterface(resolvedInterface);
+						clazz.removeUnresolvedInterface(unresolved);
+						return;
+					}
+				}
+			}
+		}
+	}
+	
 	/**
 	 * This returns a list of all clazzes that are contained
 	 * inside of the given package.
@@ -85,9 +136,25 @@ public class Resolver {
 	}
 	
 	/**
+	 * This return a list of all files that are in the
+	 * supplied package name.
+	 * @param pkg
+	 * @return
+	 */
+	public List<File> getFilesInPackage(String pkg) {
+		List<File> files = new ArrayList<File>();
+		
+		for(File file: callGraph.getAllFiles()) {
+			if(file.getFilePackage().equals(pkg))
+				files.add(file);
+		}
+		
+		return files;
+	}
+	
+	/**
 	 * This will return a list of clazzes that are inside the
 	 * imported packages.
-	 * TODO This function does not work as intended yet.
 	 * @param imports
 	 * @return
 	 */
@@ -102,6 +169,25 @@ public class Resolver {
 		}
 		
 		return clazzes;
+	}
+	
+	/**
+	 * This will return a list of files that are inside the
+	 * imported packages.
+	 * @param imports
+	 * @return
+	 */
+	public List<File> getFilesInImports(List<String> imports) {
+		List<File> files = new ArrayList<File>();
+		
+		for(File file: callGraph.getAllFiles()) {
+			for(String imp: imports) {
+				if(file.getFilePackage().equals(imp))
+					files.add(file);
+			}
+		}
+		
+		return files;
 	}
 
 	public CallGraph getCallGraph() {

@@ -44,11 +44,11 @@ public class Clazz {
 		System.out.println("  CLASS: " + name);
 		System.out.println("    Interface: " + isInterface);
 		System.out.println("    Implements: ");
+		for(Clazz interf: interfaces)
+			System.out.println("      " + interf.getName());
 		System.out.println("    Unresolved Interfaces: ");
 		for(String i: unresolvedInterfaces)
 			System.out.println("      " + i);
-		for(Clazz interf: interfaces)
-			System.out.println("      " + interf.getName());
 		System.out.print("    Super Class: ");
 		if(superClazz != null)
 			System.out.println(superClazz.getName());
@@ -94,6 +94,14 @@ public class Clazz {
 	
 	public void removeUnresolvedSuperClazz() {
 		this.unresolvedSuperClazz = "";
+	}
+	
+	public void addInterface(Clazz clazz) {
+		this.interfaces.add(clazz);
+	}
+	
+	public void addSubClazz(Clazz clazz) {
+		this.subClazzes.add(clazz);
 	}
 
 	public String getName() {
@@ -151,7 +159,22 @@ public class Clazz {
 	public void setFile(File file) {
 		this.file = file;
 	}
-	
+
+	public String getUnresolvedSuperClazz() {
+		return unresolvedSuperClazz;
+	}
+
+	public void setUnresolvedSuperClazz(String unresolvedSuperClazz) {
+		this.unresolvedSuperClazz = unresolvedSuperClazz;
+	}
+
+	public List<String> getUnresolvedInterfaces() {
+		return unresolvedInterfaces;
+	}
+
+	public void setUnresolvedInterfaces(List<String> unresolvedInterfaces) {
+		this.unresolvedInterfaces = unresolvedInterfaces;
+	}
 	
 }
 
