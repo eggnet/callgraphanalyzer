@@ -9,6 +9,8 @@ import java.util.Set;
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
+import differ.filediffer.diffResult;
+
 public class Comparator {
 	private DbConnection db;
 	private filediffer differ;
@@ -60,12 +62,24 @@ public class Comparator {
 			if (oldCommitFileTree.containsKey(newKey))
 			{
 				// File is still present, might be modified.
-				// TODO @triet parse that shit!
-				System.out.println(newKey + " was modified.");
 				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
 						db.getRawFile(newKey, newCommitFileTree.get(newKey)));
-				differ.setDiffcontent(db.getRawFile("src/test/C.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));
-				differ.getChanges();
+				
+				// return the change sets from the two files
+				differ.diffFilesLineMode();
+				if(differ.isModified())
+				{
+					System.out.println(newKey + " was modified.");
+					diffResult result = differ.getResult();
+					differ.print();
+					
+					if(differ.isHasMethodChanged())
+					{
+						for(String method : result.changedMethods)
+							System.out.println(method);
+					}
+				}
+
 			}
 			else
 			{
@@ -111,7 +125,7 @@ public class Comparator {
 				while (i.hasNext())
 				{
 					currentChangedFile = i.next();
-					System.out.println(currentChangedFile);
+					//System.out.println(currentChangedFile);
 					if (requiredFiles.contains(currentChangedFile) &&
 							!CommitFileTree.containsKey(currentChangedFile))
 					{

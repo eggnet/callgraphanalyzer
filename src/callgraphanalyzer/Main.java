@@ -18,7 +18,7 @@ public class Main {
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
 		
-		CallGraph callGraph = new CallGraph();
+		/*CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
 		parser.parseFileFromString("src/test/A.java", db.getRawFile("src/test/A.java", "118038c324f6be1f4d427879515eed60d02f6aff")); // testing
 		parser.parseFileFromString("src/test/B.java", db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
@@ -32,12 +32,11 @@ public class Main {
 		resolver.resolveMethods();
 		
 		callGraph.print();
-		
+		*/
 		Comparator compare = new Comparator("master", db, args[2], args[3], new CallGraphAnalyzer());
 		compare.CompareCommits();
 
 		try {
-			System.out.println(args.length);
 			if (args.length < 4 )
 			{
 				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_before] [commit_after]");
