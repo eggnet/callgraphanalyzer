@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import callgraphanalyzer.Resources;
 
@@ -257,8 +258,8 @@ public class DbConnection {
 				commit.setCommit_date(this.savedResultSet.getDate("commit_date"));
 				commit.setCommit_id(this.savedResultSet.getString("commit_id"));
 				commit.setId(this.savedResultSet.getInt("id"));
-				commit.setChanged_files(new HashSet<String>(Arrays.asList((String[]) this.savedResultSet.getArray("changed_files").getArray())));
-				commit.setFile_structure(new HashSet<String>(Arrays.asList((String[]) this.savedResultSet.getArray("file_structure").getArray())));
+				commit.setChanged_files(getChangedFilesFromCommit(commitID));
+				commit.setFile_structure(getFileStructureFromCommit(commitID));
 				commitsList.add(commit);
 				if (this.savedResultSet.isLast())
 				{
@@ -297,8 +298,8 @@ public class DbConnection {
 				commit.setCommit_date(this.savedResultSet.getDate("commit_date"));
 				commit.setCommit_id(this.savedResultSet.getString("commit_id"));
 				commit.setId(this.savedResultSet.getInt("id"));
-				commit.setChanged_files(new HashSet<String>(Arrays.asList((String[]) this.savedResultSet.getArray("changed_files").getArray())));
-				commit.setFile_structure(new HashSet<String>(Arrays.asList((String[]) this.savedResultSet.getArray("file_structure").getArray())));
+				commit.setChanged_files(getChangedFilesFromCommit(commit.getCommit_id()));
+				commit.setFile_structure(getFileStructureFromCommit(commit.getCommit_id()));
 				commitsList.add(commit);
 				if (this.savedResultSet.isLast())
 				{
@@ -315,7 +316,6 @@ public class DbConnection {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public CommitsTO getCommit(String commitID)
 	{
 		CommitsTO commit = new CommitsTO();
@@ -330,8 +330,8 @@ public class DbConnection {
 			commit.setCommit_date(rs.getDate("commit_date"));
 			commit.setCommit_id(rs.getString("commit_id"));
 			commit.setId(rs.getInt("id"));
-			commit.setChanged_files(new HashSet<String>(Arrays.asList((String[]) rs.getArray("changed_files").getArray())));
-			commit.setFile_structure(new HashSet<String>(Arrays.asList((String[]) rs.getArray("file_structure").getArray())));
+			commit.setChanged_files(getChangedFilesFromCommit(commitID));
+			commit.setFile_structure(getFileStructureFromCommit(commitID));
 			return commit;
 		}
 		catch(SQLException e)
@@ -340,6 +340,45 @@ public class DbConnection {
 		}
 		return commit;
 	}
+	
+	public Set<String> getChangedFilesFromCommit(String commitID)
+	{
+		HashSet<String> changed = new HashSet<String>();
+		try {
+			String[] params = {commitID};
+			ResultSet rs = execPreparedQuery("SELECT file_id from changes where commit_id=?", params);
+			while(rs.next())
+			{
+				changed.add(rs.getString(1));
+			}
+			return changed;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public Set<String> getFileStructureFromCommit(String commitID)
+	{
+		HashSet<String> files = new HashSet<String>();
+		try {
+			String[] params = {commitID};
+			ResultSet rs = execPreparedQuery("SELECT file_id from source_trees where commit_id=?", params);
+			while(rs.next())
+			{
+				files.add(rs.getString(1));
+			}
+			return files;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public String getRawFile(String fileID, String commitID)
 	{
 		try{
