@@ -6,13 +6,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import parser.Parser;
+import parser.Resolver;
+
+import models.CallGraph;
+
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
 public class Comparator {
 	private DbConnection db;
 	private filediffer differ;
-	private CallGraphAnalyzer cga;
+	private CallGraphAnalyzer CallGraphAnalyzer;
+	private CallGraph CallGraph;
 	public Map<String, String> FileMap;
 	public Map<String, String> newCommitFileTree;
 	public Map<String, String> oldCommitFileTree;
@@ -48,7 +54,31 @@ public class Comparator {
 			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo);			
 			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
 		}
-		this.cga = cga;
+		this.CallGraphAnalyzer = cga;
+		this.CallGraph = generateCallGraph();
+	}
+	
+	public CallGraph generateCallGraph() 
+	{
+		CallGraph callGraph = new CallGraph();
+		Parser parser = new Parser(callGraph);
+		
+		for (String key : this.newCommitFileTree.keySet())
+		{
+			parser.parseFileFromString(key, db.getRawFile(key, this.newCommitFileTree.get(key)));
+			
+		}
+		callGraph.print();
+		
+		System.out.println();
+		System.out.println();
+		System.out.println("Resolving the fuck out of this CallGraph");
+		
+		Resolver resolver = new Resolver(callGraph);
+		resolver.resolveMethods();
+		
+		callGraph.print();
+		return callGraph;
 	}
 
 	public boolean CompareCommits()
@@ -61,7 +91,7 @@ public class Comparator {
 			{
 				// File is still present, might be modified.
 				// TODO @triet parse that shit!
-				System.out.println(newKey + " was modified.");
+				System.out.println(newKey + " could have been modified.");
 				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
 						db.getRawFile(newKey, newCommitFileTree.get(newKey)));
 				differ.setDiffcontent(db.getRawFile("src/test/C.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));
