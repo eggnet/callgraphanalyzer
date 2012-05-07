@@ -55,6 +55,9 @@ public class Method {
 		System.out.println("      Unresolved Calls: ");
 		for(String m: unresolvedMethods)
 			System.out.println("        " + m);
+		System.out.println("      Called By: ");
+		for(Method m: calledBy)
+			System.out.println("        " + m.getName());
 	}
 	
 	public String getName() {

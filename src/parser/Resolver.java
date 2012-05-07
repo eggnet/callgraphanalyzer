@@ -56,6 +56,8 @@ public class Resolver {
 		for(String unresolved: method.getUnresolvedMethods()) {
 			for(Clazz clazz: clazzes) {
 				resolved = clazz.hasUnresolvedMethod(unresolved);
+				if(resolved == null && clazz.getSuperClazz() != null)
+					resolved = recursiveResolveMethodCall(unresolved, clazz.getSuperClazz());
 				if(resolved != null) {
 					method.addMethodCall(resolved);
 					resolved.addCalledBy(method);
@@ -66,6 +68,16 @@ public class Resolver {
 		}
 		
 		return false;
+	}
+	
+	public Method recursiveResolveMethodCall(String unresolved, Clazz clazz) {
+		Method resolved = clazz.hasUnresolvedMethod(unresolved);
+		if(resolved != null)
+			return resolved;
+		else if (resolved == null && clazz.getSuperClazz() != null)
+			return recursiveResolveMethodCall(unresolved, clazz.getSuperClazz());
+		else
+			return null;
 	}
 	
 	public boolean resolveClazzes() {

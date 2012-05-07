@@ -24,6 +24,7 @@ public class Main {
 		//parser.parseFileFromFile("/home/jordan/Documents/testproject/src/pak/Base.java");
 		//parser.parseFileFromFile("/home/jordan/Documents/testproject/src/pak/B.java");
 		//parser.parseFileFromFile("/home/jordan/Documents/testproject/src/pak/Face.java");
+		//parser.parseFileFromFile("/home/jordan/Documents/testproject/src/test/A.java");
 		parser.parseFileFromString("src/test/A.java", db.getRawFile("src/test/A.java", "118038c324f6be1f4d427879515eed60d02f6aff")); // testing
 		parser.parseFileFromString("src/test/B.java", db.getRawFile("src/test/B.java", "ea276fbd7e46f84e02574823169cc06982542f0f"));	// testing
 		callGraph.print();
