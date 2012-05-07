@@ -49,6 +49,34 @@ public class File {
 	public void addInterface(Clazz clazz) {
 		this.fileInterfaces.add(clazz);
 	}
+	
+	public Clazz hasUnresolvedClazz(String c) {
+		for(Clazz clazz: fileClazzes) {
+			String unresolved = clazz.getName();
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
+			
+			if(c.equals(unresolved)) {
+				System.out.println("Found " + c + " in class " + this.getFileName());
+				return clazz;
+			}
+		}
+		
+		return null;
+	}
+	
+	public Clazz hasUnresolvedInterface(String c) {
+		for(Clazz clazz: fileInterfaces) {
+			String unresolved = clazz.getName();
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
+			
+			if(c.equals(unresolved)) {
+				System.out.println("Found " + c + " in class " + this.getFileName());
+				return clazz;
+			}
+		}
+		
+		return null;
+	}
 
 	public String getFileName() {
 		return fileName;
