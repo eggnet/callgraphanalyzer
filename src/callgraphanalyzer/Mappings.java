@@ -16,9 +16,23 @@ public class Mappings {
 		currentMap = maps.getFirst();
 	}
 	
-	public Mapping lookup(String key)
+	public String lookupType(String key)
 	{
-		return currentMap.get(key);
+		HashMap<String, Mapping> ptr = maps.getFirst();
+		for (int i = 0;i < maps.size();i++) 
+		{ 
+			if (maps.get(i).containsKey(key))
+			{
+				ptr = maps.get(i); 
+			}
+		}
+		if (ptr.containsKey(key))
+		{
+			System.out.println(key + " is " + ptr.get(key).getType());
+		}
+		else
+			return "";	// No variable found.
+		return ptr.get(key).getType();
 	}
 	
 	public void addMapping(String key, Mapping mapping)

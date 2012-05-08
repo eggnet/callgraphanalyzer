@@ -234,7 +234,7 @@ public class DbConnection {
 	}
 	
 	/**
-	 * Gets the 100 commits
+	 * Gets the first 100 commits
 	 * @param commitID
 	 * @return
 	 */

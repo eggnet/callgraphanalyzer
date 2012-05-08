@@ -156,7 +156,7 @@ public class Comparator {
 				while (i.hasNext())
 				{
 					currentChangedFile = i.next();
-					//System.out.println(currentChangedFile);
+					System.out.println(currentChangedFile);
 					if (requiredFiles.contains(currentChangedFile) &&
 							!CommitFileTree.containsKey(currentChangedFile))
 					{

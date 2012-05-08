@@ -15,12 +15,14 @@ import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -110,7 +112,8 @@ public class Visitor extends ASTVisitor {
 		List<Type> interfaces = node.superInterfaceTypes();
 		for(Type i: interfaces)
 			currentClazz.addUnresolvedInterface(i.toString());
-
+	
+		mappings.newMap();
 		return super.visit(node);
 	}
 	
@@ -130,6 +133,7 @@ public class Visitor extends ASTVisitor {
 		if(clazzStack.peek().isInterface())
 			file.addInterface(clazzStack.peek());
 		file.addClazz(clazzStack.pop());
+		mappings.removeMap();
 	}
 	
 	/**
@@ -189,7 +193,7 @@ public class Visitor extends ASTVisitor {
 			
 			if(node.getExpression() instanceof Name) {
 				exp = node.getExpression().toString();
-				// resolvedType = lookUp(exp);
+				resolvedType = mappings.lookupType(exp);
 				currentMethod.addUnresolvedExprezzion(exp, "", new ArrayList<Exprezzion>(), resolvedType);
 			}
 		}
@@ -225,7 +229,7 @@ public class Visitor extends ASTVisitor {
 			if(expression instanceof Name)
 			{
 				exp = expression.toString();
-				// exp = lookUp(((Name)node.getExpression()).toString());
+				resolvedType = mappings.lookupType((((Name)node.getExpression()).toString()));
 				methodCall = "";
 				parameters = new ArrayList<Exprezzion>();
 			}
@@ -255,6 +259,12 @@ public class Visitor extends ASTVisitor {
 		return exprezzions;
 	}
 	
+	/**
+	 * This function will return a string that corresponds to the
+	 * type of the literal in the expression it is passed.
+	 * @param expression
+	 * @return
+	 */
 	private String resolveLiteralType(Expression expression) {
 		String literal = "";
 		
@@ -264,18 +274,32 @@ public class Visitor extends ASTVisitor {
 			literal = "char";
 		else if(expression instanceof NullLiteral)
 			literal = "null";
-		else if(expression instanceof NumberLiteral)
-		{
-			// TODO Need to figure out if it is a float/double/int/whatever
-			// HARD.
-			literal = "None Supported Type";
-		}
+		else if(expression instanceof NumberLiteral || expression instanceof CastExpression)
+			literal = resolveNumberLiteral(expression);
 		else if(expression instanceof StringLiteral)
 			literal = "String";
 		
-		
-		
 		return literal;
+	}
+	
+	private String resolveNumberLiteral(Expression expression) {
+		
+		if(expression instanceof CastExpression) {
+			return ((CastExpression)expression).getType().toString();
+		}
+		
+		NumberLiteral number = (NumberLiteral)expression;
+		if(number.getToken().contains("F") || number.getToken().contains("f"))
+			return "float";
+		if(number.getToken().contains("D") || number.getToken().contains("d") || 
+				number.getToken().contains("E") || number.getToken().contains("e"))
+			return "double";
+		if(number.getToken().contains("L") || number.getToken().contains("l"))
+			return "long";
+		if(!number.getToken().contains("."))
+			return "int";
+		else
+			return "double";
 	}
 	
 	/**
@@ -285,9 +309,9 @@ public class Visitor extends ASTVisitor {
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		// SHOULD BE SAME LOGIC AS WHAT TO DO WHEN WE FIND METHOD INVOCATION
-		
 		return super.visit(node);
 	}
+	
 	@Override
 	public boolean visit(VariableDeclarationExpression node)
 	{
@@ -317,9 +341,22 @@ public class Visitor extends ASTVisitor {
 	}
 	
 	@Override
+	public boolean visit(FieldDeclaration node)
+	{
+		SimpleName varName = null;
+		for (Iterator<VariableDeclarationFragment> i = node.fragments().iterator();i.hasNext();)
+		{
+			VariableDeclarationFragment frag = (VariableDeclarationFragment)i.next();
+			varName = frag.getName();
+		}
+		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
+		mappings.addMapping(varName.getFullyQualifiedName(), m);
+		return super.visit(node);
+	}
+	
+	@Override
 	public boolean visit(Block node)
 	{
-		//TODO @braden create a new Mapping List
 		mappings.newMap();
 		return super.visit(node);
 	}
@@ -327,7 +364,6 @@ public class Visitor extends ASTVisitor {
 	@Override 
 	public void endVisit(Block node)
 	{
-		//TODO @braden
 		mappings.removeMap();
 	}
 	
