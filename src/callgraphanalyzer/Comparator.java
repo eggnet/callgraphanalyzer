@@ -14,7 +14,7 @@ import models.CallGraph;
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
-import differ.filediffer.diffResult;
+import differ.filediffer.diffObjectResult;
 
 public class Comparator {
 	private DbConnection db;
@@ -92,23 +92,18 @@ public class Comparator {
 			if (oldCommitFileTree.containsKey(newKey))
 			{
 				// File is still present, might be modified.
-				// TODO @triet parse that shit!
 				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
-						db.getRawFile(newKey, newCommitFileTree.get(newKey)));
+										db.getRawFile(newKey, newCommitFileTree.get(newKey)));
 				
 				// return the change sets from the two files
 				differ.diffFilesLineMode();
 				if(differ.isModified())
 				{
 					System.out.println(newKey + " was modified.");
-					diffResult result = differ.getResult();
-					differ.print();
+					List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
+					List<diffObjectResult> insertObjects = differ.getInsertObjects();
 					
-					if(differ.isHasMethodChanged())
-					{
-						for(String method : result.changedMethods)
-							System.out.println(method);
-					}
+					differ.print();
 				}
 
 			}

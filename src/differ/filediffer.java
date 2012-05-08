@@ -26,14 +26,6 @@ import differ.diff_match_patch.LinesToCharsResult;
 //  3. Check if diff(start,stop) is inside any methods(start,stop) -> changedMethod list
 public class filediffer {
 	
-	// Result to return
-	public class diffResult
-	{
-		public diffResult(){};
-		public List<String> changedMethods = new ArrayList<String>();
-		public List<String> changedClasses = new ArrayList<String>();
-	};
-	
 	// Store location of method in a file
 	public class methodResult
 	{
@@ -57,18 +49,14 @@ public class filediffer {
 	};
 	
 	private boolean isModified = false;
-	private boolean hasMethodChanged = false;
 	private String oldFileContent;
 	private String newFileContent;
-	private String diffContent;
-	private String myPackage;
 	
 	private diff_match_patch myDiffer = new diff_match_patch();
-	private diffResult result 		  = new diffResult();
 	private List<Diff> diffObjects 	  = new LinkedList<Diff>();
 	
-	private List<diffObjectResult> diffObjectResults = new ArrayList<diffObjectResult>();
-	private List<methodResult> methodResults = new ArrayList<methodResult>();
+	private List<diffObjectResult> deleteObjects = new ArrayList<diffObjectResult>();
+	private List<diffObjectResult> insertObjects = new ArrayList<diffObjectResult>();
 	
 	/**
 	 * fileDiffer constructor
@@ -81,30 +69,14 @@ public class filediffer {
 	}
 
 	/**
-	 * diff two file contents and produce diffContent
-	 * + Line added
-	 * - Line deleted
-	 * = Line modified
-	 */
-	public void diffFilesCharMode(){
-		this.diffObjects.clear();
-		
-		// Look at the content character by character
-		this.diffObjects = myDiffer.diff_main(oldFileContent, newFileContent);
-		myDiffer.diff_cleanupSemantic((LinkedList)this.diffObjects);
-		myDiffer.diff_cleanupMerge	 ((LinkedList)this.diffObjects);
-		
-		objectToContent();
-		getChanges();
-	}
-
-	/**
 	 * Diff the two files by line number
 	 * Compare line by line
 	 */
 	public void diffFilesLineMode()
 	{
 		this.diffObjects.clear();
+		this.deleteObjects.clear();
+		this.insertObjects.clear();
 		
 		// convert diff object to set of lines
 		LinesToCharsResult result = myDiffer.diff_linesToChars(oldFileContent, newFileContent);
@@ -115,45 +87,26 @@ public class filediffer {
 		myDiffer.diff_cleanupSemantic((LinkedList)this.diffObjects);
 		myDiffer.diff_cleanupMerge	 ((LinkedList)this.diffObjects);
 		
-		objectToContent();
-		getChanges();
+		// parse the diff location
 		getDiffLocation();
-	}
-	
-	/**
-	 * Convert diffObject to diffContent
-	 */
-	private void objectToContent()
-	{
-		this.diffContent = "";
-		
-		for(Diff mydiff : this.diffObjects)
-		{
-			if(mydiff.operation != diff_match_patch.Operation.EQUAL)
-			{
-				diffContent += mydiff.text;
-				isModified = true;
-			}
-		}
-	}
-	/**
-	 * @return the functions, class and other changes
-	 */
-	public void getChanges()
-	{
-		result.changedClasses.clear();
-		result.changedMethods.clear();
-		
-		parseMethods(oldFileContent);
 	}
 	
 	public void print()
 	{
 		// Print diff objects
-		for(Diff mydiff : this.diffObjects)
+		int count = 0;
+		for(diffObjectResult mydiff : this.deleteObjects)
 		{
-			if(mydiff.operation != diff_match_patch.Operation.EQUAL)
-				System.out.println(mydiff.toString());
+			count ++;
+			System.out.print("Delete object " + count);
+			System.out.println("Start: "+ mydiff.start + "Stop " + mydiff.end);
+		}
+		
+		for(diffObjectResult mydiff : this.insertObjects)
+		{
+			count ++;
+			System.out.print("Insert object " + count);
+			System.out.println("Start: "+ mydiff.start + "Stop " + mydiff.end);
 		}
 	}
 	
@@ -190,8 +143,8 @@ public class filediffer {
 		Matcher matcher = pattern.matcher(input);
 		while (matcher.find())
 		{
-			this.myPackage = matcher.group(1);
-			return this.myPackage;
+			String packageName = matcher.group(1);
+			return packageName;
 		}
 		
 		return "";
@@ -208,7 +161,6 @@ public class filediffer {
 		
 		// get all method names, use non-greedy match 
 		// account for public, private, protected, static function etc
-		//String regex = "[\\s]*(public|private|protect)?[\\s]+[\\w<>]*?[\\s]+([\\w]+)[(](.*?)[)][\\s]*[{](.*?)\\r?\\n[\\s][}]";
 		String regex = "[\\s]*(public|private|protect)?[\\s]*[\\w<>]*?[\\s]+([\\w]+)[(](.*?)[)]";
 		Pattern pattern = Pattern.compile(regex);
 		
@@ -259,69 +211,94 @@ public class filediffer {
 	}
 	
 	/**
-	 * Get all methods appeared in the file
-	 * public int getId() {
-	 * private int getId( int a, hash<string> map)
-	 * protected
-	 * public Collection<User> getUsers() {
+	 * Calculate diffLocation
 	 */
 	public void getDiffLocation()
 	{
 		if (diffObjects.isEmpty())
 			return;
 		
-
 		for(Diff mydiff : this.diffObjects)
 		{
+			String oldText = "";
+			String newText = "";
+			
+			int oldTextLocation = 0;
+			int newTextLocation = 0;
+			
+			// Append equal to current text
+			if(mydiff.operation == diff_match_patch.Operation.EQUAL)
+			{
+				oldText += mydiff.text;
+				newText += mydiff.text;
+				
+				// Update current location
+				oldTextLocation += mydiff.text.length();
+				newTextLocation += mydiff.text.length();
+			}
+			else
 			// Search OldFileContent for DELETE
 			// Old TEXT is EQUAL + DELETE
 			if(mydiff.operation == diff_match_patch.Operation.DELETE)
 			{
-				System.out.println("OldTextLength: " + this.oldFileContent.length());
-				System.out.println("NewTextLength: " + this.newFileContent.length());
+				System.out.println("OldTextLength: " + oldText.length());
 				
 				// Each diff, match old txt to find the location
-				//int location = myDiffer.match_main(this.oldFileContent,mydiff.text, 0);
-				int location = this.oldFileContent.indexOf(mydiff.text, 0);
-				if(location == -1)
+				int startlocation = this.oldFileContent.indexOf(mydiff.text, oldTextLocation);
+				if(startlocation == -1)
 				{
-					// none found
 					System.out.println("No location found for this delete");
 				}
 				else
 				{
 					// calculate the range of this diff
-					int stoplocation = location + mydiff.text.length();
-					System.out.println("Diff start:" + location + " Stop:" + stoplocation);
+					diffObjectResult diffResult = new diffObjectResult();
+					int stoplocation 	  = startlocation + mydiff.text.length();
+					diffResult.diffObject = mydiff;
+					diffResult.start 	  = startlocation;
+					diffResult.end 		  = stoplocation;
+					
+					this.deleteObjects.add(diffResult);
+					System.out.println("Diff start:" + startlocation + " Stop:" + stoplocation);
 				}
+				
+				// Update oldtext
+				oldText += mydiff.text;
+				oldTextLocation += mydiff.text.length();
 			}
 			else
 			// Search NewFileContent for INSERT
 			// New TEXT is EQUAL + INSERT	
 			if(mydiff.operation == diff_match_patch.Operation.INSERT)
 			{
-				System.out.println("OldTextLength: " + this.oldFileContent.length());
-				System.out.println("NewTextLength: " + this.newFileContent.length());
+				System.out.println("NewTextLength: " + newText.length());
 				
-				// Each Insert, match new txt to find the location
-				//int location = myDiffer.match_main(this.newFileContent,mydiff.text, 0);
-				int location = this.newFileContent.indexOf(mydiff.text, 0);
-				if(location == -1)
+				// Each diff, match old txt to find the location
+				int startlocation = this.newFileContent.indexOf(mydiff.text, newTextLocation);
+				if(startlocation == -1)
 				{
-					// none found
-					System.out.println("No location found for this Insert");
+					System.out.println("No location found for this insert");
 				}
 				else
 				{
 					// calculate the range of this diff
-					System.out.println("Diff start:" + location + " Stop:" + location + mydiff.text.length());
+					diffObjectResult diffResult = new diffObjectResult();
+					int stoplocation 	  = startlocation + mydiff.text.length();
+					diffResult.diffObject = mydiff;
+					diffResult.start 	  = startlocation;
+					diffResult.end 		  = stoplocation;
+					this.insertObjects.add(diffResult);
+					
+					System.out.println("Diff start:" + startlocation + " Stop:" + stoplocation);
 				}
+				
+				// Update newtext
+				newText += mydiff.text;
+				newTextLocation += mydiff.text.length();
 			}
 		}
 		
-	
 	}
-	
 	
 			
 	public String getOldFileContent() {
@@ -340,22 +317,9 @@ public class filediffer {
 		this.newFileContent = filecontent2;
 	}
 
-	public String getDiffcontent() {
-		return diffContent;
-	}
-
-	public void setDiffcontent(String diffcontent) {
-		this.diffContent = diffcontent;
-	}
-	
 	public List<Diff> getDiffObjects()
 	{
 		return this.diffObjects;
-	}
-	
-	public diffResult getResult()
-	{
-		return this.result;
 	}
 
 	public boolean isModified() {
@@ -366,12 +330,12 @@ public class filediffer {
 		this.isModified = isModified;
 	}
 
-	public boolean isHasMethodChanged() {
-		return hasMethodChanged;
+	public List<diffObjectResult> getDeleteObjects() {
+		return deleteObjects;
 	}
-
-	public void setHasMethodChanged(boolean hasMethodChanged) {
-		this.hasMethodChanged = hasMethodChanged;
+	
+	public List<diffObjectResult> getInsertObjects() {
+		return insertObjects;
 	}
 	
 }
