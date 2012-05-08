@@ -6,16 +6,24 @@ import java.util.Stack;
 
 import models.CallGraph;
 import models.Clazz;
+import models.Exprezzion;
 import models.File;
 import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
@@ -146,9 +154,113 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
-		// SOOOO MUCH HARDER THAN WE THOUGHT
+		// Check to see if there is an expression out front of the invocation
+		String exp;
+		String methodCall;
+		List<Exprezzion> parameters;
+		String resolvedType = "";
+		if(node.getExpression() != null)
+		{
+			System.out.println("-----------------");
+			System.out.println("Expression: " + node.getExpression().toString());
+			System.out.println("Is a Name.");
+			exp = node.getExpression().toString();
+			methodCall = node.getName().getIdentifier();
+			System.out.println("Method: " + node.getName().getIdentifier());
+			parameters = parseMethodParameters(node);
+			
+			currentMethod.addUnresolvedExprezzion(exp, methodCall, parameters, resolvedType);
+			
+			if(node.getExpression() instanceof Name) {
+				exp = node.getExpression().toString();
+				// resolvedType = lookUp(exp);
+				currentMethod.addUnresolvedExprezzion(exp, "", new ArrayList<Exprezzion>(), resolvedType);
+			}
+		}
+		else
+		{
+			// This means we have a local function call
+			System.out.println("-----------------");
+			System.out.println("Method: " + node.getName().getIdentifier());
+			exp = "";
+			methodCall = node.getName().getIdentifier();
+			parameters = parseMethodParameters(node);
+			
+			currentMethod.addUnresolvedExprezzion(exp, methodCall, parameters, resolvedType);
+		}
+		
 
 		return super.visit(node);
+	}
+	
+	
+	public List<Exprezzion> parseMethodParameters(MethodInvocation node) {
+		List<Exprezzion> exprezzions = new ArrayList<Exprezzion>();
+		
+		// Temp variables
+		String exp;
+		String methodCall;
+		List<Exprezzion> parameters;
+		String resolvedType = "";
+		
+		List<Expression> expressions = node.arguments();
+		int paramNum = 0;
+		for(Expression expression: expressions) {
+			// 3 Cases
+			if(expression instanceof Name)
+			{
+				exp = expression.toString();
+				// exp = lookUp(((Name)node.getExpression()).toString());
+				methodCall = "";
+				parameters = new ArrayList<Exprezzion>();
+			}
+			else if(expression instanceof MethodInvocation) {
+				// Handle if the method invocation has an expression
+				if(((MethodInvocation)expression).getExpression() != null) {
+					exp = ((MethodInvocation)expression).getExpression().toString();
+				}
+				else
+					exp = "";
+				methodCall = ((MethodInvocation)expression).getName().getIdentifier();
+				parameters = parseMethodParameters(((MethodInvocation)expression));
+			}
+			else {
+				// The parameter must be some kind of literal
+				exp = expression.toString();
+				methodCall = "";
+				parameters = new ArrayList<Exprezzion>();
+				resolvedType = resolveLiteralType(expression);
+			}
+			// Add the new parameter
+			exprezzions.add(new Exprezzion(exp, methodCall, parameters, resolvedType));
+			System.out.println("Argument: " + expression.toString());
+			paramNum++;
+		}
+		
+		return exprezzions;
+	}
+	
+	private String resolveLiteralType(Expression expression) {
+		String literal = "";
+		
+		if(expression instanceof BooleanLiteral)
+			literal = "boolean";
+		else if(expression instanceof CharacterLiteral)
+			literal = "char";
+		else if(expression instanceof NullLiteral)
+			literal = "null";
+		else if(expression instanceof NumberLiteral)
+		{
+			// TODO Need to figure out if it is a float/double/int/whatever
+			// HARD.
+			literal = "None Supported Type";
+		}
+		else if(expression instanceof StringLiteral)
+			literal = "String";
+		
+		
+		
+		return literal;
 	}
 	
 	/**

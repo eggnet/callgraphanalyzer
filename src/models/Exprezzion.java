@@ -1,19 +1,38 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Exprezzion {
 	
-	private String expression;
-	private String methodCall;
-	private String resolvedType;
+	private String 				expression;
+	private String 				methodCall;
+	private List<Exprezzion> 	parameters;
+	private String 				resolvedType;
 	
 	public Exprezzion() {
-		
+		parameters = new ArrayList<Exprezzion>();
 	}
 
-	public Exprezzion(String expression, String methodCall, String resolvedType) {
+	public Exprezzion(String expression, String methodCall, List<Exprezzion> parameters, String resolvedType) {
 		this.expression = expression;
 		this.methodCall = methodCall;
+		this.parameters = parameters;
 		this.resolvedType = resolvedType;
+	}
+	
+	public void print(int sum) {
+		System.out.println("        " + "Expression: " + expression + " Method Call: " + methodCall + 
+							" Resolved Type: " + resolvedType);
+		for(int i=0; i < sum; i++)
+			System.out.print(" ");
+		System.out.println("        " + "Parameters: ");
+		for(Exprezzion e: parameters) {
+			for(int i=0; i < sum; i++)
+				System.out.print(" ");
+			e.print(sum+2);
+		}
+		
 	}
 
 	public String getExpression() {
@@ -30,6 +49,14 @@ public class Exprezzion {
 
 	public void setMethodCall(String methodCall) {
 		this.methodCall = methodCall;
+	}
+
+	public List<Exprezzion> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(List<Exprezzion> parameters) {
+		this.parameters = parameters;
 	}
 
 	public String getResolvedType() {
