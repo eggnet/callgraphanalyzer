@@ -113,7 +113,6 @@ public class Comparator {
 							System.out.println(method);
 					}
 				}
-
 			}
 			else
 			{

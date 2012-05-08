@@ -220,7 +220,8 @@ public class DbConnection {
 			ResultSet rs = execPreparedQuery(sql, params);
 			String currentCommitId;
 			Set<String> currentFileset;
-			rs.next();
+			if (!rs.next())
+				return changes;
 			currentFileset = new HashSet<String>();
 			currentCommitId = rs.getString("commit_id");
 			currentFileset.add(rs.getString("file_id"));
