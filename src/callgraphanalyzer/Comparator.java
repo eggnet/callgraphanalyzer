@@ -2,17 +2,12 @@ package callgraphanalyzer;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.tools.javac.util.Pair;
-
+import models.CallGraph;
 import parser.Parser;
 import parser.Resolver;
-
-import models.CallGraph;
-
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
