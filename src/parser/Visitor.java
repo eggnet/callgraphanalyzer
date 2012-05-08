@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -110,7 +111,8 @@ public class Visitor extends ASTVisitor {
 		List<Type> interfaces = node.superInterfaceTypes();
 		for(Type i: interfaces)
 			currentClazz.addUnresolvedInterface(i.toString());
-
+	
+		mappings.newMap();
 		return super.visit(node);
 	}
 	
@@ -130,6 +132,7 @@ public class Visitor extends ASTVisitor {
 		if(clazzStack.peek().isInterface())
 			file.addInterface(clazzStack.peek());
 		file.addClazz(clazzStack.pop());
+		mappings.removeMap();
 	}
 	
 	/**
@@ -189,7 +192,7 @@ public class Visitor extends ASTVisitor {
 			
 			if(node.getExpression() instanceof Name) {
 				exp = node.getExpression().toString();
-				// resolvedType = lookUp(exp);
+				resolvedType = mappings.lookupType(exp);
 				currentMethod.addUnresolvedExprezzion(exp, "", new ArrayList<Exprezzion>(), resolvedType);
 			}
 		}
@@ -285,9 +288,9 @@ public class Visitor extends ASTVisitor {
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		// SHOULD BE SAME LOGIC AS WHAT TO DO WHEN WE FIND METHOD INVOCATION
-		
 		return super.visit(node);
 	}
+	
 	@Override
 	public boolean visit(VariableDeclarationExpression node)
 	{
@@ -317,9 +320,22 @@ public class Visitor extends ASTVisitor {
 	}
 	
 	@Override
+	public boolean visit(FieldDeclaration node)
+	{
+		SimpleName varName = null;
+		for (Iterator<VariableDeclarationFragment> i = node.fragments().iterator();i.hasNext();)
+		{
+			VariableDeclarationFragment frag = (VariableDeclarationFragment)i.next();
+			varName = frag.getName();
+		}
+		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
+		mappings.addMapping(varName.getFullyQualifiedName(), m);
+		return super.visit(node);
+	}
+	
+	@Override
 	public boolean visit(Block node)
 	{
-		//TODO @braden create a new Mapping List
 		mappings.newMap();
 		return super.visit(node);
 	}
@@ -327,7 +343,6 @@ public class Visitor extends ASTVisitor {
 	@Override 
 	public void endVisit(Block node)
 	{
-		//TODO @braden
 		mappings.removeMap();
 	}
 	
