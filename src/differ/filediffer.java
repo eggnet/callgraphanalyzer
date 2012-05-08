@@ -12,12 +12,47 @@ import differ.diff_match_patch.LinesToCharsResult;
 
 ////////////////////////////////////////////////////////////////
 // Compare two files to get all the changes out (deleted, added, modified lines)
+// each diff object, find the function that the diff belongs to
+// Need diff(start,stop)
+// After Each diff get
+// 		currentOldText = Equal + Delete
+//		currentNewText = Equal + Insert
+// Parse currentOldText/Newtext to find the new search Location, this guarantee the diff location.
+// Find involved methods
+//	0. Parse Package, Class
+//	1. Parse all methods in both Old/New file methods(start,stop)
+//		Get Method signature as well.
+//  2. Parse all methods appreared in diff object
+//  3. Check if diff(start,stop) is inside any methods(start,stop) -> changedMethod list
 public class filediffer {
+	
+	// Result to return
 	public class diffResult
 	{
 		public diffResult(){};
 		public List<String> changedMethods = new ArrayList<String>();
 		public List<String> changedClasses = new ArrayList<String>();
+	};
+	
+	// Store location of method in a file
+	public class methodResult
+	{
+		public int start = -1;
+		public int end = -1;
+		public String fullName;
+		public String packageName;
+		public String className;
+		public String signature;
+		
+		public methodResult(){};
+	};
+	
+	// Store location of a diff in a file
+	public class diffObjectResult
+	{
+		public int start = -1;
+		public int end = -1;
+		Diff diffObject;
 	};
 	
 	private boolean isModified = false;
@@ -26,8 +61,11 @@ public class filediffer {
 	private String newFileContent;
 	private String diffContent;
 	private diff_match_patch myDiffer = new diff_match_patch();
-	private diffResult result = new diffResult();
-	private List<Diff> diffObjects = new LinkedList<Diff>();
+	private diffResult result 		  = new diffResult();
+	private List<Diff> diffObjects 	  = new LinkedList<Diff>();
+	
+	private List<diffObjectResult> diffObjectResults = new ArrayList<diffObjectResult>();
+	private List<methodResult> methodResults = new ArrayList<methodResult>();
 	
 	/**
 	 * fileDiffer constructor
@@ -104,7 +142,7 @@ public class filediffer {
 		result.changedMethods.clear();
 		
 		getChangedClasses();
-		getChangedMethods();
+		getChangedMethods(oldFileContent);
 	}
 	
 	public void print()
@@ -148,35 +186,46 @@ public class filediffer {
 	
 	/**
 	 * Parse DiffObjects to methods and class list
+	 * @param input the txt to search for function
+	 * @return List of methods appeared in the input txt
 	 */
-	public void getChangedMethods()
+	public ArrayList<methodResult> getChangedMethods(String input)
 	{
-		if (diffContent.isEmpty())
-			return;
+		ArrayList<methodResult> results = new ArrayList<methodResult>();
 		
-		// get all method names
-		// Need to use non-greedy match 
+		// get all method names, use non-greedy match 
 		// Todo: account for public, private, protected, static function etc
-		String regex = "public[\\s]+[\\w<>]+?[\\s]+([\\w]+)[(]";
+		String regex = "(public|private)[\\s]+[\\w<>]+?[\\s]+([\\w]+)[(](.*?)[)]";
 		Pattern pattern = Pattern.compile(regex);
 		
-		Matcher matcher = pattern.matcher(diffContent);
-		boolean found = false;
-
+		Matcher matcher = pattern.matcher(input);
 		while (matcher.find())
 		{
+			methodResult method = new methodResult();
+			method.className = matcher.group(2);
+			method.start = matcher.start();
+			method.end = matcher.end();
+			
+			// Parse parameters
+			parseFunctionParameters(matcher.group(3), method);
+			results.add(method);
+			
 			System.out.println("Function: " +
 					matcher.group() + " from "+
 					matcher.start() + " to " +
 					matcher.end());
-			
-			result.changedMethods.add(matcher.group(1));
-			found = true;
-			
-			hasMethodChanged = true;
 		}
-		if(!found)
-			System.out.println("No match found");	
+		
+		return results;
+	}
+	
+	/**
+	 * Parse parameters type in a function
+	 * 
+	 */
+	public void parseFunctionParameters(String parameters, methodResult method)
+	{
+		
 	}
 	
 	/**
@@ -191,7 +240,7 @@ public class filediffer {
 		if (diffObjects.isEmpty())
 			return;
 		
-		// each diff object, find the function that the diff belongs to
+
 		for(Diff mydiff : this.diffObjects)
 		{
 			// Search OldFileContent for DELETE
@@ -242,6 +291,8 @@ public class filediffer {
 		
 	
 	}
+	
+	
 			
 	public String getOldFileContent() {
 		return oldFileContent;

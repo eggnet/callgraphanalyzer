@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="src" path="libs"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="libs/java-diff-utils-1.2.jar"/>
@@ -14,5 +15,6 @@
 	<classpathentry kind="lib" path="libs/org.eclipse.osgi_3.6.1.R36x_v20100806.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
 	<classpathentry kind="lib" path="libs/postgresql-9.1-902.jdbc4.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
