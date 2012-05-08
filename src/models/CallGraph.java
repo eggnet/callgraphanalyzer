@@ -71,6 +71,36 @@ public class CallGraph {
 		return clazzes;
 	}
 	
+	/**
+	 * This function will return a list of methods that are inside the given
+	 * file name and that are involved in the start and end character locations.
+	 * @param fileName
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	public List<Method> getMethodsUsingCharacters(String fileName, int start, int end) {
+		List<Method> m = new ArrayList<Method>();
+		
+		File file = containsFile(fileName);
+		if(file == null)
+			return m;
+		else {
+			for(Clazz clazz: file.getFileClazzes()) {
+				for(Method method: clazz.getMethods()) {
+					if((method.getStartLine() <= start && method.getEndLine() >= end) ||
+					   (method.getStartLine() <= start && method.getEndLine() >= start) ||
+					   (method.getStartLine() >= start && method.getEndLine() <= end) ||
+					   (method.getStartLine() <= end   && method.getEndLine() >= end)) {
+						m.add(method);
+					}
+				}
+			}
+		}
+		
+		return m;
+	}
+	
 	public void print() {
 		Iterator it = files.entrySet().iterator();
 		

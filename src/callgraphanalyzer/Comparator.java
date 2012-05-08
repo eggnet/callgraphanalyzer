@@ -2,15 +2,12 @@ package callgraphanalyzer;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import models.CallGraph;
 import parser.Parser;
 import parser.Resolver;
-
-import models.CallGraph;
-
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
@@ -20,7 +17,8 @@ public class Comparator {
 	private DbConnection db;
 	private filediffer differ;
 	private CallGraphAnalyzer CallGraphAnalyzer;
-	private CallGraph CallGraph;
+	private CallGraph newCallGraph;
+	private CallGraph oldCallGraph;
 	public Map<String, String> FileMap;
 	public Map<String, String> newCommitFileTree;
 	public Map<String, String> oldCommitFileTree;
@@ -57,7 +55,7 @@ public class Comparator {
 			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
 		}
 		this.CallGraphAnalyzer = cga;
-		this.CallGraph = generateCallGraph();
+		this.newCallGraph = generateCallGraph();
 	}
 	
 	public CallGraph generateCallGraph() 
@@ -105,7 +103,6 @@ public class Comparator {
 					
 					differ.print();
 				}
-
 			}
 			else
 			{
@@ -139,27 +136,22 @@ public class Comparator {
 	public Map<String, String> getFilesTreeForCommit(String commitID)
 	{
 		Map<String, String> CommitFileTree = new HashMap<String, String>();
-		List<CommitsTO> commitsBefore = db.getCommitsBefore(commitID);
-		Set<String> requiredFiles = commitsBefore.get(0).getFile_structure();	// First commit;
-		while(true) {
-			if (db.isPaging) commitsBefore = db.getNextCommitsPage();
-			else commitsBefore = db.getCommitsBefore(commitID);
-			for (CommitsTO commit : commitsBefore)
+		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(commitID);
+		Set<String> requiredFiles = db.getFileStructureFromCommit(commitID);	// First commit;
+		for (String commit : prevChanges.keySet())
+		{
+			Iterator<String> i = prevChanges.get(commit).iterator();
+			String currentChangedFile;
+			while (i.hasNext())
 			{
-				Iterator<String> i = commit.getChanged_files().iterator();
-				String currentChangedFile;
-				while (i.hasNext())
+				currentChangedFile = i.next();
+				System.out.println(currentChangedFile);
+				if (requiredFiles.contains(currentChangedFile) &&
+						!CommitFileTree.containsKey(currentChangedFile))
 				{
-					currentChangedFile = i.next();
-					System.out.println(currentChangedFile);
-					if (requiredFiles.contains(currentChangedFile) &&
-							!CommitFileTree.containsKey(currentChangedFile))
-					{
-						CommitFileTree.put(currentChangedFile, commit.getCommit_id());
-					}
+					CommitFileTree.put(currentChangedFile, commit);
 				}
 			}
-			if (!db.isPaging) break;
 		}
 		return CommitFileTree;
 	}

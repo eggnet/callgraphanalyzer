@@ -164,6 +164,10 @@ public class Visitor extends ASTVisitor {
 		}
 		currentMethod.setName(uniqueMethod);
 		currentMethod.setClazz(currentClazz);
+		currentMethod.setStartLine(node.getStartPosition());
+		currentMethod.setEndLine(node.getLength() + currentMethod.getStartLine());
+		if(node.getReturnType2() != null)
+			currentMethod.setReturnType(node.getReturnType2().toString());
 
 		return super.visit(node);
 	}
@@ -174,6 +178,8 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
+		if (currentMethod == null)
+			return super.visit(node);
 		// Check to see if there is an expression out front of the invocation
 		String exp;
 		String methodCall;
@@ -188,7 +194,7 @@ public class Visitor extends ASTVisitor {
 			methodCall = node.getName().getIdentifier();
 			System.out.println("Method: " + node.getName().getIdentifier());
 			parameters = parseMethodParameters(node);
-			
+
 			currentMethod.addUnresolvedExprezzion(exp, methodCall, parameters, resolvedType);
 			
 			if(node.getExpression() instanceof Name) {
@@ -229,7 +235,7 @@ public class Visitor extends ASTVisitor {
 			if(expression instanceof Name)
 			{
 				exp = expression.toString();
-				resolvedType = mappings.lookupType((((Name)node.getExpression()).toString()));
+				resolvedType = mappings.lookupType(expression.toString());
 				methodCall = "";
 				parameters = new ArrayList<Exprezzion>();
 			}

@@ -5,8 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -205,32 +203,47 @@ public class DbConnection {
 		}
 		return files;
 	}
-	
-	/**
-	 * Returns a List of filepaths
-	 * @param commitID
-	 * @return
-	 */
-	public HashSet<String> getCommitFileStructure(String commitID)
+
+	public Map<String, Set<String>> getCommitsBeforeChanges(String commitID)
 	{
-		HashSet<String> filepaths = new HashSet<String>();
-		try {
-			String sql = "SELECT file_structure FROM commits where commit_id=? and (branch_id=? OR branch_id is NULL);";
-			String[] params = {commitID, this.branchID};
+		try{
+			Map<String, Set<String>> changes = new HashMap<String, Set<String>>();
+			String sql = "SELECT commit_id, file_id from changes natural join commits where " +
+					"(branch_id=? or branch_id is NULL) and commit_date < " +
+					"(select commit_date from commits where commit_id=? and " +
+					"(branch_id=? OR branch_id is NULL)) ORDER BY commit_date;";
+			String[] params = {this.branchID, commitID, this.branchID};
 			ResultSet rs = execPreparedQuery(sql, params);
-			rs.next();
-			String[] structure = (String[])rs.getArray(1).getArray();
-			for (String s: structure)
+			String currentCommitId;
+			Set<String> currentFileset;
+			if (!rs.next())
+				return changes;
+			currentFileset = new HashSet<String>();
+			currentCommitId = rs.getString("commit_id");
+			currentFileset.add(rs.getString("file_id"));
+			while(rs.next())
 			{
-				filepaths.add(s);
+				if (rs.getString("commit_id").equals(currentCommitId))
+				{
+					// append to the current commit
+					currentFileset.add(rs.getString("file_id"));
+				}
+				else
+				{
+					// start a new one
+					changes.put(currentCommitId, currentFileset);
+					currentFileset = new HashSet<String>();
+					currentCommitId = rs.getString("commit_id");
+					currentFileset.add(rs.getString("file_id"));
+				}
 			}
+			return changes;
 		}
-		catch (Exception e)
+		catch (SQLException e)
 		{
 			e.printStackTrace();
 			return null;
 		}
-		return filepaths;
 	}
 	
 	/**
