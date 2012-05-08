@@ -66,16 +66,14 @@ public class Clazz {
 		this.methods.add(m);
 	}
 	
+	/**
+	 * This function will return a method if it is passed a string such as
+	 * A.method() and if the current class is A and contains a method named
+	 * method()
+	 * @param m
+	 * @return
+	 */
 	public Method hasUnresolvedMethod(String m) {
-		for(Method method: methods) {
-			String unresolved = method.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
-			
-			if(m.equals(unresolved)) {
-				System.out.println("Found " + m + " in class " + this.getName());
-				return method;
-			}
-		}
 		
 		return null;
 	}

@@ -157,23 +157,7 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
-		// Get the constructor's parameters
-		List<Type> parametersList =  node.typeArguments();
-		List<String> parameters = new ArrayList<String>();
-		for(Type t: parametersList) {
-			parameters.add(t.toString());
-		}
-		
-		// Get the stub name
-		String stubName = node.getType().toString()  + "(";
-		for(String s: parameters)
-			stubName += s + ", ";
-		if(!parameters.isEmpty())
-			stubName = stubName.substring(0, stubName.length()-2);
-		stubName += ")";
-		
-		currentMethod.addUnresolvedMethod(stubName);
-		
+		// SHOULD BE SAME LOGIC AS WHAT TO DO WHEN WE FIND METHOD INVOCATION
 		
 		return super.visit(node);
 	}
