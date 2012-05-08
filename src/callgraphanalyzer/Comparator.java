@@ -100,7 +100,7 @@ public class Comparator {
 			else
 			{
 				// The file was added (+) since the old commit.
-				System.out.println(newKey + " was added.");
+				System.out.println("+\t" + newKey);
 			}
 		}
 		for (String oldKey : oldCommitFileTree.keySet())
@@ -108,7 +108,7 @@ public class Comparator {
 			if (!newCommitFileTree.containsKey(oldKey))
 			{
 				// The file was deleted from the old tree
-				System.out.println(oldKey + " was deleted.");
+				System.out.println("-\t" + oldKey);
 			}
 		}
 		return true;
