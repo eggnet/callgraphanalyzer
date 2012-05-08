@@ -8,6 +8,11 @@ public class Method {
 	private String		 		name;
 	private Clazz 				clazz;
 	
+	private int					startLine;
+	private int					endLine;
+	
+	private String				returnType;
+	
 	private List<Method> 		methodCalls;
 	private List<Method>		calledBy;
 	private List<Exprezzion>	unresolvedExprezzions;
@@ -89,7 +94,28 @@ public class Method {
 	public void setCalledBy(List<Method> calledBy) {
 		this.calledBy = calledBy;
 	}
-	
-	
-	
+
+	public int getStartLine() {
+		return startLine;
+	}
+
+	public void setStartLine(int startLine) {
+		this.startLine = startLine;
+	}
+
+	public int getEndLine() {
+		return endLine;
+	}
+
+	public void setEndLine(int endLine) {
+		this.endLine = endLine;
+	}
+
+	public String getReturnType() {
+		return returnType;
+	}
+
+	public void setReturnType(String returnType) {
+		this.returnType = returnType;
+	}
 }
