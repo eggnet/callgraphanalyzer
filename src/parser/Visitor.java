@@ -229,7 +229,7 @@ public class Visitor extends ASTVisitor {
 			if(expression instanceof Name)
 			{
 				exp = expression.toString();
-				// exp = lookUp(((Name)node.getExpression()).toString());
+				resolvedType = mappings.lookupType((((Name)node.getExpression()).toString()));
 				methodCall = "";
 				parameters = new ArrayList<Exprezzion>();
 			}
