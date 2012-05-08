@@ -166,7 +166,8 @@ public class Visitor extends ASTVisitor {
 		currentMethod.setClazz(currentClazz);
 		currentMethod.setStartLine(node.getStartPosition());
 		currentMethod.setEndLine(node.getLength() + currentMethod.getStartLine());
-		currentMethod.setReturnType(node.getReturnType2().toString());
+		if(node.getReturnType2() != null)
+			currentMethod.setReturnType(node.getReturnType2().toString());
 
 		return super.visit(node);
 	}
