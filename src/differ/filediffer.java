@@ -43,6 +43,7 @@ public class filediffer {
 		public String packageName;
 		public String className;
 		public String signature;
+		public List<String> parameters = new ArrayList<String>();
 		
 		public methodResult(){};
 	};
@@ -60,6 +61,8 @@ public class filediffer {
 	private String oldFileContent;
 	private String newFileContent;
 	private String diffContent;
+	private String myPackage;
+	
 	private diff_match_patch myDiffer = new diff_match_patch();
 	private diffResult result 		  = new diffResult();
 	private List<Diff> diffObjects 	  = new LinkedList<Diff>();
@@ -141,8 +144,7 @@ public class filediffer {
 		result.changedClasses.clear();
 		result.changedMethods.clear();
 		
-		getChangedClasses();
-		getChangedMethods(oldFileContent);
+		parseMethods(oldFileContent);
 	}
 	
 	public void print()
@@ -158,30 +160,41 @@ public class filediffer {
 	/**
 	 * Parse DiffObjects to methods and class list
 	 */
-	public void getChangedClasses()
+	public void getClassContent(String input)
 	{
-		if (diffContent.isEmpty())
-			return;
-		
-		// get all method names
 		String regex = "public[\\s]+class[\\s]+([\\w]+)[\\s]+[\\w]+";
 		Pattern pattern = Pattern.compile(regex);
-		
-		Matcher matcher = pattern.matcher(diffContent);
-		
-		boolean found = false;
+		Matcher matcher = pattern.matcher(input);
 		while (matcher.find())
 		{
-			System.out.println("Class: " +
-					matcher.group() + " from "+
-					matcher.start() + " to " +
-					matcher.end());
-			
-			result.changedClasses.add(matcher.group(1));
-			found = true;
+			String content = matcher.group(2);
+			String className = matcher.group(1);
+			//parse all method inside
+			ArrayList<methodResult> methods = parseMethods(content);
+			for(methodResult m :methods)
+			{
+				m.className = className;
+			}
 		}
-		if(!found)
-			System.out.println("No match found");		
+	}
+	
+	/**
+	 * Parse Package name
+	 * @param input text to search, for example a file content
+	 * @return package name
+	 */
+	public String parsePackage(String input)
+	{
+		String regex = "package[\\s]+([\\w_]+)[\\s]*[;]";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(input);
+		while (matcher.find())
+		{
+			this.myPackage = matcher.group(1);
+			return this.myPackage;
+		}
+		
+		return "";
 	}
 	
 	/**
@@ -189,13 +202,14 @@ public class filediffer {
 	 * @param input the txt to search for function
 	 * @return List of methods appeared in the input txt
 	 */
-	public ArrayList<methodResult> getChangedMethods(String input)
+	public ArrayList<methodResult> parseMethods(String input)
 	{
 		ArrayList<methodResult> results = new ArrayList<methodResult>();
 		
 		// get all method names, use non-greedy match 
-		// Todo: account for public, private, protected, static function etc
-		String regex = "(public|private)[\\s]+[\\w<>]+?[\\s]+([\\w]+)[(](.*?)[)]";
+		// account for public, private, protected, static function etc
+		//String regex = "[\\s]*(public|private|protect)?[\\s]+[\\w<>]*?[\\s]+([\\w]+)[(](.*?)[)][\\s]*[{](.*?)\\r?\\n[\\s][}]";
+		String regex = "[\\s]*(public|private|protect)?[\\s]*[\\w<>]*?[\\s]+([\\w]+)[(](.*?)[)]";
 		Pattern pattern = Pattern.compile(regex);
 		
 		Matcher matcher = pattern.matcher(input);
@@ -203,11 +217,13 @@ public class filediffer {
 		{
 			methodResult method = new methodResult();
 			method.className = matcher.group(2);
-			method.start = matcher.start();
-			method.end = matcher.end();
+			method.signature = matcher.group(3);
+			method.start 	 = matcher.start();
+			method.end 		 = matcher.end();
 			
 			// Parse parameters
-			parseFunctionParameters(matcher.group(3), method);
+			ArrayList<String> paras = parseFunctionParameters(method.signature);
+			method.parameters = paras;
 			results.add(method);
 			
 			System.out.println("Function: " +
@@ -221,15 +237,29 @@ public class filediffer {
 	
 	/**
 	 * Parse parameters type in a function
-	 * 
+	 * @param method the method that has parameters in it
+	 * ex: "int a, int b, Map<String> list, String s"
 	 */
-	public void parseFunctionParameters(String parameters, methodResult method)
+	public ArrayList<String> parseFunctionParameters(String parameter)
 	{
+		ArrayList<String> results = new ArrayList<String>();
+		// get type of the method
+		String regex = "[\\s]*([\\w<>_]+?)[\\s]+([\\w_]+?)[\\s]*[,]?";
+		Pattern pattern = Pattern.compile(regex);
 		
+		Matcher matcher = pattern.matcher(parameter);
+		while (matcher.find())
+		{
+			String type = matcher.group(1);
+			String name = matcher.group(2);
+			results.add(type);
+		}
+		
+		return results;
 	}
 	
 	/**
-	 * 	// Get all methods appeared in the file
+	 * Get all methods appeared in the file
 	 * public int getId() {
 	 * private int getId( int a, hash<string> map)
 	 * protected
