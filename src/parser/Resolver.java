@@ -27,45 +27,73 @@ public class Resolver {
 	
 	public boolean resolveFileMethodCalls(File file) {
 		for(Clazz clazz: file.getFileClazzes()) {
-			resolveAllClazzMethodCalls(clazz);
+			resolveAllClazzMethodCalls(file, clazz);
 		}
 		return true;
 	}
 	
-	public boolean resolveAllClazzMethodCalls(Clazz clazz) {
+	public boolean resolveAllClazzMethodCalls(File file, Clazz clazz) {
 		for(Method m: clazz.getMethods()) {
-			resolveMethodCalls(m);
+			resolveMethodCalls(file, clazz, m);
 		}
 		return true;
 	}
 	
-	public boolean resolveMethodCalls(Method method) {
+	public boolean resolveMethodCalls(File file, Clazz clazz, Method method) {
+		
+		// TODO finish this
+		
+		return false;
+	}
+	
+	/**
+	 * This function will return the 
+	 * @param file
+	 * @param clazz
+	 * @param m
+	 * @return
+	 */
+	public Method resolveLocalMethod(Clazz clazz, String m) {
+		return clazz.hasUnresolvedMethod(m);
+	}
+	
+	/**
+	 * Pass this method an argument such as A.method() and it will try and
+	 * resolve method() in class A, else it will return null
+	 * @param unresolvedMethod
+	 * @return
+	 */
+	public Method resolveExternalMethod(Method m, String unresolvedMethod) {
 		// Get all classes in the package
-		List<Clazz> pkgClazzes = getClazzesInPackage(method.getClazz().getFile().getFilePackage());
+		List<Clazz> pkgClazzes = getClazzesInPackage(m.getClazz().getFile().getFilePackage());
 		// Get all classes that are imported
-		List<Clazz> impClazzes = getClazzesInImports(method.getClazz().getFile().getFileImports());
+		List<Clazz> impClazzes = getClazzesInImports(m.getClazz().getFile().getFileImports());
 		
 		// Combine the two lists to search over all reachable clazzes
 		List<Clazz> clazzes = pkgClazzes;
-		for(Clazz clazz: impClazzes)
-			clazzes.add(clazz);
+		for(Clazz claz: impClazzes)
+			clazzes.add(claz);
 		
-		
-		// Resolve all the method calls if they are in the project's classes
-		Method resolved;
-		for(String unresolved: method.getUnresolvedMethods()) {
-			for(Clazz clazz: clazzes) {
-				resolved = clazz.hasUnresolvedMethod(unresolved);
-				if(resolved != null) {
-					method.addMethodCall(resolved);
-					resolved.addCalledBy(method);
-					method.removeUnresolvedMethod(unresolved);
-					return true;
-				}
+		String packageName;
+		for(Clazz claz: clazzes) {
+			packageName = claz.getFile().getFilePackage();
+			for(Method meth: claz.getMethods()) {
+				if(meth.getName().equals(packageName + "." + unresolvedMethod))
+					return meth;
 			}
 		}
 		
-		return false;
+		return null;
+	}
+	
+	public Method recursiveResolveMethodCall(String unresolved, Clazz clazz) {
+		Method resolved = clazz.hasUnresolvedMethod(unresolved);
+		if(resolved != null)
+			return resolved;
+		else if (resolved == null && clazz.getSuperClazz() != null)
+			return recursiveResolveMethodCall(unresolved, clazz.getSuperClazz());
+		else
+			return null;
 	}
 	
 	public boolean resolveClazzes() {

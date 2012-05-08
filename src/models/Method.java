@@ -5,18 +5,18 @@ import java.util.List;
 
 public class Method {
 	
-	private String		 	name;
-	private Clazz 			clazz;
+	private String		 		name;
+	private Clazz 				clazz;
 	
-	private List<Method> 	methodCalls;
-	private List<Method>	calledBy;
-	private List<String>	unresolvedMethods;
+	private List<Method> 		methodCalls;
+	private List<Method>		calledBy;
+	private List<Exprezzion>	unresolvedExprezzions;
 	
 	
 	public Method() {
 		methodCalls = new ArrayList<Method>();
 		calledBy = new ArrayList<Method>();
-		unresolvedMethods = new ArrayList<String>();
+		unresolvedExprezzions = new ArrayList<Exprezzion>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
@@ -24,7 +24,7 @@ public class Method {
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
 		calledBy = new ArrayList<Method>();
-		unresolvedMethods = new ArrayList<String>();
+		unresolvedExprezzions = new ArrayList<Exprezzion>();
 	}
 	
 	public void addCalledBy(Method m) {
@@ -37,14 +37,10 @@ public class Method {
 			this.methodCalls.add(m);
 	}
 	
-	public void addUnresolvedMethod(String m) {
-		if(!unresolvedMethods.contains(m))
-			this.unresolvedMethods.add(m);
-	}
-	
-	public void removeUnresolvedMethod(String m) {
-		if(unresolvedMethods.contains(m))
-			this.unresolvedMethods.remove(m);
+	public void addUnresolvedExprezzion(String exprezzion, String methodCall) {
+		Exprezzion e = new Exprezzion(exprezzion, methodCall, "");
+		if(!unresolvedExprezzions.contains(e))
+			this.unresolvedExprezzions.add(e);
 	}
 	
 	public void print() {
@@ -53,8 +49,12 @@ public class Method {
 		for(Method m: methodCalls)
 			System.out.println("        " + m.getName());
 		System.out.println("      Unresolved Calls: ");
-		for(String m: unresolvedMethods)
-			System.out.println("        " + m);
+		for(Exprezzion e: unresolvedExprezzions)
+			System.out.println("        " + "Expression: " + e.getExpression() + " Method Call: " + e.getMethodCall() + 
+					" Resolved Type: " + e.getResolvedType());
+		System.out.println("      Called By: ");
+		for(Method m: calledBy)
+			System.out.println("        " + m.getName());
 	}
 	
 	public String getName() {
@@ -76,12 +76,12 @@ public class Method {
 		this.methodCalls = methodCalls;
 	}
 
-	public List<String> getUnresolvedMethods() {
-		return unresolvedMethods;
+	public List<Exprezzion> getUnresolvedExprezzions() {
+		return unresolvedExprezzions;
 	}
 
-	public void setUnresolvedMethods(List<String> unresolvedMethods) {
-		this.unresolvedMethods = unresolvedMethods;
+	public void setUnresolvedExprezzions(List<Exprezzion> unresolvedExprezzions) {
+		this.unresolvedExprezzions = unresolvedExprezzions;
 	}
 
 	public List<Method> getCalledBy() {
