@@ -1,23 +1,37 @@
 package parser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
 import models.CallGraph;
 import models.Clazz;
 import models.File;
+import models.Mapping;
 import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+
+import callgraphanalyzer.Mappings;
 
 public class Visitor extends ASTVisitor {
 	
@@ -27,6 +41,7 @@ public class Visitor extends ASTVisitor {
 	private Stack<Clazz> clazzStack;
 	private Clazz currentClazz;
 	private Method currentMethod;
+	private Mappings mappings = new Mappings();
 	
 	public Visitor(CallGraph callGraph, String fileName) {
 		this.callGraph = callGraph;
@@ -146,8 +161,21 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
-		// SOOOO MUCH HARDER THAN WE THOUGHT
-
+		// Get the method's parameter
+		List<Type> parametersList =  node.typeArguments();
+		List<String> parameters = new ArrayList<String>();
+		for(Type t: parametersList) {
+			parameters.add(t.toString());
+		}
+		
+		// Get the stub name
+		String stubName = node.getName().getIdentifier() + "(";
+		for(String s: parameters)
+			stubName += s + ", ";
+		if(!parameters.isEmpty())
+			stubName = stubName.substring(0, stubName.length()-2);
+		stubName += ")";
+		currentMethod.addUnresolvedMethod(stubName);
 		return super.visit(node);
 	}
 	
@@ -160,6 +188,48 @@ public class Visitor extends ASTVisitor {
 		// SHOULD BE SAME LOGIC AS WHAT TO DO WHEN WE FIND METHOD INVOCATION
 		
 		return super.visit(node);
+	}
+	@Override
+	public boolean visit(VariableDeclarationExpression node)
+	{
+		SimpleName varName = null;
+		for (Iterator<VariableDeclarationFragment> i = node.fragments().iterator();i.hasNext();)
+		{
+			VariableDeclarationFragment frag = (VariableDeclarationFragment)i.next();
+			varName = frag.getName();
+		}
+		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
+		mappings.addMapping(node.fragments().get(0).toString(), m);
+		return super.visit(node);
+	}
+	
+	@Override
+	public boolean visit(VariableDeclarationStatement node)
+	{
+		SimpleName varName = null;
+		for (Iterator<VariableDeclarationFragment> i = node.fragments().iterator();i.hasNext();)
+		{
+			VariableDeclarationFragment frag = (VariableDeclarationFragment)i.next();
+			varName = frag.getName();
+		}
+		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
+		mappings.addMapping(varName.getFullyQualifiedName(), m);
+		return super.visit(node);
+	}
+	
+	@Override
+	public boolean visit(Block node)
+	{
+		//TODO @braden create a new Mapping List
+		mappings.newMap();
+		return super.visit(node);
+	}
+	
+	@Override 
+	public void endVisit(Block node)
+	{
+		//TODO @braden
+		mappings.removeMap();
 	}
 	
 	/**
