@@ -15,6 +15,7 @@ import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
@@ -255,6 +256,12 @@ public class Visitor extends ASTVisitor {
 		return exprezzions;
 	}
 	
+	/**
+	 * This function will return a string that corresponds to the
+	 * type of the literal in the expression it is passed.
+	 * @param expression
+	 * @return
+	 */
 	private String resolveLiteralType(Expression expression) {
 		String literal = "";
 		
@@ -264,18 +271,32 @@ public class Visitor extends ASTVisitor {
 			literal = "char";
 		else if(expression instanceof NullLiteral)
 			literal = "null";
-		else if(expression instanceof NumberLiteral)
-		{
-			// TODO Need to figure out if it is a float/double/int/whatever
-			// HARD.
-			literal = "None Supported Type";
-		}
+		else if(expression instanceof NumberLiteral || expression instanceof CastExpression)
+			literal = resolveNumberLiteral(expression);
 		else if(expression instanceof StringLiteral)
 			literal = "String";
 		
-		
-		
 		return literal;
+	}
+	
+	private String resolveNumberLiteral(Expression expression) {
+		
+		if(expression instanceof CastExpression) {
+			return ((CastExpression)expression).getType().toString();
+		}
+		
+		NumberLiteral number = (NumberLiteral)expression;
+		if(number.getToken().contains("F") || number.getToken().contains("f"))
+			return "float";
+		if(number.getToken().contains("D") || number.getToken().contains("d") || 
+				number.getToken().contains("E") || number.getToken().contains("e"))
+			return "double";
+		if(number.getToken().contains("L") || number.getToken().contains("l"))
+			return "long";
+		if(!number.getToken().contains("."))
+			return "int";
+		else
+			return "double";
 	}
 	
 	/**
