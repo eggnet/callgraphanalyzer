@@ -45,6 +45,9 @@ public class Method {
 	public void addUnresolvedExprezzion(String exprezzion, String methodCall, List<Exprezzion> parameters, String resolvedType) {
 		Exprezzion e = new Exprezzion(exprezzion, methodCall, parameters, resolvedType);
 		this.unresolvedExprezzions.add(e);
+		for(Exprezzion exp: e.getParameters()) {
+			addUnresolvedExprezzion(exp.getExpression(), exp.getMethodCall(), exp.getParameters(), exp.getResolvedType());
+		}
 	}
 	
 	public void print() {
@@ -54,7 +57,7 @@ public class Method {
 			System.out.println("        " + m.getName());
 		System.out.println("      Unresolved Calls: ");
 		for(Exprezzion e: unresolvedExprezzions)
-			e.print(2);
+			e.print();
 		System.out.println("      Called By: ");
 		for(Method m: calledBy)
 			System.out.println("        " + m.getName());
