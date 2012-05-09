@@ -103,6 +103,7 @@ public class Resolver {
 				}
 				else {
 					System.out.println(unresolved + " does not exist");
+					exprezzion.setResolvedType("unknown");
 				}
 				
 			}
