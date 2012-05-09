@@ -93,6 +93,12 @@ public class filediffer {
 	
 	public void print()
 	{
+		for(Diff mydiff : this.diffObjects)
+		{
+			if(mydiff.operation != diff_match_patch.Operation.EQUAL)
+				System.out.println(mydiff.toString());
+		}
+		
 		// Print diff objects
 		int count = 0;
 		for(diffObjectResult mydiff : this.deleteObjects)
@@ -265,6 +271,8 @@ public class filediffer {
 				// Update oldtext
 				oldText += mydiff.text;
 				oldTextLocation += mydiff.text.length();
+				
+				this.isModified = true;
 			}
 			else
 			// Search NewFileContent for INSERT
@@ -295,6 +303,8 @@ public class filediffer {
 				// Update newtext
 				newText += mydiff.text;
 				newTextLocation += mydiff.text.length();
+				
+				this.isModified = true;
 			}
 		}
 		

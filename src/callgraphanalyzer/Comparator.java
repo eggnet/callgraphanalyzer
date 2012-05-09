@@ -96,6 +96,7 @@ public class Comparator {
 				
 				// return the change sets from the two files
 				differ.diffFilesLineMode();
+				differ.print();
 				if(differ.isModified())
 				{
 					System.out.println(newKey + " was modified.");
