@@ -39,12 +39,71 @@ public class Resolver {
 		return true;
 	}
 	
+	/**
+	 * This function will resolve all unresolved exprezzions in a 
+	 * given method.
+	 * @param file
+	 * @param clazz
+	 * @param method
+	 * @return
+	 */
 	public boolean resolveMethodCalls(File file, Clazz clazz, Method method) {
 		
-		// TODO finish this
+		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
+			Exprezzion exprezzion = method.getUnresolvedExprezzions().get(i);
+			
+			// Start resolving expressions now
+			
+			// Handle case where it is a variable
+			if(exprezzion.getExpression() != null && exprezzion.getMethodCall() == null) {
+				// Handle if it is already resolved
+				if(exprezzion.getResolvedType() != null) {
+					continue;
+				}
+				// If the variable is not resolved, we have big problems
+				if(exprezzion.getResolvedType() == null) {
+					System.err.println("A variable was not resolved in parse time.");
+					return false;
+				}
+			}
+			
+			// Handle case where it is a local method
+			else if(exprezzion.getExpression() == null && exprezzion.getMethodCall() != null) {
+				String unresolved = exprezzion.getMethodCall() + "(";
+				// TODO resolve the parameters
+				unresolved += ")";
+				Method resolved = clazz.hasUnresolvedMethod(unresolved);
+				if(resolved != null) {
+					resolved.addCalledBy(method);
+					method.addMethodCall(resolved);
+					exprezzion.setResolvedType(resolved.getReturnType());
+				}
+			}
+			
+			// Handle the case where it is an external method
+			// This is the most complex case
+			else if(exprezzion.getExpression() != null && exprezzion.getMethodCall() != null) {
+				
+			}
+		}
 		
-		return false;
+		return true;
 	}
+	
+	private void resolveParameters(Exprezzion exprezzion) {
+		// Do a reverse loop of all the parameters
+		for(int i = exprezzion.getParameters().size()-1; i >= 0; i--) {
+			Exprezzion parameter = exprezzion.getParameters().get(i);
+			
+			// Solve parameters recursively 
+			if(parameter.getParameters().size() != 0)
+				resolveParameters(parameter);
+			
+			
+		}
+	}
+	
+	
 	
 	/**
 	 * This function will return the 
