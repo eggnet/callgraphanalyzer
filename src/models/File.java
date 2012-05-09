@@ -17,6 +17,7 @@ public class File {
 		fileImports = new ArrayList<String>();
 		fileClazzes = new ArrayList<Clazz>();
 		fileInterfaces = new ArrayList<Clazz>();
+		filePackage = "";
 	}
 
 	public File(List<String> fileImports, String filePackage,

@@ -300,16 +300,26 @@ public class Resolver {
 	 * @return
 	 */
 	public List<Clazz> getClazzesInImports(List<String> imports) {
-		List<Clazz> clazzes = new ArrayList<Clazz>();
-		
-		for(Clazz clazz: callGraph.getAllClazzes()) {
-			for(String imp: imports) {
-				if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
-					clazzes.add(clazz);
+		Clazz tc = null;
+		try {
+			List<Clazz> clazzes = new ArrayList<Clazz>();
+			
+			for(Clazz clazz: callGraph.getAllClazzes()) {
+				tc = clazz;
+				for(String imp: imports) {
+					tc = clazz;
+					if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
+						clazzes.add(clazz);
+				}
 			}
+			
+			return clazzes;
 		}
-		
-		return clazzes;
+		catch (NullPointerException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	/**

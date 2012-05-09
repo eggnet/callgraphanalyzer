@@ -1,9 +1,10 @@
-package models;
+package owners;
 
 public class Owner {
 	private String Id;
 	private String Email;
-	private int Weight; 
+	private int Weight;
+	
 	public Owner() { } 
 	public String getId() {
 		return Id;
