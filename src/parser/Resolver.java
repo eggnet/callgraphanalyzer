@@ -39,16 +39,7 @@ public class Resolver {
 		return true;
 	}
 	
-	/**
-	 * This function will resolve all unresolved exprezzions in a 
-	 * given method.
-	 * @param file
-	 * @param clazz
-	 * @param method
-	 * @return
-	 */
 	public boolean resolveMethodCalls(File file, Clazz clazz, Method method) {
-		
 		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
 			Exprezzion exprezzion = method.getUnresolvedExprezzions().get(i);
 			
@@ -110,7 +101,7 @@ public class Resolver {
 			}
 		}
 		
-		return true;
+		return false;
 	}
 	
 	private String resolveExpression(Method method, Exprezzion exprezzion) {
@@ -170,19 +161,6 @@ public class Resolver {
 		}
 		
 		return resolvedParams;
-	}
-	
-	
-	
-	/**
-	 * This function will return the 
-	 * @param file
-	 * @param clazz
-	 * @param m
-	 * @return
-	 */
-	public Method resolveLocalMethod(Clazz clazz, String m) {
-		return clazz.hasUnresolvedMethod(m);
 	}
 	
 	/**
@@ -352,5 +330,70 @@ public class Resolver {
 
 	public void setCallGraph(CallGraph callGraph) {
 		this.callGraph = callGraph;
+	}
+	
+	/**
+	 * Looks up which Method Object is being called based on the invocation string
+	 * and the current class.
+	 * @param methodInvocation
+	 * @param invokingClass
+	 * @return invokedMethod Object
+	 */
+	public Method lookupInvokedMethod(String methodInvocation, Clazz invokingClass)
+	{
+		// 	go through imported classes and match with the invoking class
+		//		if not found, go through package classes
+		//			once found class, look upwards from method for function defn
+		List<String> imports = invokingClass.getFile().getFileImports();
+		String objStr = methodInvocation.substring(0, methodInvocation.lastIndexOf("."));
+		for (String s : imports)
+		{
+			// grab the object (ie System.out.println() ==> System.out
+			if (s.equals(objStr))
+			{
+				// we know it's this import
+				for (Clazz c : callGraph.getAllClazzes())
+				{
+					if (c.getName().equals(s))
+					{
+						// Found the right class
+						return lookupMethodCallInClass(c, methodInvocation.substring(methodInvocation.lastIndexOf(".")));
+					}
+				}
+			}
+		}
+		// otherwise it's in the package classes maybe
+		for (Clazz packageClazz : getClazzesInPackage(invokingClass.getFile().getFilePackage()))
+		{
+			if (packageClazz.getName().equals(objStr))
+			{
+				// it's this class.
+				for (Clazz c : callGraph.getAllClazzes())
+				{
+					if (c.getName().equals(packageClazz.getName()))
+					{
+						// Found the right class
+						return lookupMethodCallInClass(c, methodInvocation.substring(methodInvocation.lastIndexOf(".")));
+					}
+				}
+			}
+		}
+		// The method doesn't exist.
+		return null;
+	}
+	
+	public Method lookupMethodCallInClass(Clazz clazz, String methodCall)
+	{
+		for (;clazz != null;clazz=clazz.getSuperClazz())
+		{
+			for (Method currentMethod : clazz.getMethods())
+			{
+				if (currentMethod.getName().equals(methodCall))
+				{
+					return currentMethod;
+				}
+			}
+		}
+		return null;
 	}
 }
