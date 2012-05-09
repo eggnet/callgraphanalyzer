@@ -53,7 +53,7 @@ public class Resolver {
 				}
 				// If the variable is not resolved, we have big problems
 				if(exprezzion.getResolvedType().equals("")) {
-					System.err.println("A variable was not resolved in parse time: " + exprezzion.getExpression());
+					System.out.println("A variable was not resolved in parse time: " + exprezzion.getExpression());
 					exprezzion.setResolvedType("unknown");
 					continue;
 				}
@@ -115,7 +115,7 @@ public class Resolver {
 	private String resolveExpression(Method method, Exprezzion exprezzion) {
 		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
 			Exprezzion resolved = method.getUnresolvedExprezzions().get(i);
-			
+			 
 			
 			// If the resolved exprezzion we are looking at is not resolved then exit
 			if(resolved.getResolvedType().equals("")) {
@@ -135,6 +135,14 @@ public class Resolver {
 				exp += resolved.getExpression();
 				if(!resolved.getMethodCall().equals("")) {
 					exp += "." + resolved.getMethodCall();
+					exp += "(";
+					List<String> params = resolveParameters(method, exprezzion);
+					for(String param: params) {
+						exp += param + ", ";
+					}
+					if(params.size() != 0)
+						exp = exp.substring(0, exp.length()-2);
+					exp += ")";
 				}
 			}
 			else {
@@ -151,13 +159,47 @@ public class Resolver {
 				}
 			}
 			
-			// Check to see if that is the expression we are looking for
+			// Check to see if this is the expression we are looking for
 			if(exp.equals(exprezzion.getExpression())) {
 				return resolved.getResolvedType();
+			}
+			// Check to see if we are looking for just a method call
+			if(exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
+				String methodCall = "";
+				methodCall = exprezzion.getMethodCall() + "(";
+				List<String> params = resolveParameters(method, exprezzion);
+				for(String param: params) {
+					methodCall += param + ", ";
+				}
+				if(params.size() != 0)
+					methodCall = methodCall.substring(0, exp.length()-2);
+				methodCall += ")";
+				
+				if(methodCall.equals(exp)) {
+					return exprezzion.getResolvedType();
+				}
 			}
 		}
 		
 		return null;
+	}
+	
+	private String resolveMethodCallType(Method method, Exprezzion exprezzion) {
+		String unresolved = exprezzion.getMethodCall() + "(";
+		List<String> params = resolveParameters(method, exprezzion);
+		for(String param: params) {
+			unresolved += param + ", ";
+		}
+		if(params.size() != 0)
+			unresolved = unresolved.substring(0, unresolved.length()-2);
+		unresolved += ")";
+		
+		Method resolved = method.getClazz().hasUnresolvedMethod(unresolved);
+		if(resolved != null) {
+			return resolved.getReturnType();
+		}
+		
+		return "";
 	}
 	
 	private List<String> resolveParameters(Method method, Exprezzion exprezzion) {
@@ -165,7 +207,13 @@ public class Resolver {
 		for(int i = 0; i < exprezzion.getParameters().size(); i++) {
 			Exprezzion resolved = exprezzion.getParameters().get(i);
 			
-			resolvedParams.add(resolveExpression(method, resolved));
+			if(!resolved.getExpression().equals(""))
+				resolvedParams.add(resolveExpression(method, resolved));
+			else if(resolved.getExpression().equals("") && !resolved.getMethodCall().equals(""))  {
+				resolvedParams.add(resolveMethodCallType(method, resolved));
+				
+			}
+				
 		}
 		
 		return resolvedParams;
@@ -371,7 +419,7 @@ public class Resolver {
 				}
 			}
 		}
-		// otherwise it's in the package classes maybe
+		// check if it's in the package classes maybe
 		for (Clazz packageClazz : getClazzesInPackage(invokingClass.getFile().getFilePackage()))
 		{
 			if (packageClazz.getName().equals(objStr))
@@ -387,8 +435,8 @@ public class Resolver {
 				}
 			}
 		}
-		// The method doesn't exist.
-		return null;
+		// Check if it is a local function to the given clazz
+		return lookupMethodCallInClass(invokingClass, methodInvocation.substring(methodInvocation.lastIndexOf(".")+1));
 	}
 	
 	public Method lookupMethodCallInClass(Clazz clazz, String methodCall)
@@ -398,9 +446,7 @@ public class Resolver {
 			for (Method currentMethod : clazz.getMethods())
 			{
 				if (currentMethod.getName().substring(currentMethod.getName().lastIndexOf(".")+1).equals(methodCall))
-				{
 					return currentMethod;
-				}
 			}
 		}
 		return null;
