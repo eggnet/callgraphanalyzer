@@ -12,6 +12,9 @@ public class Exprezzion {
 	
 	public Exprezzion() {
 		parameters = new ArrayList<Exprezzion>();
+		expression = "";
+		methodCall = "";
+		resolvedType = "";
 	}
 
 	public Exprezzion(String expression, String methodCall, List<Exprezzion> parameters, String resolvedType) {

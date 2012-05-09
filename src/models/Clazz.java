@@ -74,10 +74,12 @@ public class Clazz {
 	 * @return
 	 */
 	public Method hasUnresolvedMethod(String m) {
+		String shortM = m;
+		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
 		for(Method method: methods) {
 			String unresolved = method.getName();
 			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
-			if(unresolved.equals(m))
+			if(unresolved.equals(shortM))
 				return method;
 		}
 		return null;

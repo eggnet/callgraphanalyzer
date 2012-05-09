@@ -39,6 +39,15 @@ public class Resolver {
 		return true;
 	}
 	
+	/**
+	 * This function goes through a method's list of exprezzions
+	 * and will resolve all the types of the exprezzions and from
+	 * that figure out what methods this method calls.
+	 * @param file
+	 * @param clazz
+	 * @param method
+	 * @return
+	 */
 	public boolean resolveMethodCalls(File file, Clazz clazz, Method method) {
 		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
 			Exprezzion exprezzion = method.getUnresolvedExprezzions().get(i);
@@ -53,7 +62,7 @@ public class Resolver {
 				}
 				// If the variable is not resolved, we have big problems
 				if(exprezzion.getResolvedType().equals("")) {
-					System.err.println("A variable was not resolved in parse time: " + exprezzion.getExpression());
+					System.out.println("A variable was not resolved in parse time: " + exprezzion.getExpression());
 					exprezzion.setResolvedType("unknown");
 					continue;
 				}
@@ -61,38 +70,18 @@ public class Resolver {
 			
 			// Handle case where it is a local method
 			else if(exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
-				String unresolved = exprezzion.getMethodCall() + "(";
-				List<String> params = resolveParameters(method, exprezzion);
-				for(String param: params) {
-					unresolved += param + ", ";
-				}
-				if(params.size() != 0)
-					unresolved = unresolved.substring(0, unresolved.length()-2);
-				unresolved += ")";
-				
-				Method resolved = clazz.hasUnresolvedMethod(unresolved);
-				if(resolved != null) {
-					resolved.addCalledBy(method);
-					method.addMethodCall(resolved);
-					exprezzion.setResolvedType(resolved.getReturnType());
-				}
+				resolveMethodCallType(method, exprezzion);
+				continue;
 			}
 			
 			// Handle the case where it is an external method
 			// This is the most complex case
 			else if(!exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
-				String expType = resolveExpression(method, exprezzion);
+				String expType = resolveExpressionType(method, exprezzion);
 				if(expType == null)
 					continue;
-				String unresolved = expType + ".";
-				unresolved += exprezzion.getMethodCall() + "(";
-				List<String> params = resolveParameters(method, exprezzion);
-				for(String param: params) {
-					unresolved += param + ", ";
-				}
-				if(params.size() != 0)
-					unresolved = unresolved.substring(0, unresolved.length()-2);
-				unresolved += ")";
+				String unresolved = buildFullMethodCall(expType, exprezzion.getMethodCall(), 
+						resolveParameters(method, exprezzion));
 				
 				Method res = lookupInvokedMethod(unresolved, clazz);
 				
@@ -100,21 +89,30 @@ public class Resolver {
 				{
 					System.out.println("Resolved: " + unresolved + " to type: " + res.getReturnType());
 					exprezzion.setResolvedType(res.getReturnType());
+					method.addMethodCall(res);
+					res.addCalledBy(method);
 				}
 				else {
 					System.out.println(unresolved + " does not exist");
+					exprezzion.setResolvedType("unknown");
 				}
-				
 			}
 		}
 		
 		return false;
 	}
 	
-	private String resolveExpression(Method method, Exprezzion exprezzion) {
+	/**
+	 * Given an expression inside the exprezzion class, this function will
+	 * return the type that the expression resolves to.
+	 * @param method
+	 * @param exprezzion
+	 * @return
+	 */
+	private String resolveExpressionType(Method method, Exprezzion exprezzion) {
 		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
 			Exprezzion resolved = method.getUnresolvedExprezzions().get(i);
-			
+			 
 			
 			// If the resolved exprezzion we are looking at is not resolved then exit
 			if(resolved.getResolvedType().equals("")) {
@@ -131,43 +129,105 @@ public class Resolver {
 			// Combine the tested expression and method call
 			String exp = "";
 			if(!resolved.getExpression().equals("")) {
-				exp += resolved.getExpression();
-				if(!resolved.getMethodCall().equals("")) {
-					exp += "." + resolved.getMethodCall();
-				}
+				exp += buildFullMethodCall(resolved.getExpression(), resolved.getMethodCall(), 
+						resolveParameters(method, exprezzion));
 			}
-			else {
-				if(!resolved.getMethodCall().equals("")) {
-					exp += resolved.getMethodCall();
-					exp += "(";
-					List<String> params = resolveParameters(method, exprezzion);
-					for(String param: params) {
-						exp += param + ", ";
-					}
-					if(params.size() != 0)
-						exp = exp.substring(0, exp.length()-2);
-					exp += ")";
-				}
+			else if(!resolved.getMethodCall().equals("")) {
+					exp += buildFullMethodCall("", resolved.getMethodCall(), 
+							resolveParameters(method, exprezzion));
 			}
 			
-			// Check to see if that is the expression we are looking for
+			// Check to see if this is the expression we are looking for
 			if(exp.equals(exprezzion.getExpression())) {
 				return resolved.getResolvedType();
+			}
+			// Check to see if  the expression we are looking for
+			// is just a method call
+			if(exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
+				String methodCall = buildFullMethodCall("", exprezzion.getMethodCall(), 
+						resolveParameters(method, exprezzion));
+				
+				if(methodCall.equals(exp)) {
+					return exprezzion.getResolvedType();
+				}
 			}
 		}
 		
 		return null;
 	}
 	
+	/**
+	 * Given an exprezzion which is just a function call aka has no
+	 * expression, this will return the return type of that function.
+	 * @param method
+	 * @param exprezzion
+	 * @return
+	 */
+	private String resolveMethodCallType(Method method, Exprezzion exprezzion) {
+		String unresolved = buildFullMethodCall("", exprezzion.getMethodCall(), 
+				resolveParameters(method, exprezzion));
+		
+		Method resolved = method.getClazz().hasUnresolvedMethod(unresolved);
+		if(resolved != null) {
+			resolved.addCalledBy(method);
+			method.addMethodCall(resolved);
+			exprezzion.setResolvedType(resolved.getReturnType());
+			return resolved.getReturnType();
+		}
+		
+		return "";
+	}
+	
+	/**
+	 * This function will return a list of resolved types which are
+	 * assumed to be a function's parameter types.
+	 * @param method
+	 * @param exprezzion
+	 * @return
+	 */
 	private List<String> resolveParameters(Method method, Exprezzion exprezzion) {
 		List<String> resolvedParams = new ArrayList<String>();
 		for(int i = 0; i < exprezzion.getParameters().size(); i++) {
 			Exprezzion resolved = exprezzion.getParameters().get(i);
 			
-			resolvedParams.add(resolveExpression(method, resolved));
+			if(!resolved.getExpression().equals(""))
+				resolvedParams.add(resolveExpressionType(method, resolved));
+			else if(resolved.getExpression().equals("") && !resolved.getMethodCall().equals(""))  {
+				resolvedParams.add(resolveMethodCallType(method, resolved));
+				
+			}
+				
 		}
 		
 		return resolvedParams;
+	}
+	
+	/**
+	 * This function will return a fully typed function call.
+	 * You can use this function as needed.
+	 * @param type
+	 * @param methodCall
+	 * @param params
+	 * @return
+	 */
+	private String buildFullMethodCall(String type, String methodCall, List<String> params) {
+		String fullCall = "";
+		if(!type.equals("")) {
+			fullCall += type;
+		}
+		if(!methodCall.equals("")) {
+			if(!type.equals(""))
+				fullCall += ".";
+			fullCall += methodCall + "(";
+			for(String param: params) {
+				fullCall += param + ", ";
+			}
+			if(params.size() != 0)
+				fullCall = fullCall.substring(0, fullCall.length()-2);
+			fullCall += ")";
+		}
+		
+		return fullCall;
 	}
 	
 	/**
@@ -380,7 +440,7 @@ public class Resolver {
 				}
 			}
 		}
-		// otherwise it's in the package classes maybe
+		// check if it's in the package classes maybe
 		for (Clazz packageClazz : getClazzesInPackage(invokingClass.getFile().getFilePackage()))
 		{
 			if (packageClazz.getName().equals(objStr))
@@ -396,8 +456,8 @@ public class Resolver {
 				}
 			}
 		}
-		// The method doesn't exist.
-		return null;
+		// Check if it is a local function to the given clazz
+		return lookupMethodCallInClass(invokingClass, methodInvocation.substring(methodInvocation.lastIndexOf(".")+1));
 	}
 	
 	public Method lookupMethodCallInClass(Clazz clazz, String methodCall)
@@ -407,9 +467,7 @@ public class Resolver {
 			for (Method currentMethod : clazz.getMethods())
 			{
 				if (currentMethod.getName().substring(currentMethod.getName().lastIndexOf(".")+1).equals(methodCall))
-				{
 					return currentMethod;
-				}
 			}
 		}
 		return null;
