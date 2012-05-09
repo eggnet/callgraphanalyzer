@@ -74,6 +74,9 @@ public class filediffer {
 	 */
 	public void diffFilesLineMode()
 	{
+		if(this.oldFileContent == null || this.newFileContent == null)
+			return;
+		
 		this.diffObjects.clear();
 		this.deleteObjects.clear();
 		this.insertObjects.clear();
