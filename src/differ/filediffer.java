@@ -85,7 +85,6 @@ public class filediffer {
 		
 		// merge and cleanup junk changes
 		myDiffer.diff_cleanupSemantic((LinkedList)this.diffObjects);
-		myDiffer.diff_cleanupMerge	 ((LinkedList)this.diffObjects);
 		
 		// parse the diff location
 		getDiffLocation();
@@ -224,14 +223,14 @@ public class filediffer {
 		if (diffObjects.isEmpty())
 			return;
 		
+		String oldText = "";
+		String newText = "";
+		
+		int oldTextLocation = 0;
+		int newTextLocation = 0;
+		
 		for(Diff mydiff : this.diffObjects)
 		{
-			String oldText = "";
-			String newText = "";
-			
-			int oldTextLocation = 0;
-			int newTextLocation = 0;
-			
 			// Append equal to current text
 			if(mydiff.operation == diff_match_patch.Operation.EQUAL)
 			{
@@ -247,8 +246,6 @@ public class filediffer {
 			// Old TEXT is EQUAL + DELETE
 			if(mydiff.operation == diff_match_patch.Operation.DELETE)
 			{
-				System.out.println("OldTextLength: " + oldText.length());
-				
 				// Each diff, match old txt to find the location
 				int startlocation = this.oldFileContent.indexOf(mydiff.text, oldTextLocation);
 				if(startlocation == -1)
@@ -265,7 +262,6 @@ public class filediffer {
 					diffResult.end 		  = stoplocation;
 					
 					this.deleteObjects.add(diffResult);
-					System.out.println("Diff start:" + startlocation + " Stop:" + stoplocation);
 				}
 				
 				// Update oldtext
@@ -279,8 +275,6 @@ public class filediffer {
 			// New TEXT is EQUAL + INSERT	
 			if(mydiff.operation == diff_match_patch.Operation.INSERT)
 			{
-				System.out.println("NewTextLength: " + newText.length());
-				
 				// Each diff, match old txt to find the location
 				int startlocation = this.newFileContent.indexOf(mydiff.text, newTextLocation);
 				if(startlocation == -1)
@@ -296,8 +290,6 @@ public class filediffer {
 					diffResult.start 	  = startlocation;
 					diffResult.end 		  = stoplocation;
 					this.insertObjects.add(diffResult);
-					
-					System.out.println("Diff start:" + startlocation + " Stop:" + stoplocation);
 				}
 				
 				// Update newtext

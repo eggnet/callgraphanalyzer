@@ -3,9 +3,11 @@ package differ;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
+import differ.filediffer.diffObjectResult;
 import differ.filediffer.methodResult;
 
 public class testGetChangedMethod {
@@ -67,6 +69,21 @@ public class testGetChangedMethod {
 		assertEquals(paras.get(0), "int");
 		assertEquals(paras.get(1), "double");
 		assertEquals(paras.get(2), "Map<String>");
+	}
+	
+	@Test
+	public void testDiffFilesLineMode() {
+		String oldText = "class A;\n public funtion A(); private int a;";
+		String newText = "class A;\n package haha;\n private int a;\n private function B();";
+		
+		filediffer mydiffer = new filediffer(oldText, newText);
+		mydiffer.diffFilesLineMode();
+		
+		List<diffObjectResult> deleteObjects = mydiffer.getDeleteObjects();
+		List<diffObjectResult> insertObjects = mydiffer.getInsertObjects();
+		
+		assertEquals(deleteObjects.size(), 1);
+		assertEquals(insertObjects.size(), 1);
 	}
 
 }
