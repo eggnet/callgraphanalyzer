@@ -1,5 +1,6 @@
 package callgraphanalyzer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Set;
 import java.util.List;
 
 import models.CallGraph;
+import models.Method;
 import parser.Parser;
 import parser.Resolver;
 import db.CommitsTO;
@@ -23,6 +25,7 @@ public class Comparator {
 	public Map<String, String> FileMap;
 	public Map<String, String> newCommitFileTree;
 	public Map<String, String> oldCommitFileTree;
+	public Map<String, List<Method>> modifiedMethods;
 	public CommitsTO newCommit;
 	public CommitsTO oldCommit;
 	public String CurrentBranch;
@@ -30,12 +33,11 @@ public class Comparator {
 	
 	/**
 	 * Constructs a new Comparator class.  This class connects the FileDiffer {@link #differ} and the CallGraphAnalyzer {@link #cga}
-	 * @param branchName Name of the branch
 	 * @param db Name of the Database.
 	 * @param CommitIDOne SHA-1 Hash of the commit in question.
 	 * @param CommitIDTwo SHA-1 Hash of the second commit.
 	 */
-	public Comparator(String branchName, DbConnection db, String CommitIDOne, String CommitIDTwo, CallGraphAnalyzer cga) {
+	public Comparator(DbConnection db, String CommitIDOne, String CommitIDTwo, CallGraphAnalyzer cga) {
 		this.db = db;
 		
 		// Figure out which commit is newer
@@ -56,19 +58,25 @@ public class Comparator {
 			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
 		}
 		this.CallGraphAnalyzer = cga;
-		this.newCallGraph = generateCallGraph();
+		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
+		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 	}
 	
-	public CallGraph generateCallGraph() 
+	/**
+	 * Generate Callgraph from a commitFileTree
+	 * @param commitFileTree map of file name and path from a commit
+	 * @return CallGraph a resolved CallGraph
+	 */
+	public CallGraph generateCallGraph(Map<String, String> commitFileTree) 
 	{
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
 		
-		for (String key : this.newCommitFileTree.keySet())
+		for (String key : commitFileTree.keySet())
 		{
 			if (!key.endsWith(".java"))	// Currently don't care about non-java files in our callgraph
 				continue;
-			parser.parseFileFromString(key, db.getRawFile(key, this.newCommitFileTree.get(key)));
+			parser.parseFileFromString(key, db.getRawFile(key, commitFileTree.get(key)));
 		}
 		callGraph.print();
 		
@@ -85,6 +93,8 @@ public class Comparator {
 
 	public boolean CompareCommits()
 	{
+		this.modifiedMethods = new HashMap<String, List<Method>>();
+		
 		// For every file in the new commit tree
 		for (String newKey : newCommitFileTree.keySet())
 		{
@@ -94,17 +104,19 @@ public class Comparator {
 				// File is still present, might be modified.
 				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
 										db.getRawFile(newKey, newCommitFileTree.get(newKey)));
-				
-				// return the change sets from the two files
 				differ.diffFilesLineMode();
+				
+				// The file was modified (+-) since the old commit.
 				if(differ.isModified())
 				{
-					System.out.println(newKey + " was modified.");
+					// return the change sets from the two files
+					System.out.println("+-\t" + newKey);
 					List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
 					List<diffObjectResult> insertObjects = differ.getInsertObjects();
-					
-					//Todo: Use these return objects to figure out which function gets called in call graph
 					differ.print();
+					
+					// figure out which function has changed
+					getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
 				}
 			}
 			else
@@ -121,7 +133,41 @@ public class Comparator {
 				System.out.println("-\t" + oldKey);
 			}
 		}
+		
+		printModifiedMethods();
 		return true;
+	}
+	
+	/**
+	 * get all methods in a file that might be changed from new commit to other
+	 * @param fileName file path
+	 * @param callgraph 
+	 * @param diffs list of diff objects
+	 * @return
+	 */
+	public void getModifiedMethodsForFile(String fileName, List<diffObjectResult> deleteDiffs, List<diffObjectResult> insertDiffs)
+	{
+		List<Method> methods = new ArrayList<Method>();
+		
+		// methods from old file version
+		for(diffObjectResult diff : deleteDiffs)
+		{
+			List<Method> changedMethod = this.oldCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
+			for(Method m : changedMethod)
+				if(!methods.contains(m)) methods.add(m);
+		}
+		
+		// methods from new file version
+		for(diffObjectResult diff : insertDiffs)
+		{
+			List<Method> changedMethod = this.newCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
+			for(Method m : changedMethod)
+				if(!methods.contains(m)) methods.add(m);
+		}
+		
+		// Insert to modifiedMethod map
+		if(!this.modifiedMethods.containsKey(fileName))
+			this.modifiedMethods.put(fileName, methods);
 	}
 	
 	/**
@@ -158,6 +204,20 @@ public class Comparator {
 			{
 				CommitFileTree.put(currentChangedFile, commit);
 			}
+		}
+	}
+	
+	public void printModifiedMethods()
+	{
+		for(String file : this.modifiedMethods.keySet())
+		{
+			List<Method> methods = this.modifiedMethods.get(file);
+			System.out.println("File: " + file);
+			for(Method m :methods)
+			{
+				System.out.println("\tModified method: " +m.getName());
+			}
+			
 		}
 	}
 }
