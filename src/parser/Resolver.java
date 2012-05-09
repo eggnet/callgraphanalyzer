@@ -94,9 +94,16 @@ public class Resolver {
 					unresolved = unresolved.substring(0, unresolved.length()-2);
 				unresolved += ")";
 				
-				System.out.println("Resolved: " + unresolved);
+				Method res = lookupInvokedMethod(unresolved, clazz);
 				
-				// Use braden's function too look up fully names function
+				if(res != null)
+				{
+					System.out.println("Resolved: " + unresolved + " to type: " + res.getReturnType());
+					exprezzion.setResolvedType(res.getReturnType());
+				}
+				else {
+					System.out.println(unresolved + " does not exist");
+				}
 				
 			}
 		}
