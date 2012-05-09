@@ -97,13 +97,13 @@ public class Comparator {
 				
 				// return the change sets from the two files
 				differ.diffFilesLineMode();
-				differ.print();
 				if(differ.isModified())
 				{
 					System.out.println(newKey + " was modified.");
 					List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
 					List<diffObjectResult> insertObjects = differ.getInsertObjects();
 					
+					//Todo: Use these return objects to figure out which function gets called in call graph
 					differ.print();
 				}
 			}
