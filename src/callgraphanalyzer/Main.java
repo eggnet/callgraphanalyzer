@@ -18,7 +18,7 @@ public class Main {
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
 				
-		Comparator compare = new Comparator("master", db, args[2], args[3], new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, args[2], args[3], new CallGraphAnalyzer());
 		compare.CompareCommits();
 
 		try {
