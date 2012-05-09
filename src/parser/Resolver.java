@@ -352,20 +352,21 @@ public class Resolver {
 		// 	go through imported classes and match with the invoking class
 		//		if not found, go through package classes
 		//			once found class, look upwards from method for function defn
-		List<String> imports = invokingClass.getFile().getFileImports();
+		List<Clazz> imports = getClazzesInImports(invokingClass.getFile().getFileImports());
 		String objStr = methodInvocation.substring(0, methodInvocation.lastIndexOf("."));
-		for (String s : imports)
+		for (Clazz s : imports)
 		{
 			// grab the object (ie System.out.println() ==> System.out
-			if (s.equals(objStr))
+			String t = s.getName().substring(s.getName().lastIndexOf(".")+1);
+			if (t.equals(objStr))
 			{
 				// we know it's this import
 				for (Clazz c : callGraph.getAllClazzes())
 				{
-					if (c.getName().equals(s))
+					if (c.getName().equals(s.getName()))
 					{
 						// Found the right class
-						return lookupMethodCallInClass(c, methodInvocation.substring(methodInvocation.lastIndexOf(".")));
+						return lookupMethodCallInClass(c, methodInvocation.substring(methodInvocation.lastIndexOf(".")+1));
 					}
 				}
 			}
@@ -396,7 +397,7 @@ public class Resolver {
 		{
 			for (Method currentMethod : clazz.getMethods())
 			{
-				if (currentMethod.getName().equals(methodCall))
+				if (currentMethod.getName().substring(currentMethod.getName().lastIndexOf(".")+1).equals(methodCall))
 				{
 					return currentMethod;
 				}
