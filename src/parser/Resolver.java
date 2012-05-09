@@ -55,26 +55,28 @@ public class Resolver {
 			// Start resolving expressions now
 			
 			// Handle case where it is a variable
-			if(exprezzion.getExpression() != null && exprezzion.getMethodCall() == null) {
+			if(!exprezzion.getExpression().equals("") && exprezzion.getMethodCall().equals("")) {
 				// Handle if it is already resolved
-				if(exprezzion.getResolvedType() != null) {
+				if(!exprezzion.getResolvedType().equals("")) {
 					continue;
 				}
 				// If the variable is not resolved, we have big problems
-				if(exprezzion.getResolvedType() == null) {
-					System.err.println("A variable was not resolved in parse time.");
-					return false;
+				if(exprezzion.getResolvedType().equals("")) {
+					System.err.println("A variable was not resolved in parse time: " + exprezzion.getExpression());
+					exprezzion.setResolvedType("unknown");
+					continue;
 				}
 			}
 			
 			// Handle case where it is a local method
-			else if(exprezzion.getExpression() == null && exprezzion.getMethodCall() != null) {
+			else if(exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
 				String unresolved = exprezzion.getMethodCall() + "(";
 				List<String> params = resolveParameters(method, exprezzion);
 				for(String param: params) {
 					unresolved += param + ", ";
 				}
-				unresolved = unresolved.substring(0, unresolved.length()-2);
+				if(params.size() != 0)
+					unresolved = unresolved.substring(0, unresolved.length()-2);
 				unresolved += ")";
 				
 				Method resolved = clazz.hasUnresolvedMethod(unresolved);
@@ -87,7 +89,23 @@ public class Resolver {
 			
 			// Handle the case where it is an external method
 			// This is the most complex case
-			else if(exprezzion.getExpression() != null && exprezzion.getMethodCall() != null) {
+			else if(!exprezzion.getExpression().equals("") && !exprezzion.getMethodCall().equals("")) {
+				String expType = resolveExpression(method, exprezzion);
+				if(expType == null)
+					continue;
+				String unresolved = expType + ".";
+				unresolved += exprezzion.getMethodCall() + "(";
+				List<String> params = resolveParameters(method, exprezzion);
+				for(String param: params) {
+					unresolved += param + ", ";
+				}
+				if(params.size() != 0)
+					unresolved = unresolved.substring(0, unresolved.length()-2);
+				unresolved += ")";
+				
+				System.out.println("Resolved: " + unresolved);
+				
+				// Use braden's function too look up fully names function
 				
 			}
 		}
@@ -99,11 +117,18 @@ public class Resolver {
 		for(int i = method.getUnresolvedExprezzions().size()-1; i >= 0; i--) {
 			Exprezzion resolved = method.getUnresolvedExprezzions().get(i);
 			
+			
 			// If the resolved exprezzion we are looking at is not resolved then exit
 			if(resolved.getResolvedType().equals("")) {
-				System.out.println("Could not resolve exprezzion");
-				break;
+				System.out.println("Could not resolve expression: " + exprezzion.getExpression());
+				resolved.setResolvedType("unknown");
+				return null;
 			}
+			
+			// If the resolved exprezzion we are lookig as is unknow
+			// just continue the search
+			if(resolved.getResolvedType().equals("unknown"))
+				continue;
 			
 			// Combine the tested expression and method call
 			String exp = "";
@@ -116,15 +141,16 @@ public class Resolver {
 			else {
 				if(!resolved.getMethodCall().equals("")) {
 					exp += resolved.getMethodCall();
+					exp += "(";
+					List<String> params = resolveParameters(method, exprezzion);
+					for(String param: params) {
+						exp += param + ", ";
+					}
+					if(params.size() != 0)
+						exp = exp.substring(0, exp.length()-2);
+					exp += ")";
 				}
 			}
-			exp += "(";
-			List<String> params = resolveParameters(method, exprezzion);
-			for(String param: params) {
-				exp += param + ", ";
-			}
-			exp = exp.substring(0, exp.length()-2);
-			exp += ")";
 			
 			// Check to see if that is the expression we are looking for
 			if(exp.equals(exprezzion.getExpression())) {
@@ -137,7 +163,7 @@ public class Resolver {
 	
 	private List<String> resolveParameters(Method method, Exprezzion exprezzion) {
 		List<String> resolvedParams = new ArrayList<String>();
-		for(int i = exprezzion.getParameters().size()-1; i >= 0; i--) {
+		for(int i = 0; i < exprezzion.getParameters().size(); i++) {
 			Exprezzion resolved = exprezzion.getParameters().get(i);
 			
 			resolvedParams.add(resolveExpression(method, resolved));

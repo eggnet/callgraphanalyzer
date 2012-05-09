@@ -21,18 +21,9 @@ public class Exprezzion {
 		this.resolvedType = resolvedType;
 	}
 	
-	public void print(int sum) {
+	public void print() {
 		System.out.println("        " + "Expression: " + expression + " Method Call: " + methodCall + 
 							" Resolved Type: " + resolvedType);
-		for(int i=0; i < sum; i++)
-			System.out.print(" ");
-		System.out.println("        " + "Parameters: ");
-		for(Exprezzion e: parameters) {
-			for(int i=0; i < sum; i++)
-				System.out.print(" ");
-			e.print(sum+2);
-		}
-		
 	}
 
 	public String getExpression() {
