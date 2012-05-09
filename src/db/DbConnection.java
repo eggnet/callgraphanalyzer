@@ -184,16 +184,16 @@ public class DbConnection {
 	 * @param commitID
 	 * @return
 	 */
-	public Map<String, String> getCommitChangedFiles(String commitID)
+	public Set<String> getCommitChangedFiles(String commitID)
 	{
-		Map<String, String> files = new HashMap<String, String>();
+		Set<String> files = new HashSet<String>();
 		try {
-			String sql = "SELECT file_id, raw_file FROM files where commit_id=?;";
+			String sql = "SELECT file_id FROM changes where commit_id=?;";
 			String[] params = {commitID};
 			ResultSet rs = execPreparedQuery(sql, params);
 			while(rs.next())
 			{
-				files.put(rs.getString("file_id"), rs.getString("raw_file"));
+				files.add(rs.getString("file_id"));
 			}
 		}
 		catch (Exception e)

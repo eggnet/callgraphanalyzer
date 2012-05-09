@@ -65,8 +65,9 @@ public class Comparator {
 		
 		for (String key : this.newCommitFileTree.keySet())
 		{
+			if (!key.endsWith(".java"))	// Currently don't care about non-java files in our callgraph
+				continue;
 			parser.parseFileFromString(key, db.getRawFile(key, this.newCommitFileTree.get(key)));
-			
 		}
 		callGraph.print();
 		
@@ -126,12 +127,6 @@ public class Comparator {
 		return true;
 	}
 	
-	public boolean getChangedFilesForCommit(String commitID)
-	{
-		FileMap = db.getCommitChangedFiles(commitID);
-		return true;
-	}
-	
 	/**
 	 * Recursively get the files for a commit, going down from the given commit.
 	 * adding them to @see {@link #newCommitFileTree}
@@ -143,22 +138,29 @@ public class Comparator {
 		Map<String, String> CommitFileTree = new HashMap<String, String>();
 		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(commitID);
 		Set<String> requiredFiles = db.getFileStructureFromCommit(commitID);	// First commit;
+		Iterator<String> i = db.getCommitChangedFiles(commitID).iterator();
+		addFilesFromCommit(i, requiredFiles, CommitFileTree, commitID);
+		
 		for (String commit : prevChanges.keySet())
 		{
-			Iterator<String> i = prevChanges.get(commit).iterator();
-			String currentChangedFile;
-			while (i.hasNext())
-			{
-				currentChangedFile = i.next();
-				System.out.println(currentChangedFile);
-				if (requiredFiles.contains(currentChangedFile) &&
-						!CommitFileTree.containsKey(currentChangedFile))
-				{
-					CommitFileTree.put(currentChangedFile, commit);
-				}
-			}
+			Iterator<String> iter = prevChanges.get(commit).iterator();
+			addFilesFromCommit(iter, requiredFiles, CommitFileTree, commit); 
 		}
 		return CommitFileTree;
 	}
 	
+	public void addFilesFromCommit(Iterator<String> i, Set<String> requiredFiles, Map<String, String> CommitFileTree, String commit)
+	{
+		String currentChangedFile;
+		while (i.hasNext())
+		{
+			currentChangedFile = i.next();
+			System.out.println("Commit :" + commit + " changed file " + currentChangedFile);
+			if (requiredFiles.contains(currentChangedFile) &&
+					!CommitFileTree.containsKey(currentChangedFile))
+			{
+				CommitFileTree.put(currentChangedFile, commit);
+			}
+		}
+	}
 }
