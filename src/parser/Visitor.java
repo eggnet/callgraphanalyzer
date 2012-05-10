@@ -186,12 +186,8 @@ public class Visitor extends ASTVisitor {
 		String resolvedType = "";
 		if(node.getExpression() != null)
 		{
-			System.out.println("-----------------");
-			System.out.println("Expression: " + node.getExpression().toString());
-			System.out.println("Is a Name.");
 			exp = node.getExpression().toString();
 			methodCall = node.getName().getIdentifier();
-			System.out.println("Method: " + node.getName().getIdentifier());
 			parameters = parseMethodParameters(node);
 
 			currentMethod.addUnresolvedExprezzion(exp, methodCall, parameters, resolvedType);
@@ -205,8 +201,6 @@ public class Visitor extends ASTVisitor {
 		else
 		{
 			// This means we have a local function call
-			System.out.println("-----------------");
-			System.out.println("Method: " + node.getName().getIdentifier());
 			exp = "";
 			methodCall = node.getName().getIdentifier();
 			parameters = parseMethodParameters(node);
@@ -257,7 +251,6 @@ public class Visitor extends ASTVisitor {
 			}
 			// Add the new parameter
 			exprezzions.add(new Exprezzion(exp, methodCall, parameters, resolvedType));
-			System.out.println("Argument: " + expression.toString());
 			paramNum++;
 		}
 		
@@ -342,6 +335,11 @@ public class Visitor extends ASTVisitor {
 		}
 		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
 		mappings.addMapping(node.fragments().get(0).toString(), m);
+		if(currentMethod == null)
+		{
+			System.out.println(node.getType().toString() + " " + varName.getFullyQualifiedName());
+			//clazzStack.peek().getVariables().add(new Mapping(node.getType().toString(), varName.getFullyQualifiedName()));
+		}
 		return super.visit(node);
 	}
 	
@@ -356,6 +354,11 @@ public class Visitor extends ASTVisitor {
 		}
 		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
 		mappings.addMapping(varName.getFullyQualifiedName(), m);
+		if(currentMethod == null)
+		{
+			System.out.println(node.getType().toString() + " " + varName.getFullyQualifiedName());
+			//clazzStack.peek().getVariables().add(new Mapping(node.getType().toString(), varName.getFullyQualifiedName()));
+		}
 		return super.visit(node);
 	}
 	
@@ -370,6 +373,9 @@ public class Visitor extends ASTVisitor {
 		}
 		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
 		mappings.addMapping(varName.getFullyQualifiedName(), m);
+		// Add the field declaration to the current clazz
+		if(clazzStack.peek() != null)
+			clazzStack.peek().getVariables().add(new Mapping(node.getType().toString(), varName.getFullyQualifiedName()));
 		return super.visit(node);
 	}
 	

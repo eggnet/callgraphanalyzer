@@ -62,7 +62,7 @@ public class Comparator {
 		// check and create our owners.
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
-		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		//this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
 		// get all the commits exist between the two commits
 		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
@@ -86,9 +86,9 @@ public class Comparator {
 		}
 		callGraph.print();
 		
-		System.out.println();
-		System.out.println();
-		System.out.println("Resolving the fuck out of this CallGraph");
+		//System.out.println();
+		//System.out.println();
+		//System.out.println("Resolving the fuck out of this CallGraph");
 		
 		//Resolver resolver = new Resolver(callGraph);
 		//resolver.resolveMethods();

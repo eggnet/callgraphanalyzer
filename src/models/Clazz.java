@@ -16,6 +16,10 @@ public class Clazz {
 	
 	private Clazz 				superClazz;
 	private String 				unresolvedSuperClazz;
+	
+	private List<Mapping>		variables;
+	
+	private List<Exprezzion> 	unresolvedExprezzions;
 
 	public Clazz() {
 		methods = new ArrayList<Method>();
@@ -23,6 +27,9 @@ public class Clazz {
 		unresolvedInterfaces = new ArrayList<String>();
 		subClazzes = new ArrayList<Clazz>();
 		unresolvedSuperClazz = "";
+		
+		variables = new ArrayList<Mapping>();
+		unresolvedExprezzions = new ArrayList<Exprezzion>();
 		
 	}
 
@@ -38,6 +45,9 @@ public class Clazz {
 		
 		unresolvedInterfaces = new ArrayList<String>();
 		unresolvedSuperClazz = "";
+		
+		variables = new ArrayList<Mapping>();
+		unresolvedExprezzions = new ArrayList<Exprezzion>();
 	}
 	
 	public void print() {
@@ -58,6 +68,9 @@ public class Clazz {
 		System.out.println("    Sub Classes: ");
 		for(Clazz clazz: subClazzes)
 			System.out.println("      " + clazz.getName());
+		System.out.println("    Fields: ");
+		for(Mapping map: variables) 
+			System.out.println("      " + map.getType() + ": " + map.getVarName());
 		for(Method m: methods)
 			m.print();
 	}
@@ -179,6 +192,22 @@ public class Clazz {
 
 	public void setUnresolvedInterfaces(List<String> unresolvedInterfaces) {
 		this.unresolvedInterfaces = unresolvedInterfaces;
+	}
+
+	public List<Mapping> getVariables() {
+		return variables;
+	}
+
+	public void setVariables(List<Mapping> variables) {
+		this.variables = variables;
+	}
+
+	public List<Exprezzion> getUnresolvedExprezzions() {
+		return unresolvedExprezzions;
+	}
+
+	public void setUnresolvedExprezzions(List<Exprezzion> unresolvedExprezzions) {
+		this.unresolvedExprezzions = unresolvedExprezzions;
 	}
 	
 }

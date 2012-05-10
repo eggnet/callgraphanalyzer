@@ -27,12 +27,9 @@ public class Mappings {
 			}
 		}
 		if (ptr.containsKey(key))
-		{
-			System.out.println(key + " is " + ptr.get(key).getType());
-		}
+			return ptr.get(key).getType();
 		else
-			return "";	// No variable found.
-		return ptr.get(key).getType();
+			return "";
 	}
 	
 	public void addMapping(String key, Mapping mapping)
