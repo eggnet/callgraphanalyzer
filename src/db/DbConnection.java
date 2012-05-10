@@ -247,6 +247,77 @@ public class DbConnection {
 	}
 	
 	/**
+	 * Return a list of commits and their changed files between any 2 commits
+	 * @param beforeCommitID
+	 * @param afterCommitID
+	 * @return
+	 */
+	public Map<String, Set<String>> getCommitsBeforeAndAfterChanges(String beforeCommitID, String afterCommitID)
+	{
+		try{
+			Map<String, Set<String>> changes = new HashMap<String, Set<String>>();
+			String sql = "SELECT commit_id, file_id from changes natural join commits where " +
+					"(branch_id=? or branch_id is NULL) and commit_date < " +
+					"(select commit_date from commits where commit_id=? and " +
+					"(branch_id=? OR branch_id is NULL)) and commit_date > " +
+					"(select commit_date from commits where commit_id=? and " +
+					"(branch_id=? or branch_id is NULL)) ORDER BY commit_date;";
+			
+			String[] params = {this.branchID, beforeCommitID, this.branchID, afterCommitID, this.branchID};
+			ResultSet rs = execPreparedQuery(sql, params);
+			String currentCommitId;
+			Set<String> currentFileset;
+			if (!rs.next())
+				return changes;
+			currentFileset = new HashSet<String>();
+			currentCommitId = rs.getString("commit_id");
+			currentFileset.add(rs.getString("file_id"));
+			while(rs.next())
+			{
+				if (rs.getString("commit_id").equals(currentCommitId))
+				{
+					// append to the current commit
+					currentFileset.add(rs.getString("file_id"));
+				}
+				else
+				{
+					// start a new one
+					changes.put(currentCommitId, currentFileset);
+					currentFileset = new HashSet<String>();
+					currentCommitId = rs.getString("commit_id");
+					currentFileset.add(rs.getString("file_id"));
+				}
+			}
+			return changes;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public Set<String> getBinaryFiles()
+	{
+		HashSet<String> binaryFiles = new HashSet<String>();
+		try {
+			String[] params = {};
+			ResultSet rs = execPreparedQuery("SELECT file_id from changes EXCEPT (SELECT file_id from files);", params);
+			while(rs.next())
+			{
+				binaryFiles.add(rs.getString(1));
+			}
+			
+			return binaryFiles;
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
 	 * Gets the first 100 commits
 	 * @param commitID
 	 * @return
@@ -398,8 +469,10 @@ public class DbConnection {
 			String sql = "SELECT raw_file from files where commit_id=? and file_id=?;";
 			String[] params = {commitID, fileID};
 			ResultSet rs = execPreparedQuery(sql, params);
-			rs.next();
-			return rs.getString(1);
+			if(rs.next())
+				return rs.getString(1);
+			else
+				return "Binary file";
 		}
 		catch (SQLException e)
 		{
