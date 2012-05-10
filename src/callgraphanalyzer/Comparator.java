@@ -225,11 +225,17 @@ public class Comparator {
 		}
 	}
 	
-	public boolean isBinaryFileChanged(String filePath, String oldCommitID, String newCommitID)
+	public boolean isBinaryFileChanged(String file, String oldCommitID, String newCommitID)
 	{
-		// Find the latest commit that has this changes
+		Map<String, Set<String>> commitsInBetween = db.getCommitsBeforeAndAfterChanges(oldCommitID, newCommitID);
 		
-		// If the latest commit exists between newCommit and oldCommit, there is a change
+		// If the file was committed sometime between newCommit and oldCommit, there is a change
+		for(String commit : commitsInBetween.keySet())
+		{
+			Set<String> fileChanged = commitsInBetween.get(commit);
+			if(fileChanged.contains(file))
+				return true;
+		}
 		return false;
 	}
 	
