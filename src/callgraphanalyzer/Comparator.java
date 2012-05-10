@@ -3,16 +3,13 @@ package callgraphanalyzer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-
-import owners.OwnerManager;
 
 import models.CallGraph;
 import models.Method;
 import parser.Parser;
-import parser.Resolver;
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
@@ -32,7 +29,6 @@ public class Comparator {
 	public CommitsTO oldCommit;
 	public String CurrentBranch;
 	public String CurrentBranchID;
-	private OwnerManager OwnerMgr;
 	
 	/**
 	 * Constructs a new Comparator class.  This class connects the FileDiffer {@link #differ} and the CallGraphAnalyzer {@link #cga}
@@ -62,9 +58,6 @@ public class Comparator {
 		}
 		
 		// check and create our owners.
-		this.OwnerMgr = new OwnerManager(db);
-		this.OwnerMgr.update();
-		
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
