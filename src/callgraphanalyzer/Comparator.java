@@ -84,16 +84,17 @@ public class Comparator {
 		System.out.println();
 		System.out.println("Resolving the fuck out of this CallGraph");
 		
-		Resolver resolver = new Resolver(callGraph);
-		resolver.resolveMethods();
+		//Resolver resolver = new Resolver(callGraph);
+		//resolver.resolveMethods();
 		
-		callGraph.print();
+		//callGraph.print();
 		return callGraph;
 	}
 
 	public boolean CompareCommits()
 	{
 		this.modifiedMethods = new HashMap<String, List<Method>>();
+		Set<String> binaryFiles = db.getBinaryFiles();
 		
 		// For every file in the new commit tree
 		for (String newKey : newCommitFileTree.keySet())
@@ -102,21 +103,37 @@ public class Comparator {
 			if (oldCommitFileTree.containsKey(newKey))
 			{
 				// File is still present, might be modified.
-				differ = new filediffer(db.getRawFile(newKey, oldCommitFileTree.get(newKey)),
-										db.getRawFile(newKey, newCommitFileTree.get(newKey)));
-				differ.diffFilesLineMode();
-				
-				// The file was modified (+-) since the old commit.
-				if(differ.isModified())
+				// Check if its a binary file, ignore
+				if(binaryFiles.contains(newKey))
 				{
-					// return the change sets from the two files
-					System.out.println("+-\t" + newKey);
-					List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
-					List<diffObjectResult> insertObjects = differ.getInsertObjects();
-					differ.print();
+					//todo check if this binary file has changed
+					if(isBinaryFileChanged(newKey, oldCommit.getCommit_id(), newCommit.getCommit_id()))
+					{
+						System.out.println("Binary file is modified: " + newKey);
+					}
+					continue;
+				}
+				else
+				{
+					// Non-binary files, use differ to compare them.
+					String oldRaw = db.getRawFile(newKey, oldCommitFileTree.get(newKey));
+					String newRaw = db.getRawFile(newKey, newCommitFileTree.get(newKey));
 					
-					// figure out which function has changed
-					getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
+					differ = new filediffer(oldRaw, newRaw);
+					differ.diffFilesLineMode();
+					
+					// The file was modified (+-) since the old commit.
+					if(differ.isModified())
+					{
+						// return the change sets from the two files
+						System.out.println("+-\t" + newKey);
+						List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
+						List<diffObjectResult> insertObjects = differ.getInsertObjects();
+						differ.print();
+						
+						// figure out which function has changed
+						getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
+					}		
 				}
 			}
 			else
@@ -205,6 +222,14 @@ public class Comparator {
 				CommitFileTree.put(currentChangedFile, commit);
 			}
 		}
+	}
+	
+	public boolean isBinaryFileChanged(String filePath, String oldCommitID, String newCommitID)
+	{
+		// Find the latest commit that has this changes
+		
+		// If the latest commit exists between newCommit and oldCommit, there is a change
+		return false;
 	}
 	
 	public void printModifiedMethods()
