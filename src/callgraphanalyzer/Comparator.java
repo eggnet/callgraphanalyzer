@@ -176,7 +176,19 @@ public class Comparator {
 		{
 			List<Method> changedMethod = this.oldCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
 			for(Method m : changedMethod)
-				if(!methods.contains(m)) methods.add(m);
+			{
+				boolean exist = false;
+				for(Method me : methods)
+				{
+					if(me.getName().equals(m.getName()))
+					{
+						exist = true;
+						break;
+					}
+				}
+				if(!exist)
+					methods.add(m);
+			}
 		}
 		
 		// methods from new file version
@@ -184,7 +196,19 @@ public class Comparator {
 		{
 			List<Method> changedMethod = this.newCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
 			for(Method m : changedMethod)
-				if(!methods.contains(m)) methods.add(m);
+			{
+				boolean exist = false;
+				for(Method me : methods)
+				{
+					if(me.getName().equals(m.getName()))
+					{
+						exist = true;
+						break;
+					}
+				}
+				if(!exist)
+					methods.add(m);
+			}
 		}
 		
 		// Insert to modifiedMethod map
