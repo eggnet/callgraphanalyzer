@@ -63,7 +63,7 @@ public class Comparator {
 		
 		// check and create our owners.
 		this.OwnerMgr = new OwnerManager(db);
-		this.OwnerMgr.update(this.newCommit.getCommit_id());
+		this.OwnerMgr.update();
 		
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
