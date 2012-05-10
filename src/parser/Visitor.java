@@ -308,6 +308,20 @@ public class Visitor extends ASTVisitor {
 	}
 	
 	/**
+	 * This method overrides what to do when we reach
+	 * the end of a method declaration
+	 */
+	@Override
+	public void endVisit(MethodDeclaration node) {
+		// Add method to the call graph
+		callGraph.addMethod(currentMethod);
+		// Add method to the current class
+		clazzStack.peek().addMethod(currentMethod);
+		// Must set to null incase we have variable declarations in between
+		currentMethod = null;
+	}
+	
+	/**
 	 * This function overrides what to do when we reach
 	 * a class instance creation statement
 	 */
@@ -370,18 +384,6 @@ public class Visitor extends ASTVisitor {
 	public void endVisit(Block node)
 	{
 		mappings.removeMap();
-	}
-	
-	/**
-	 * This method overrides what to do when we reach
-	 * the end of a method declaration
-	 */
-	@Override
-	public void endVisit(MethodDeclaration node) {
-		// Add method to the call graph
-		callGraph.addMethod(currentMethod);
-		// Add method to the current class
-		clazzStack.peek().addMethod(currentMethod);
 	}
 	
 	public void commitFile() {
