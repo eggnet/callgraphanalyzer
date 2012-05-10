@@ -433,7 +433,7 @@ public class DbConnection {
 			commit.setAuthor_email(rs.getString("author_email"));
 			commit.setBranch_id(rs.getString("branch_id"));
 			commit.setComment(rs.getString("comments"));
-			commit.setCommit_date(rs.getDate("commit_date"));
+			commit.setCommit_date(rs.getTimestamp("commit_date"));
 			commit.setCommit_id(rs.getString("commit_id"));
 			commit.setId(rs.getInt("id"));
 			commit.setChanged_files(getChangedFilesFromCommit(commitID));
