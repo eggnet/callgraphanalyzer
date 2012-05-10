@@ -306,7 +306,7 @@ public class DbConnection {
 	{
 		try {
 			String[] params = {commit_id, this.branchID};
-			ResultSet rs = execPreparedQuery("SELECT commit_date from commits where commit_id =? and branch_id =?;", params);
+			ResultSet rs = execPreparedQuery("SELECT commit_date from commits where commit_id =? and (branch_id=? or branch_id is NULL);", params);
 			if(rs.next())
 				return rs.getString(1);
 			else
