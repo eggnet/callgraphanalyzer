@@ -28,6 +28,8 @@ public class Comparator {
 	public Map<String, String> newCommitFileTree;
 	public Map<String, String> oldCommitFileTree;
 	public Map<String, List<Method>> modifiedMethods;
+	public Map<String, Set<String>> commitsInBetween;
+	
 	public CommitsTO newCommit;
 	public CommitsTO oldCommit;
 	public String CurrentBranch;
@@ -68,6 +70,9 @@ public class Comparator {
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		
+		// get all the commits exist between the two commits
+		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
 	}
 	
 	/**
@@ -114,10 +119,10 @@ public class Comparator {
 				// Check if its a binary file, ignore
 				if(binaryFiles.contains(newKey))
 				{
-					//todo check if this binary file has changed
-					if(isBinaryFileChanged(newKey, oldCommit.getCommit_id(), newCommit.getCommit_id()))
+					//check if this binary file has changed
+					if(isBinaryFileChanged(newKey))
 					{
-						System.out.println("Binary file is modified: " + newKey);
+						System.out.println("+-\t[Binary file]" + newKey);
 					}
 					continue;
 				}
@@ -137,7 +142,6 @@ public class Comparator {
 						System.out.println("+-\t" + newKey);
 						List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
 						List<diffObjectResult> insertObjects = differ.getInsertObjects();
-						differ.print();
 						
 						// figure out which function has changed
 						getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
@@ -232,10 +236,8 @@ public class Comparator {
 		}
 	}
 	
-	public boolean isBinaryFileChanged(String file, String oldCommitID, String newCommitID)
+	public boolean isBinaryFileChanged(String file)
 	{
-		Map<String, Set<String>> commitsInBetween = db.getCommitsBeforeAndAfterChanges(oldCommitID, newCommitID);
-		
 		// If the file was committed sometime between newCommit and oldCommit, there is a change
 		for(String commit : commitsInBetween.keySet())
 		{

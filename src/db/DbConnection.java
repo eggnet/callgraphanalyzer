@@ -253,18 +253,22 @@ public class DbConnection {
 	 * @param afterCommitID
 	 * @return
 	 */
-	public Map<String, Set<String>> getCommitsBeforeAndAfterChanges(String beforeCommitID, String afterCommitID)
+	public Map<String, Set<String>> getCommitsBeforeAndAfterChanges(String oldCommitID, String newCommitID)
 	{
 		try{
+			// Get time stamp
+			String oldTimeStamp = getTimeStamp(oldCommitID);
+			String newTimeStamp = getTimeStamp(newCommitID);
+						
+			// Get old commit back
 			Map<String, Set<String>> changes = new HashMap<String, Set<String>>();
 			String sql = "SELECT commit_id, file_id from changes natural join commits where " +
-					"(branch_id=? or branch_id is NULL) and commit_date < " +
-					"(select commit_date from commits where commit_id=? and " +
-					"(branch_id=? OR branch_id is NULL)) and commit_date > " +
-					"(select commit_date from commits where commit_id=? and " +
-					"(branch_id=? or branch_id is NULL)) ORDER BY commit_date;";
+					"(branch_id=? or branch_id is NULL) and "+
+					"(commit_date > '"+ oldTimeStamp +
+					"\' and commit_date < '" + newTimeStamp + "') " +
+					"ORDER BY commit_date;";
 			
-			String[] params = {this.branchID, beforeCommitID, this.branchID, afterCommitID, this.branchID};
+			String[] params = {this.branchID};
 			ResultSet rs = execPreparedQuery(sql, params);
 			String currentCommitId;
 			Set<String> currentFileset;
@@ -292,6 +296,23 @@ public class DbConnection {
 			return changes;
 		}
 		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public String getTimeStamp(String commit_id)
+	{
+		try {
+			String[] params = {commit_id, this.branchID};
+			ResultSet rs = execPreparedQuery("SELECT commit_date from commits where commit_id =? and branch_id =?;", params);
+			if(rs.next())
+				return rs.getString(1);
+			else
+				return "";
+		}
+		catch(SQLException e)
 		{
 			e.printStackTrace();
 			return null;
