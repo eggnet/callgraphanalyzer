@@ -72,7 +72,6 @@ public class Visitor extends ASTVisitor {
 			System.err.println("ERROR: StructuredFile.java there is more than one package, using first visited");
 		else 
 			file.setFilePackage(node.getName().getFullyQualifiedName()); 
-
 		return super.visit(node);
 	}
 	
