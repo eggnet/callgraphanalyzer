@@ -13,15 +13,19 @@ public class OwnerManager {
 	 * then updates up to our given commit.
 	 * @author braden
 	 */
-	public void update(String CommitID) {
+	public void update() {
 		// Check if the owners table is up to date.
 		if (this.isUpToDate())
 			return;
 		// Otherwise update the table.
+		
 	}
 	
 	public boolean isUpToDate() {
-		// TODO @braden
+		String endPoint = db.getLastOwnerCommit();
+		String startPoint = db.getLastCommit();
+//		if (db.isCommitInOwners(CommitId))
+//			return true;
 		return false;
 	}
 }

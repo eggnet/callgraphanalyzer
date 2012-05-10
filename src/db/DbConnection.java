@@ -407,4 +407,63 @@ public class DbConnection {
 			return null;
 		}
 	}
+	
+	/**
+	 * Checks whether or not a commit is included in the owners table
+	 * @param CommitId
+	 * @return
+	 */
+	public boolean isCommitInOwners(String CommitId) 
+	{
+		try
+		{
+			String sql = "SELECT commit_id from owners where commit_id=?;";
+			String[] params = {CommitId};
+			ResultSet rs = execPreparedQuery(sql, params);
+			if (rs.next())
+				return true;
+			else
+				return false;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public String getLastOwnerCommit() 
+	{
+		try 
+		{
+			String sql = "Select commit_id from owners natural join commits order by commit_date desc;";
+			ResultSet rs = execPreparedQuery(sql, null);
+			if (rs.next())
+				return rs.getString(0);
+			else
+				return null;
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	public String getLastCommit() 
+	{
+		try 
+		{
+			String sql = "Select commit_id from commits order by commit_date desc;";
+			ResultSet rs = execPreparedQuery(sql, null);
+			if (rs.next())
+				return rs.getString(0);
+			else
+				return null;
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

@@ -68,7 +68,7 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(PackageDeclaration node) {
-		if (file.getFilePackage() != null)
+		if (!file.getFilePackage().equals(""))
 			System.err.println("ERROR: StructuredFile.java there is more than one package, using first visited");
 		else 
 			file.setFilePackage(node.getName().getFullyQualifiedName()); 
