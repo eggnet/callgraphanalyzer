@@ -18,12 +18,11 @@ public class OwnerManager {
 		if (this.isUpToDate())
 			return;
 		// Otherwise update the table.
-		
 	}
 	
 	public boolean isUpToDate() {
-		String endPoint = db.getLastOwnerCommit();
-		String startPoint = db.getLastCommit();
+		//String endPoint = db.getLastOwnerCommit();
+		//String startPoint = db.getLastCommit();
 //		if (db.isCommitInOwners(CommitId))
 //			return true;
 		return false;

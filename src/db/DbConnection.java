@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -207,11 +208,11 @@ public class DbConnection {
 	public Map<String, Set<String>> getCommitsBeforeChanges(String commitID)
 	{
 		try{
-			Map<String, Set<String>> changes = new HashMap<String, Set<String>>();
+			Map<String, Set<String>> changes = new LinkedHashMap<String, Set<String>>();
 			String sql = "SELECT commit_id, file_id from changes natural join commits where " +
 					"(branch_id=? or branch_id is NULL) and commit_date < " +
 					"(select commit_date from commits where commit_id=? and " +
-					"(branch_id=? OR branch_id is NULL)) ORDER BY commit_date;";
+					"(branch_id=? OR branch_id is NULL)) ORDER BY commit_date desc;";
 			String[] params = {this.branchID, commitID, this.branchID};
 			ResultSet rs = execPreparedQuery(sql, params);
 			String currentCommitId;
