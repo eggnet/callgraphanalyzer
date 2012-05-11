@@ -10,6 +10,7 @@ import java.util.Set;
 import models.CallGraph;
 import models.Method;
 import parser.Parser;
+import parser.Resolver;
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
@@ -86,14 +87,14 @@ public class Comparator {
 		}
 		callGraph.print();
 		
-		//System.out.println();
-		//System.out.println();
-		//System.out.println("Resolving the fuck out of this CallGraph");
+		System.out.println();
+		System.out.println();
+		System.out.println("Resolving the fuck out of this CallGraph");
 		
-		//Resolver resolver = new Resolver(callGraph);
-		//resolver.resolveMethods();
+		Resolver resolver = new Resolver(callGraph);
+		resolver.resolveMethods();
 		
-		//callGraph.print();
+		callGraph.print();
 		return callGraph;
 	}
 

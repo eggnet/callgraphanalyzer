@@ -3,23 +3,25 @@ package models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.MethodInvocation;
+
 public class Clazz {
 	
-	private File				file;
-	private String 				name;
-	private boolean 			isInterface;
-	private List<Method> 		methods;
-	private List<Clazz> 		subClazzes;
+	private File					file;
+	private String 					name;
+	private boolean 				isInterface;
+	private List<Method> 			methods;
+	private List<Clazz> 			subClazzes;
 	
-	private List<Clazz> 		interfaces;
-	private List<String> 		unresolvedInterfaces;
+	private List<Clazz> 			interfaces;
+	private List<String> 			unresolvedInterfaces;
 	
-	private Clazz 				superClazz;
-	private String 				unresolvedSuperClazz;
+	private Clazz 					superClazz;
+	private String 					unresolvedSuperClazz;
 	
-	private List<Mapping>		variables;
+	private List<Mapping>			variables;
 	
-	private List<Exprezzion> 	unresolvedExprezzions;
+	private List<MethodInvocation> 	invocations;
 
 	public Clazz() {
 		methods = new ArrayList<Method>();
@@ -29,7 +31,8 @@ public class Clazz {
 		unresolvedSuperClazz = "";
 		
 		variables = new ArrayList<Mapping>();
-		unresolvedExprezzions = new ArrayList<Exprezzion>();
+		
+		invocations = new ArrayList<MethodInvocation>();
 		
 	}
 
@@ -47,7 +50,39 @@ public class Clazz {
 		unresolvedSuperClazz = "";
 		
 		variables = new ArrayList<Mapping>();
-		unresolvedExprezzions = new ArrayList<Exprezzion>();
+		
+		invocations = new ArrayList<MethodInvocation>();
+	}
+	
+	public String lookupField(String variable) {
+		for(Mapping map: variables) {
+			if(map.getVarName().equals(variable))
+				return map.getType();
+		}
+		
+		return null;
+	}
+	
+	public boolean hasUnqualifiedName(String unqualifiedName) {
+		String shortC = unqualifiedName;
+		if(shortC.contains("."))
+			shortC = shortC.substring(shortC.lastIndexOf("."));
+		if(this.name.substring(this.name.lastIndexOf(".")+1).equals(shortC))
+			return true;
+		else
+			return false;
+	}
+	
+	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
+		String shortM = unqualifiedMethod;
+		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
+		for(Method method: methods) {
+			String unresolved = method.getName();
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
+			if(unresolved.equals(shortM))
+				return method;
+		}
+		return null;
 	}
 	
 	public void print() {
@@ -77,25 +112,6 @@ public class Clazz {
 	
 	public void addMethod(Method m) {
 		this.methods.add(m);
-	}
-	
-	/**
-	 * This function will return a method if it is passed a string such as
-	 * A.method() and if the current class is A and contains a method named
-	 * method()
-	 * @param m
-	 * @return
-	 */
-	public Method hasUnresolvedMethod(String m) {
-		String shortM = m;
-		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
-		for(Method method: methods) {
-			String unresolved = method.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
-			if(unresolved.equals(shortM))
-				return method;
-		}
-		return null;
 	}
 	
 	public void addUnresolvedInterface(String i) {
@@ -202,13 +218,12 @@ public class Clazz {
 		this.variables = variables;
 	}
 
-	public List<Exprezzion> getUnresolvedExprezzions() {
-		return unresolvedExprezzions;
+	public List<MethodInvocation> getInvocations() {
+		return invocations;
 	}
 
-	public void setUnresolvedExprezzions(List<Exprezzion> unresolvedExprezzions) {
-		this.unresolvedExprezzions = unresolvedExprezzions;
+	public void setInvocations(List<MethodInvocation> invocations) {
+		this.invocations = invocations;
 	}
-	
 }
 
