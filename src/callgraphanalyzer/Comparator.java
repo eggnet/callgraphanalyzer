@@ -2,6 +2,7 @@ package callgraphanalyzer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,60 @@ import differ.filediffer;
 import differ.filediffer.diffObjectResult;
 
 public class Comparator {
+	
+	public class ModifiedMethod
+	{
+		public ModifiedMethod(Set<Method> oldM, Set<Method> newM)
+		{
+			this.oldMethods = oldM;
+			this.newMethods = newM;
+		};
+		public Set<Method> oldMethods = new HashSet<Method>();
+		public Set<Method> newMethods = new HashSet<Method>();
+	};
+	
+	public class CompareResult
+	{
+		public CompareResult(){};
+		public void clear()
+		{
+			addedFiles.clear();
+			deletedFiles.clear();
+			modifiedFiles.clear();
+			modifiedBinaryFiles.clear();
+		};
+		
+		public void print()
+		{
+			for(String file : addedFiles)
+				System.out.println("+\t" + file);
+			
+			for(String file : deletedFiles)
+				System.out.println("-\t" + file);
+			
+			for(String file : modifiedBinaryFiles.keySet())
+			{
+				String commitID = modifiedBinaryFiles.get(file);
+				System.out.println("+-[BIN]\t" + file + " in " + commitID);
+			}
+			
+			for(String file : modifiedFiles.keySet())
+			{
+				ModifiedMethod methods = modifiedFiles.get(file);
+				System.out.println("+-\t" + file);
+				for(Method mo : methods.oldMethods)
+					System.out.println("\tModified old method: " + mo.getName());
+				for(Method mn : methods.newMethods)
+					System.out.println("\tModified new method: " + mn.getName());
+			}
+		};
+		
+		public Set<String> addedFiles = new HashSet<String>();
+		public Set<String> deletedFiles = new HashSet<String>();
+		public Map<String, ModifiedMethod> modifiedFiles = new HashMap<String, ModifiedMethod>();
+		public Map<String, String> modifiedBinaryFiles = new HashMap<String, String>();
+	};
+	
 	private DbConnection db;
 	private filediffer differ;
 	private CallGraphAnalyzer CallGraphAnalyzer;
@@ -24,8 +79,9 @@ public class Comparator {
 	public Map<String, String> FileMap;
 	public Map<String, String> newCommitFileTree;
 	public Map<String, String> oldCommitFileTree;
-	public Map<String, List<Method>> modifiedMethods;
 	public Map<String, Set<String>> commitsInBetween;
+	
+	private CompareResult compareResult = new CompareResult();
 	
 	public CommitsTO newCommit;
 	public CommitsTO oldCommit;
@@ -64,8 +120,9 @@ public class Comparator {
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
-		// get all the commits exist between the two commits
+		// get all the commits exist between the two commits and the newer commit
 		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
+		this.commitsInBetween.put(first.getCommit_id(), first.getChanged_files());
 	}
 	
 	/**
@@ -99,8 +156,8 @@ public class Comparator {
 
 	public boolean CompareCommits()
 	{
-		this.modifiedMethods = new HashMap<String, List<Method>>();
 		Set<String> binaryFiles = db.getBinaryFiles();
+		this.compareResult.clear();
 		
 		// For every file in the new commit tree
 		for (String newKey : newCommitFileTree.keySet())
@@ -113,10 +170,9 @@ public class Comparator {
 				if(binaryFiles.contains(newKey))
 				{
 					//check if this binary file has changed
-					if(isBinaryFileChanged(newKey))
-					{
-						System.out.println("+-\t[Binary file]" + newKey);
-					}
+					String commitID = getCommitHasChangedBinaryFile(newKey);
+					if(!commitID.isEmpty())
+						this.compareResult.modifiedBinaryFiles.put(newKey, commitID);
 					continue;
 				}
 				else
@@ -132,7 +188,6 @@ public class Comparator {
 					if(differ.isModified())
 					{
 						// return the change sets from the two files
-						System.out.println("+-\t" + newKey);
 						List<diffObjectResult> deleteObjects = differ.getDeleteObjects();
 						List<diffObjectResult> insertObjects = differ.getInsertObjects();
 						
@@ -144,7 +199,7 @@ public class Comparator {
 			else
 			{
 				// The file was added (+) since the old commit.
-				System.out.println("+\t" + newKey);
+				this.compareResult.addedFiles.add(newKey);
 			}
 		}
 		for (String oldKey : oldCommitFileTree.keySet())
@@ -152,11 +207,11 @@ public class Comparator {
 			if (!newCommitFileTree.containsKey(oldKey))
 			{
 				// The file was deleted from the old tree
-				System.out.println("-\t" + oldKey);
+				this.compareResult.deletedFiles.add(oldKey);
 			}
 		}
 		
-		printModifiedMethods();
+		print();
 		return true;
 	}
 	
@@ -169,26 +224,16 @@ public class Comparator {
 	 */
 	public void getModifiedMethodsForFile(String fileName, List<diffObjectResult> deleteDiffs, List<diffObjectResult> insertDiffs)
 	{
-		List<Method> methods = new ArrayList<Method>();
+		Set<Method> newMethods = new HashSet<Method>();
+		Set<Method> oldMethods = new HashSet<Method>();
 		
 		// methods from old file version
 		for(diffObjectResult diff : deleteDiffs)
 		{
 			List<Method> changedMethod = this.oldCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
 			for(Method m : changedMethod)
-			{
-				boolean exist = false;
-				for(Method me : methods)
-				{
-					if(me.getName().equals(m.getName()))
-					{
-						exist = true;
-						break;
-					}
-				}
-				if(!exist)
-					methods.add(m);
-			}
+				if(!oldMethods.contains(m))
+					oldMethods.add(m);
 		}
 		
 		// methods from new file version
@@ -196,24 +241,16 @@ public class Comparator {
 		{
 			List<Method> changedMethod = this.newCallGraph.getMethodsUsingCharacters(fileName, diff.start, diff.end);
 			for(Method m : changedMethod)
-			{
-				boolean exist = false;
-				for(Method me : methods)
-				{
-					if(me.getName().equals(m.getName()))
-					{
-						exist = true;
-						break;
-					}
-				}
-				if(!exist)
-					methods.add(m);
-			}
+				if(!newMethods.contains(m))
+					newMethods.add(m);
 		}
 		
 		// Insert to modifiedMethod map
-		if(!this.modifiedMethods.containsKey(fileName))
-			this.modifiedMethods.put(fileName, methods);
+		if(!this.compareResult.modifiedFiles.containsKey(fileName))
+		{
+			ModifiedMethod mm = new ModifiedMethod(oldMethods, newMethods);
+			this.compareResult.modifiedFiles.put(fileName, mm);
+		}
 	}
 	
 	/**
@@ -253,29 +290,26 @@ public class Comparator {
 		}
 	}
 	
-	public boolean isBinaryFileChanged(String file)
+	public String getCommitHasChangedBinaryFile(String file)
 	{
 		// If the file was committed sometime between newCommit and oldCommit, there is a change
+		// Search from the newest commit down
 		for(String commit : commitsInBetween.keySet())
 		{
 			Set<String> fileChanged = commitsInBetween.get(commit);
 			if(fileChanged.contains(file))
-				return true;
+				return commit;
 		}
-		return false;
+		return "";
 	}
 	
-	public void printModifiedMethods()
+	public void print()
 	{
-		for(String file : this.modifiedMethods.keySet())
-		{
-			List<Method> methods = this.modifiedMethods.get(file);
-			System.out.println("File: " + file);
-			for(Method m :methods)
-			{
-				System.out.println("\tModified method: " +m.getName());
-			}
-			
-		}
+		this.compareResult.print();
 	}
+
+	public CompareResult getCompareResult() {
+		return compareResult;
+	}
+	
 }

@@ -252,7 +252,7 @@ public class DbConnection {
 	 * Return a list of commits and their changed files between any 2 commits
 	 * @param beforeCommitID
 	 * @param afterCommitID
-	 * @return
+	 * @return map of all commits and their changed files between the given commits
 	 */
 	public Map<String, Set<String>> getCommitsBeforeAndAfterChanges(String oldCommitID, String newCommitID)
 	{
@@ -267,7 +267,7 @@ public class DbConnection {
 					"(branch_id=? or branch_id is NULL) and "+
 					"(commit_date > '"+ oldTimeStamp +
 					"\' and commit_date < '" + newTimeStamp + "') " +
-					"ORDER BY commit_date;";
+					"ORDER BY commit_date desc;";
 			
 			String[] params = {this.branchID};
 			ResultSet rs = execPreparedQuery(sql, params);
