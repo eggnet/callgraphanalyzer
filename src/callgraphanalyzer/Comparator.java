@@ -11,6 +11,7 @@ import java.util.Set;
 import models.CallGraph;
 import models.Method;
 import parser.Parser;
+import parser.Resolver;
 import db.CommitsTO;
 import db.DbConnection;
 import differ.filediffer;
@@ -118,7 +119,7 @@ public class Comparator {
 		// check and create our owners.
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
-		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		//this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
 		// get all the commits exist between the two commits and the newer commit
 		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
@@ -147,10 +148,10 @@ public class Comparator {
 		System.out.println();
 		System.out.println("Resolving the fuck out of this CallGraph");
 		
-		//Resolver resolver = new Resolver(callGraph);
-		//resolver.resolveMethods();
+		Resolver resolver = new Resolver(callGraph);
+		resolver.resolveMethods();
 		
-		//callGraph.print();
+		callGraph.print();
 		return callGraph;
 	}
 

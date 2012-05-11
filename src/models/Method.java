@@ -3,6 +3,8 @@ package models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+
 public class Method {
 	
 	private String		 		name;
@@ -15,13 +17,13 @@ public class Method {
 	
 	private List<Method> 		methodCalls;
 	private List<Method>		calledBy;
-	private List<Exprezzion>	unresolvedExprezzions;
+	
+	private MethodDeclaration	node;
 	
 	
 	public Method() {
 		methodCalls = new ArrayList<Method>();
 		calledBy = new ArrayList<Method>();
-		unresolvedExprezzions = new ArrayList<Exprezzion>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
@@ -29,7 +31,6 @@ public class Method {
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
 		calledBy = new ArrayList<Method>();
-		unresolvedExprezzions = new ArrayList<Exprezzion>();
 	}
 	
 	public void addCalledBy(Method m) {
@@ -42,22 +43,11 @@ public class Method {
 			this.methodCalls.add(m);
 	}
 	
-	public void addUnresolvedExprezzion(String exprezzion, String methodCall, List<Exprezzion> parameters, String resolvedType) {
-		Exprezzion e = new Exprezzion(exprezzion, methodCall, parameters, resolvedType);
-		this.unresolvedExprezzions.add(e);
-		for(Exprezzion exp: e.getParameters()) {
-			addUnresolvedExprezzion(exp.getExpression(), exp.getMethodCall(), exp.getParameters(), exp.getResolvedType());
-		}
-	}
-	
 	public void print() {
 		System.out.println("    METHOD: " + name);
 		System.out.println("      Calls: ");
 		for(Method m: methodCalls)
 			System.out.println("        " + m.getName());
-		System.out.println("      Unresolved Calls: ");
-		for(Exprezzion e: unresolvedExprezzions)
-			e.print();
 		System.out.println("      Called By: ");
 		for(Method m: calledBy)
 			System.out.println("        " + m.getName());
@@ -80,14 +70,6 @@ public class Method {
 	}
 	public void setMethodCalls(ArrayList<Method> methodCalls) {
 		this.methodCalls = methodCalls;
-	}
-
-	public List<Exprezzion> getUnresolvedExprezzions() {
-		return unresolvedExprezzions;
-	}
-
-	public void setUnresolvedExprezzions(List<Exprezzion> unresolvedExprezzions) {
-		this.unresolvedExprezzions = unresolvedExprezzions;
 	}
 
 	public List<Method> getCalledBy() {
@@ -120,5 +102,13 @@ public class Method {
 
 	public void setReturnType(String returnType) {
 		this.returnType = returnType;
+	}
+
+	public MethodDeclaration getNode() {
+		return node;
+	}
+
+	public void setNode(MethodDeclaration node) {
+		this.node = node;
 	}
 }
