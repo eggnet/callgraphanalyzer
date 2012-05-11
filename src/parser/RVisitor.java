@@ -11,11 +11,17 @@ import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -92,9 +98,29 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof SimpleName) {
 			return resolveSimpleName((SimpleName)expression);
 		}
-		// Handle type literal
+		// Handle boolean literal
+		else if(expression instanceof BooleanLiteral) {
+			return "boolean";
+		}
+		// Handle character literal
+		else if(expression instanceof CharacterLiteral) {
+			return "char";
+		}
+		// Handle null literal
+		else if(expression instanceof NullLiteral) {
+			return "null";
+		}
+		// Handle number literal
+		else if(expression instanceof NumberLiteral) {
+			return resolveNumberLiteral((NumberLiteral)expression);
+		}
+		// Handle String literal
+		else if(expression instanceof StringLiteral) {
+			return "String";
+		}
+		// Handle Type literal
 		else if(expression instanceof TypeLiteral) {
-			
+			return ((TypeLiteral)expression).getType().toString();
 		}
 		// Handle field access NOTE: Even though it says QualifiedName, it
 		// still behaves as a field access
@@ -155,6 +181,20 @@ public class RVisitor extends ASTVisitor {
 			type = resolveQualifiedName((QualifiedName)qualifiedName.getQualifier());
 		
 		return lookupClassField(type, qualifiedName.getName().toString());
+	}
+	
+	private String resolveNumberLiteral(NumberLiteral numberLiteral) {
+		if(numberLiteral.getToken().contains("F") || numberLiteral.getToken().contains("f"))
+			return "float";
+		if(numberLiteral.getToken().contains("D") || numberLiteral.getToken().contains("d") || 
+				numberLiteral.getToken().contains("E") || numberLiteral.getToken().contains("e"))
+			return "double";
+		if(numberLiteral.getToken().contains("L") || numberLiteral.getToken().contains("l"))
+			return "long";
+		if(!numberLiteral.getToken().contains("."))
+			return "int";
+		else
+			return "double";
 	}
 	
 	private List<String> resolveParameters(List<Expression> parameters) {

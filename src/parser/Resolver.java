@@ -54,49 +54,6 @@ public class Resolver {
 		return true;
 	}
 	
-	/**
-	 * This function will return a string that corresponds to the
-	 * type of the literal in the expression it is passed.
-	 * @param expression
-	 * @return
-	 */
-	private String resolveLiteralType(Expression expression) {
-		String literal = "";
-		
-		if(expression instanceof BooleanLiteral)
-			literal = "boolean";
-		else if(expression instanceof CharacterLiteral)
-			literal = "char";
-		else if(expression instanceof NullLiteral)
-			literal = "null";
-		else if(expression instanceof NumberLiteral || expression instanceof CastExpression)
-			literal = resolveNumberLiteral(expression);
-		else if(expression instanceof StringLiteral)
-			literal = "String";
-		
-		return literal;
-	}
-	
-	private String resolveNumberLiteral(Expression expression) {
-		
-		if(expression instanceof CastExpression) {
-			return ((CastExpression)expression).getType().toString();
-		}
-		
-		NumberLiteral number = (NumberLiteral)expression;
-		if(number.getToken().contains("F") || number.getToken().contains("f"))
-			return "float";
-		if(number.getToken().contains("D") || number.getToken().contains("d") || 
-				number.getToken().contains("E") || number.getToken().contains("e"))
-			return "double";
-		if(number.getToken().contains("L") || number.getToken().contains("l"))
-			return "long";
-		if(!number.getToken().contains("."))
-			return "int";
-		else
-			return "double";
-	}
-	
 	public boolean resolveClazzes() {
 		for(Clazz clazz: callGraph.getAllClazzes()) {
 			// TODO This function needs to be redone
