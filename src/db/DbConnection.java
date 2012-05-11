@@ -238,6 +238,7 @@ public class DbConnection {
 					currentFileset.add(rs.getString("file_id"));
 				}
 			}
+			changes.put(currentCommitId, currentFileset);
 			return changes;
 		}
 		catch (SQLException e)
@@ -293,6 +294,7 @@ public class DbConnection {
 					currentFileset.add(rs.getString("file_id"));
 				}
 			}
+			changes.put(currentCommitId, currentFileset);
 			return changes;
 		}
 		catch (SQLException e)
