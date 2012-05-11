@@ -19,6 +19,9 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StringLiteral;
@@ -147,6 +150,18 @@ public class RVisitor extends ASTVisitor {
 		// Handle explicit use of "this"
 		else if(expression instanceof ThisExpression) {
 			return resolveThisExpression((ThisExpression)expression);
+		}
+		// Handle parathesized expression 
+		else if(expression instanceof ParenthesizedExpression) {
+			return resolveExpression(((ParenthesizedExpression)expression).getExpression());
+		}
+		// Handle postfix operator
+		else if(expression instanceof PostfixExpression) {
+			return resolveExpression(((PostfixExpression)expression).getOperand());
+		}
+		// Handle prefix operator
+		else if(expression instanceof PrefixExpression) {
+			return resolveExpression(((PrefixExpression)expression).getOperand());
 		}
 		
 		return null;
