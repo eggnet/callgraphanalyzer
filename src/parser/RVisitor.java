@@ -73,8 +73,10 @@ public class RVisitor extends ASTVisitor {
 		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
 				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
 		
-		if(resolved == null)
+		// The resolving has failed
+		if(resolved == null) {
 			return super.visit(node);
+		}
 		
 		method.addMethodCall(resolved);
 		resolved.addCalledBy(method);
@@ -121,6 +123,10 @@ public class RVisitor extends ASTVisitor {
 		// Handle Type literal
 		else if(expression instanceof TypeLiteral) {
 			return ((TypeLiteral)expression).getType().toString();
+		}
+		// Handle cast expression
+		else if(expression instanceof CastExpression) {
+			return ((CastExpression)expression).getType().toString();
 		}
 		// Handle field access NOTE: Even though it says QualifiedName, it
 		// still behaves as a field access

@@ -55,9 +55,11 @@ public class Clazz {
 	}
 	
 	public String lookupField(String variable) {
-		for(Mapping map: variables) {
-			if(map.getVarName().equals(variable))
-				return map.getType();
+		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
+			for(Mapping map: clazz.variables) {
+				if(map.getVarName().equals(variable))
+					return map.getType();
+			}
 		}
 		
 		return null;
@@ -76,11 +78,13 @@ public class Clazz {
 	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
 		String shortM = unqualifiedMethod;
 		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
-		for(Method method: methods) {
-			String unresolved = method.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
-			if(unresolved.equals(shortM))
-				return method;
+		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
+			for(Method method: methods) {
+				String unresolved = method.getName();
+				unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
+				if(unresolved.equals(shortM))
+					return method;
+			}
 		}
 		return null;
 	}
