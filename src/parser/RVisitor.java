@@ -9,16 +9,23 @@ import models.Clazz;
 import models.Mapping;
 import models.Method;
 
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StringLiteral;
@@ -147,6 +154,38 @@ public class RVisitor extends ASTVisitor {
 		// Handle explicit use of "this"
 		else if(expression instanceof ThisExpression) {
 			return resolveThisExpression((ThisExpression)expression);
+		}
+		// Handle parathesized expression 
+		else if(expression instanceof ParenthesizedExpression) {
+			return resolveExpression(((ParenthesizedExpression)expression).getExpression());
+		}
+		// Handle postfix operator
+		else if(expression instanceof PostfixExpression) {
+			return resolveExpression(((PostfixExpression)expression).getOperand());
+		}
+		// Handle prefix operator
+		else if(expression instanceof PrefixExpression) {
+			return resolveExpression(((PrefixExpression)expression).getOperand());
+		}
+		// Handle instanceof operator
+		// Defaults to bool for now.
+		else if(expression instanceof InstanceofExpression) {
+			return "boolean";
+		}
+		// Handle Infix operator - assuming each side of the operator must be the same type
+		// This could be a risky assumption and may need tweaking later.
+		else if(expression instanceof InfixExpression) {
+			// Really we need to evaluate each expression and then take the 
+			// Higher precedence
+			return resolveExpression(((InfixExpression)expression).getLeftOperand());
+		}
+		// Handle class instance creation
+		else if(expression instanceof ClassInstanceCreation) {
+			return ((ClassInstanceCreation)expression).getType().toString();
+		}
+		// Handle assignment
+		else if(expression instanceof Assignment) {
+			return resolveExpression(((Assignment)expression).getLeftHandSide());
 		}
 		
 		return null;
