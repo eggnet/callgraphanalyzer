@@ -22,6 +22,8 @@ import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -133,6 +135,14 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof QualifiedName) {
 			return resolveQualifiedName((QualifiedName)expression);
 		}
+		// Handle explicit super field access
+		else if(expression instanceof SuperFieldAccess) {
+			return resolveSuperFieldAccess((SuperFieldAccess)expression);
+		}
+		// Handle explicit super method invocation
+		else if(expression instanceof SuperMethodInvocation) {
+			return resolveSuperMethodInvocation((SuperMethodInvocation)expression);
+		}
 		
 		return null;
 	}
@@ -203,6 +213,42 @@ public class RVisitor extends ASTVisitor {
 			return "double";
 	}
 	
+	private String resolveSuperFieldAccess(SuperFieldAccess access) {
+		Clazz superClazz = null;
+		String className = null;
+		if(access.getQualifier() == null)
+			superClazz = clazz.getSuperClazz();
+		else {
+			className = resolveExpression(access.getQualifier());
+			Clazz lookupClazz = lookupClassName(className);
+			if(lookupClazz != null)
+				superClazz = lookupClazz.getSuperClazz();
+		}
+		
+		if(superClazz == null)
+			return null;
+		else
+			return superClazz.getName();
+	}
+	
+	private String resolveSuperMethodInvocation(SuperMethodInvocation invocation) {
+		Clazz superClazz = null;
+		String className = null;
+		if(invocation.getQualifier() == null)
+			superClazz = clazz.getSuperClazz();
+		else {
+			className = resolveExpression(invocation.getQualifier());
+			Clazz lookupClazz = lookupClassName(className);
+			if(lookupClazz != null)
+				superClazz = lookupClazz.getSuperClazz();
+		}
+		
+		if(superClazz == null)
+			return null;
+		else
+			return superClazz.getName();
+	}
+	
 	private List<String> resolveParameters(List<Expression> parameters) {
 		List<String> types = new ArrayList<String>();
 		
@@ -249,6 +295,27 @@ public class RVisitor extends ASTVisitor {
 
 		// Check the current class for the field
 		return clazz.hasUnqualifiedMethod(method);
+	}
+	
+	private Clazz lookupClassName(String className) {
+		// Look through the package for the class name
+		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
+			if(packageClazz.hasUnqualifiedName(className))
+				return packageClazz;
+		}
+		
+		// Look through the imports for the class name
+		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
+		for (Clazz s : imports) {
+			if(s.hasUnqualifiedName(className))
+				return s;
+		}
+		
+		// Check the current class for the name
+		if(clazz.hasUnqualifiedName(className))
+			return clazz;
+		
+		return null;
 	}
 	
 	/**
