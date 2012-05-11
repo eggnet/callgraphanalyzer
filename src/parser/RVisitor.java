@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -143,6 +144,10 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof SuperMethodInvocation) {
 			return resolveSuperMethodInvocation((SuperMethodInvocation)expression);
 		}
+		// Handle explicit use of "this"
+		else if(expression instanceof ThisExpression) {
+			return resolveThisExpression((ThisExpression)expression);
+		}
 		
 		return null;
 	}
@@ -247,6 +252,13 @@ public class RVisitor extends ASTVisitor {
 			return null;
 		else
 			return superClazz.getName();
+	}
+	
+	private String resolveThisExpression(ThisExpression thisExpression) {
+		if(thisExpression.getQualifier() != null)
+			return resolveExpression(thisExpression.getQualifier());
+		else
+			return clazz.getName();
 	}
 	
 	private List<String> resolveParameters(List<Expression> parameters) {
