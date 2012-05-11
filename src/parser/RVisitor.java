@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
@@ -162,6 +164,18 @@ public class RVisitor extends ASTVisitor {
 		// Handle prefix operator
 		else if(expression instanceof PrefixExpression) {
 			return resolveExpression(((PrefixExpression)expression).getOperand());
+		}
+		// Handle instanceof operator
+		// Defaults to bool for now.
+		else if(expression instanceof InstanceofExpression) {
+			return "boolean";
+		}
+		// Handle Infix operator - assuming each side of the operator must be the same type
+		// This could be a risky assumption and may need tweaking later.
+		else if(expression instanceof InfixExpression) {
+			// Really we need to evaluate each expression and then take the 
+			// Higher precedence
+			return resolveExpression(((InfixExpression)expression).getLeftOperand());
 		}
 		
 		return null;
