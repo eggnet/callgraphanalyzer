@@ -119,7 +119,7 @@ public class Comparator {
 		// check and create our owners.
 		this.CallGraphAnalyzer = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
-		//this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
 		// get all the commits exist between the two commits and the newer commit
 		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
