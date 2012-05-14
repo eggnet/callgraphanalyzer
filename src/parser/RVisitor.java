@@ -303,13 +303,13 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private String binaryNumericPromotion(String left, String right) {
-		if(left == "String" || right == "String")
+		if(left.equals("String") || right.equals("String"))
 			return "String";
-		else if(left == "double" || right == "double")
+		else if(left.equals("double") || right.equals("double"))
 			return "double";
-		else if(left == "float" || right == "float")
+		else if(left.equals("float") || right.equals("float"))
 			return "float";
-		else if(left == "long" || right == "long")
+		else if(left.equals("long") || right.equals("long"))
 			return "long";
 		else
 			return "int";
@@ -322,6 +322,113 @@ public class RVisitor extends ASTVisitor {
 			types.add(resolveExpression(expression));
 		
 		return types;
+	}
+	
+	/** 
+	 * This function will return all the possible parameter lists
+	 * that are possible for the given parameter list with inheritance
+	 * and interface implementation.
+	 * @param parameters
+	 * @return
+	 */
+	private List<Method> fuzzyResolveParameters(List<String> parameters) {
+		List<ArrayList<String>> fuzzyParameters = recursiveResolveFuzzy(parameters);
+		
+		for(ArrayList<String> list: fuzzyParameters) {
+			for(String s: list) {
+				System.out.print(s + ", ");
+			}
+			System.out.println();
+		}
+		
+		return null;
+	}
+	
+	private List<ArrayList<String>> recursiveResolveFuzzy(List<String> front) {
+		List<ArrayList<String>> combinations = new ArrayList<ArrayList<String>>();
+		List<ArrayList<String>> oldCombinations = new ArrayList<ArrayList<String>>();
+		String type = front.get(front.size()-1);
+		
+		for(front = front.subList(0, front.size()-1);!front.isEmpty(); front = front.subList(0, front.size()-1)) {
+			// The first case is that the we have no combinations yet.
+			if(oldCombinations.size() == 0 && type != null) {
+				for(String typeName: getSuperAndInterfaces(type)) {
+					ArrayList<String> list = new ArrayList<String>();
+					list.add(typeName);
+					combinations.add(list);
+				}
+			}
+			
+			// The second case is that we have combinations and a type
+			else if(type != null && oldCombinations.size() != 0) {
+				for(String typeName: getSuperAndInterfaces(type)) {
+					for(ArrayList<String> ending: oldCombinations) {
+						ArrayList<String> list = new ArrayList<String>();
+						list.add(typeName);
+						list.addAll(ending);
+						combinations.add(list);
+					}
+				}
+			}
+			
+			
+			oldCombinations = combinations;
+			combinations = new ArrayList<ArrayList<String>>();
+			type = front.get(front.size()-1);
+		}
+		
+		// Do the last step
+		if(type != null && oldCombinations.size() != 0) {
+			for(String typeName: getSuperAndInterfaces(type)) {
+				for(ArrayList<String> ending: oldCombinations) {
+					ArrayList<String> list = new ArrayList<String>();
+					list.add(typeName);
+					list.addAll(ending);
+					combinations.add(list);
+				}
+			}
+		}
+		
+		return combinations;
+	}
+	
+	private List<String> getSuperAndInterfaces(String className) {
+		List<String> result = new ArrayList<String>();
+		
+		// Check for literal
+		if(isLiteral(className)) {
+			result.add(className);
+			return result;
+		}
+		
+		Clazz base = lookupClassName(className);
+		Clazz superClass = null;
+		Clazz superInterface = null;
+		if(base != null) {
+			for(superClass = base;superClass != null; superClass = base.getSuperClazz()) {
+				result.add(superClass.getName().substring(superClass.getName().lastIndexOf(".")));
+				result.addAll(getInterfaces(superClass));
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * This returns an unresolved type list of all interfaces
+	 * that a given clazz implements.
+	 * @param clazz
+	 * @return
+	 */
+	private List<String> getInterfaces(Clazz clazz) {
+		List<String> interfaces = new ArrayList<String>();
+		
+		for(Clazz inter: clazz.getInterfaces()) {
+			interfaces.add(inter.getName().substring(inter.getName().lastIndexOf(".")));
+			interfaces.addAll(getInterfaces(inter));
+		}
+		
+		return interfaces;
 	}
 	
 	/**
@@ -418,6 +525,15 @@ public class RVisitor extends ASTVisitor {
 			return clazz;
 		
 		return null;
+	}
+	
+	private boolean isLiteral(String literal) {
+		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
+				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
+				literal.equals("float") || literal.equals("boolean") || literal.equals("char"))
+			return true;
+		else
+			return false;
 	}
 	
 	/**
