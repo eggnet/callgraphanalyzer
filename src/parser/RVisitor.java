@@ -324,6 +324,42 @@ public class RVisitor extends ASTVisitor {
 		return types;
 	}
 	
+	/**
+	 * This function handles when we see a constructor call.
+	 * We need to be able to link methods to other constructors
+	 * for a dependency.
+	 */
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		// Get the type
+		String type = node.getType().toString();
+
+		// This means we were unable to resolve the method invocation
+		if(type == null)
+			return super.visit(node);
+
+		// Get the method call 
+		// For constructors method name should be same as the type.
+		String methodName = node.getType().toString();
+
+		List<String> parameters = resolveParameters(node.arguments());
+
+		String methodToResolve = methodNameBuilder(type, methodName, parameters);
+		
+		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
+				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+		
+		// The resolving has failed
+		if(resolved == null) {
+			return super.visit(node);
+		}
+		
+		method.addMethodCall(resolved);
+		resolved.addCalledBy(method);
+		
+		return super.visit(node);
+	}
+	
 	private String lookupClassField(String className, String field) {
 		if(className == null || field == null)
 			return null;
