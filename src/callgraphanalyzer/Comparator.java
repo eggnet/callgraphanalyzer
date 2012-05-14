@@ -24,10 +24,10 @@ public class Comparator {
 		{
 			this.oldMethods = oldM;
 			this.newMethods = newM;
-		};
+		}
 		public Set<Method> oldMethods = new HashSet<Method>();
 		public Set<Method> newMethods = new HashSet<Method>();
-	};
+	}
 	
 	public class CompareResult
 	{
@@ -38,7 +38,7 @@ public class Comparator {
 			deletedFiles.clear();
 			modifiedFiles.clear();
 			modifiedBinaryFiles.clear();
-		};
+		}
 		
 		public void print()
 		{
@@ -63,13 +63,13 @@ public class Comparator {
 				for(Method mn : methods.newMethods)
 					System.out.println("\tModified new method: " + mn.getName());
 			}
-		};
+		}
 		
 		public Set<String> addedFiles = new HashSet<String>();
 		public Set<String> deletedFiles = new HashSet<String>();
 		public Map<String, ModifiedMethod> modifiedFiles = new HashMap<String, ModifiedMethod>();
 		public Map<String, String> modifiedBinaryFiles = new HashMap<String, String>();
-	};
+	}
 	
 	private CallGraphDb db;
 	private filediffer differ;
