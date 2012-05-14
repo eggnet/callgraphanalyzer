@@ -68,8 +68,10 @@ public class RVisitor extends ASTVisitor {
 			type = clazz.getName();
 		
 		// This means we were unable to resolve the method invocation
-		if(type == null)
+		if(type == null) {
+			method.addUnresolvedCall(node.getName().getFullyQualifiedName());
 			return super.visit(node);
+		}
 		
 		// Get the method call
 		String methodName = node.getName().getFullyQualifiedName();
@@ -85,19 +87,18 @@ public class RVisitor extends ASTVisitor {
 		
 		// The resolving has failed
 		if(resolved == null) {
+			// Try fuzzy resolving
 			if(!parameters.isEmpty()) {
-				List<Method> possibleResolves = fuzzyResolveParameters(type, methodName, parameters);
-				for(Method m: possibleResolves) {
-					method.addFuzzyCall(m);
-					m.addFuzzyCalledBy(method);
-				}
+				resolved = fuzzyResolveParameters(type, methodName, parameters);
 			}
-			
-			return super.visit(node);
 		}
 		
-		method.addMethodCall(resolved);
-		resolved.addCalledBy(method);
+		if(resolved != null) {
+			method.addMethodCall(resolved);
+			resolved.addCalledBy(method);
+		}
+		else
+			method.addUnresolvedCall(methodToResolve);
 		
 		return super.visit(node);
 	}
@@ -232,7 +233,15 @@ public class RVisitor extends ASTVisitor {
 		}
 		else {
 			System.out.println("                             " + "Return type: unknown");
-			return null;
+			// The resolving has failed
+			// Try fuzzy resolving
+			if(!parameters.isEmpty())
+				resolved = fuzzyResolveParameters(type, methodName, parameters);
+			
+			if(resolved != null)
+				return resolved.getReturnType();
+			else
+				return null;
 		}
 	}
 	
@@ -339,7 +348,7 @@ public class RVisitor extends ASTVisitor {
 	 * @param parameters
 	 * @return
 	 */
-	private List<Method> fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
+	private Method fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
 		List<ArrayList<String>> fuzzyParameters = getFuzzyParameters(parameters);
 		List<Method> fuzzyMethods = new ArrayList<Method>();
 		
@@ -352,10 +361,10 @@ public class RVisitor extends ASTVisitor {
 					methodToResolve.substring(methodToResolve.lastIndexOf(".")));
 			
 			if(resolved != null)
-				fuzzyMethods.add(resolved);
+				return resolved;
 		}
 		
-		return fuzzyMethods;
+		return null;
 	}
 	
 	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {

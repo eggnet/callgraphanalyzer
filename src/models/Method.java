@@ -18,8 +18,7 @@ public class Method {
 	private List<Method> 		methodCalls;
 	private List<Method>		calledBy;
 	
-	private List<Method>		fuzzyCalls;
-	private List<Method>		fuzzyCalledBy;
+	private List<String>		unresolvedCalls;
 	
 	private MethodDeclaration	node;
 	
@@ -28,8 +27,7 @@ public class Method {
 		methodCalls = new ArrayList<Method>();
 		calledBy = new ArrayList<Method>();
 		
-		fuzzyCalls = new ArrayList<Method>();
-		fuzzyCalledBy = new ArrayList<Method>();
+		unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
@@ -38,8 +36,7 @@ public class Method {
 		this.methodCalls = methodCalls;
 		calledBy = new ArrayList<Method>();
 		
-		fuzzyCalls = new ArrayList<Method>();
-		fuzzyCalledBy = new ArrayList<Method>();
+		unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public void addCalledBy(Method m) {
@@ -52,14 +49,9 @@ public class Method {
 			this.methodCalls.add(m);
 	}
 	
-	public void addFuzzyCalledBy(Method m) {
-		if(!fuzzyCalledBy.contains(m))
-			this.fuzzyCalledBy.add(m);
-	}
-	
-	public void addFuzzyCall(Method m) {
-		if(!fuzzyCalls.contains(m))
-			this.fuzzyCalls.add(m);
+	public void addUnresolvedCall(String method) {
+		if(!unresolvedCalls.contains(method))
+			this.unresolvedCalls.add(method);
 	}
 	
 	public void print() {
@@ -70,13 +62,9 @@ public class Method {
 		System.out.println("      Called By: ");
 		for(Method m: calledBy)
 			System.out.println("        " + m.getName());
-		System.out.println("      -----------");
-		System.out.println("      Fuzzy Calls: ");
-		for(Method m: fuzzyCalls)
-			System.out.println("        " + m.getName());
-		System.out.println("      Fuzzy Called By: ");
-		for(Method m: fuzzyCalledBy)
-			System.out.println("        " + m.getName());
+		System.out.println("      Unresolved Calls: (" + unresolvedCalls.size() + ")");
+		for(String m: unresolvedCalls)
+			System.out.println("        " + m);
 	}
 	
 	public String getName() {
@@ -136,21 +124,5 @@ public class Method {
 
 	public void setNode(MethodDeclaration node) {
 		this.node = node;
-	}
-
-	public List<Method> getFuzzyCalls() {
-		return fuzzyCalls;
-	}
-
-	public void setFuzzyCalls(List<Method> fuzzyCalls) {
-		this.fuzzyCalls = fuzzyCalls;
-	}
-
-	public List<Method> getFuzzyCalledBy() {
-		return fuzzyCalledBy;
-	}
-
-	public void setFuzzyCalledBy(List<Method> fuzzyCalledBy) {
-		this.fuzzyCalledBy = fuzzyCalledBy;
 	}
 }
