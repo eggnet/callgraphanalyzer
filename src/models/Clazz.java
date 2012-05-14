@@ -68,7 +68,7 @@ public class Clazz {
 	public boolean hasUnqualifiedName(String unqualifiedName) {
 		String shortC = unqualifiedName;
 		if(shortC.contains("."))
-			shortC = shortC.substring(shortC.lastIndexOf("."));
+			shortC = shortC.substring(shortC.lastIndexOf(".")+1);
 		if(this.name.substring(this.name.lastIndexOf(".")+1).equals(shortC))
 			return true;
 		else
@@ -79,7 +79,7 @@ public class Clazz {
 		String shortM = unqualifiedMethod;
 		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
-			for(Method method: methods) {
+			for(Method method: clazz.methods) {
 				String unresolved = method.getName();
 				unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
 				if(unresolved.equals(shortM))
