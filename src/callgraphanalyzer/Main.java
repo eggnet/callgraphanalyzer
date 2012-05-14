@@ -3,6 +3,7 @@ package callgraphanalyzer;
 import models.CallGraph;
 import parser.Parser;
 import parser.Resolver;
+import db.CallGraphDb;
 import db.DbConnection;
 
 public class Main {
@@ -14,7 +15,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
-		DbConnection db = DbConnection.getInstance();
+		CallGraphDb db = new CallGraphDb();
 		db.connect(args[0]);
 		db.setBranchName(args[1]);
 				

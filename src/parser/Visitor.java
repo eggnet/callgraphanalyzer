@@ -191,6 +191,10 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public void endVisit(MethodDeclaration node) {
+		
+		// TODO @bradens @jordanell handle inline class declarations
+		if (currentMethod == null) 
+			return;
 		// Add method to the call graph
 		callGraph.addMethod(currentMethod);
 		// Add method to the current class

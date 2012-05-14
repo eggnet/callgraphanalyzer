@@ -1,22 +1,22 @@
 package testCallgraphanalyzer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import models.Method;
-
 import org.junit.Test;
-import callgraphanalyzer.Comparator;
+
 import callgraphanalyzer.CallGraphAnalyzer;
+import callgraphanalyzer.Comparator;
 import callgraphanalyzer.Comparator.CompareResult;
 import callgraphanalyzer.Comparator.ModifiedMethod;
-import db.DbConnection;
+import db.CallGraphDb;
 
 
 public class TestComparator {
 
-	private static DbConnection db = DbConnection.getInstance();
+	private static CallGraphDb db = new CallGraphDb();
 	private String dbName ="testproject";
 	private String dbBranch = "master";
 	
