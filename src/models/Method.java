@@ -18,12 +18,16 @@ public class Method {
 	private List<Method> 		methodCalls;
 	private List<Method>		calledBy;
 	
+	private List<String>		unresolvedCalls;
+	
 	private MethodDeclaration	node;
 	
 	
 	public Method() {
 		methodCalls = new ArrayList<Method>();
 		calledBy = new ArrayList<Method>();
+		
+		unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
@@ -31,6 +35,8 @@ public class Method {
 		this.clazz = clazz;
 		this.methodCalls = methodCalls;
 		calledBy = new ArrayList<Method>();
+		
+		unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public void addCalledBy(Method m) {
@@ -43,6 +49,11 @@ public class Method {
 			this.methodCalls.add(m);
 	}
 	
+	public void addUnresolvedCall(String method) {
+		if(!unresolvedCalls.contains(method))
+			this.unresolvedCalls.add(method);
+	}
+	
 	public void print() {
 		System.out.println("    METHOD: " + name);
 		System.out.println("      Calls: ");
@@ -51,6 +62,9 @@ public class Method {
 		System.out.println("      Called By: ");
 		for(Method m: calledBy)
 			System.out.println("        " + m.getName());
+		System.out.println("      Unresolved Calls: (" + unresolvedCalls.size() + ")");
+		for(String m: unresolvedCalls)
+			System.out.println("        " + m);
 	}
 	
 	public String getName() {

@@ -84,6 +84,25 @@ public class Clazz {
 				unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
 				if(unresolved.equals(shortM))
 					return method;
+				// Handle the case where parameters are null
+				else if(shortM.contains("null")) {
+					String[] unqualifiedParams = shortM.substring(shortM.lastIndexOf("(")+1, 
+							shortM.lastIndexOf(")")).split(",");
+					String[] methodParams = unresolved.substring(unresolved.lastIndexOf("(")+1, 
+							unresolved.lastIndexOf(")")).split(",");
+					boolean isMethod = true;
+					int i;
+					for(i = 0; i < methodParams.length; i++) {
+						if(!unqualifiedParams[i].equals("null") && 
+								!methodParams[i].equals(unqualifiedParams[i])) {
+								isMethod = false;
+						}
+					}
+					if(methodParams.length != unqualifiedParams.length)
+						isMethod = false;
+					if(isMethod)
+						return method;
+				}
 			}
 		}
 		return null;
