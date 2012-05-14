@@ -172,12 +172,14 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof InstanceofExpression) {
 			return "boolean";
 		}
-		// Handle Infix operator - assuming each side of the operator must be the same type
-		// This could be a risky assumption and may need tweaking later.
+		// Handle Infix operator
 		else if(expression instanceof InfixExpression) {
-			// Really we need to evaluate each expression and then take the 
-			// Higher precedence
-			return resolveExpression(((InfixExpression)expression).getLeftOperand());
+			String left = resolveExpression(((InfixExpression)expression).getLeftOperand());
+			String right = resolveExpression(((InfixExpression)expression).getRightOperand());
+			if(!left.equals(right))
+				return binaryNumericPromotion(left, right);
+			else
+				return left;
 		}
 		// Handle class instance creation
 		else if(expression instanceof ClassInstanceCreation) {
@@ -298,6 +300,19 @@ public class RVisitor extends ASTVisitor {
 			return resolveExpression(thisExpression.getQualifier());
 		else
 			return clazz.getName();
+	}
+	
+	private String binaryNumericPromotion(String left, String right) {
+		if(left == "String" || right == "String")
+			return "String";
+		else if(left == "double" || right == "double")
+			return "double";
+		else if(left == "float" || right == "float")
+			return "float";
+		else if(left == "long" || right == "long")
+			return "long";
+		else
+			return "int";
 	}
 	
 	private List<String> resolveParameters(List<Expression> parameters) {
