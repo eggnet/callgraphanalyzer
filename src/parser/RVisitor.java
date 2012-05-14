@@ -172,12 +172,14 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof InstanceofExpression) {
 			return "boolean";
 		}
-		// Handle Infix operator - assuming each side of the operator must be the same type
-		// This could be a risky assumption and may need tweaking later.
+		// Handle Infix operator
 		else if(expression instanceof InfixExpression) {
-			// Really we need to evaluate each expression and then take the 
-			// Higher precedence
-			return resolveExpression(((InfixExpression)expression).getLeftOperand());
+			String left = resolveExpression(((InfixExpression)expression).getLeftOperand());
+			String right = resolveExpression(((InfixExpression)expression).getRightOperand());
+			if(!left.equals(right))
+				return binaryNumericPromotion(left, right);
+			else
+				return left;
 		}
 		// Handle class instance creation
 		else if(expression instanceof ClassInstanceCreation) {
@@ -300,6 +302,19 @@ public class RVisitor extends ASTVisitor {
 			return clazz.getName();
 	}
 	
+	private String binaryNumericPromotion(String left, String right) {
+		if(left == "String" || right == "String")
+			return "String";
+		else if(left == "double" || right == "double")
+			return "double";
+		else if(left == "float" || right == "float")
+			return "float";
+		else if(left == "long" || right == "long")
+			return "long";
+		else
+			return "int";
+	}
+	
 	private List<String> resolveParameters(List<Expression> parameters) {
 		List<String> types = new ArrayList<String>();
 		
@@ -307,6 +322,42 @@ public class RVisitor extends ASTVisitor {
 			types.add(resolveExpression(expression));
 		
 		return types;
+	}
+	
+	/**
+	 * This function handles when we see a constructor call.
+	 * We need to be able to link methods to other constructors
+	 * for a dependency.
+	 */
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		// Get the type
+		String type = node.getType().toString();
+
+		// This means we were unable to resolve the method invocation
+		if(type == null)
+			return super.visit(node);
+
+		// Get the method call 
+		// For constructors method name should be same as the type.
+		String methodName = node.getType().toString();
+
+		List<String> parameters = resolveParameters(node.arguments());
+
+		String methodToResolve = methodNameBuilder(type, methodName, parameters);
+		
+		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
+				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+		
+		// The resolving has failed
+		if(resolved == null) {
+			return super.visit(node);
+		}
+		
+		method.addMethodCall(resolved);
+		resolved.addCalledBy(method);
+		
+		return super.visit(node);
 	}
 	
 	private String lookupClassField(String className, String field) {
