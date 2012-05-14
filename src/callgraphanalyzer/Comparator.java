@@ -1,6 +1,5 @@
 package callgraphanalyzer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,11 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import models.CallGraph;
+import models.Commit;
 import models.Method;
 import parser.Parser;
 import parser.Resolver;
-import db.CommitsTO;
-import db.DbConnection;
+import db.CallGraphDb;
 import differ.filediffer;
 import differ.filediffer.diffObjectResult;
 
@@ -25,10 +24,10 @@ public class Comparator {
 		{
 			this.oldMethods = oldM;
 			this.newMethods = newM;
-		};
+		}
 		public Set<Method> oldMethods = new HashSet<Method>();
 		public Set<Method> newMethods = new HashSet<Method>();
-	};
+	}
 	
 	public class CompareResult
 	{
@@ -39,7 +38,7 @@ public class Comparator {
 			deletedFiles.clear();
 			modifiedFiles.clear();
 			modifiedBinaryFiles.clear();
-		};
+		}
 		
 		public void print()
 		{
@@ -64,15 +63,15 @@ public class Comparator {
 				for(Method mn : methods.newMethods)
 					System.out.println("\tModified new method: " + mn.getName());
 			}
-		};
+		}
 		
 		public Set<String> addedFiles = new HashSet<String>();
 		public Set<String> deletedFiles = new HashSet<String>();
 		public Map<String, ModifiedMethod> modifiedFiles = new HashMap<String, ModifiedMethod>();
 		public Map<String, String> modifiedBinaryFiles = new HashMap<String, String>();
-	};
+	}
 	
-	private DbConnection db;
+	private CallGraphDb db;
 	private filediffer differ;
 	private CallGraphAnalyzer CallGraphAnalyzer;
 	private CallGraph newCallGraph;
@@ -84,8 +83,8 @@ public class Comparator {
 	
 	private CompareResult compareResult = new CompareResult();
 	
-	public CommitsTO newCommit;
-	public CommitsTO oldCommit;
+	public Commit newCommit;
+	public Commit oldCommit;
 	public String CurrentBranch;
 	public String CurrentBranchID;
 	
@@ -95,12 +94,12 @@ public class Comparator {
 	 * @param CommitIDOne SHA-1 Hash of the commit in question.
 	 * @param CommitIDTwo SHA-1 Hash of the second commit.
 	 */
-	public Comparator(DbConnection db, String CommitIDOne, String CommitIDTwo, CallGraphAnalyzer cga) {
+	public Comparator(CallGraphDb db, String CommitIDOne, String CommitIDTwo, CallGraphAnalyzer cga) {
 		this.db = db;
 		
 		// Figure out which commit is newer
-		CommitsTO first = db.getCommit(CommitIDOne);
-		CommitsTO second = db.getCommit(CommitIDTwo);
+		Commit first = db.getCommit(CommitIDOne);
+		Commit second = db.getCommit(CommitIDTwo);
 		if (first.getCommit_date().compareTo(second.getCommit_date()) > 0)
 		{
 			this.newCommit = first;
@@ -122,8 +121,8 @@ public class Comparator {
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
 		// get all the commits exist between the two commits and the newer commit
-		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.oldCommit.getCommit_id(), this.newCommit.getCommit_id());
-		this.commitsInBetween.put(first.getCommit_id(), first.getChanged_files());
+		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(this.newCommit.getCommit_id(), this.oldCommit.getCommit_id(), false, false);
+		this.commitsInBetween.put(first.getCommit_id(), db.getChangedFilesFromCommit(first.getCommit_id()));
 	}
 	
 	/**
@@ -263,7 +262,7 @@ public class Comparator {
 	public Map<String, String> getFilesTreeForCommit(String commitID)
 	{
 		Map<String, String> CommitFileTree = new HashMap<String, String>();
-		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(commitID);
+		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(commitID, false, false);
 		Set<String> requiredFiles = db.getFileStructureFromCommit(commitID);	// First commit;
 		Iterator<String> i = db.getCommitChangedFiles(commitID).iterator();
 		addFilesFromCommit(i, requiredFiles, CommitFileTree, commitID);

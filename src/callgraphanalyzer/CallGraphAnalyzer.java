@@ -5,11 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import models.*;
+import db.CallGraphDb;
 import db.DbConnection;
 
 public class CallGraphAnalyzer {
 	
-	private DbConnection db = DbConnection.getInstance();
+	private CallGraphDb db = new CallGraphDb();
 	private CallGraph callGraphBefore = new CallGraph();
 	private CallGraph callGraphAfter  = new CallGraph();
 	
