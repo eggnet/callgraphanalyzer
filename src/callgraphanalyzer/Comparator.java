@@ -141,14 +141,13 @@ public class Comparator {
 				continue;
 			parser.parseFileFromString(key, db.getRawFile(key, commitFileTree.get(key)));
 		}
-		callGraph.print();
 		
 		System.out.println();
 		System.out.println();
 		System.out.println("Resolving the fuck out of this CallGraph");
 		
 		Resolver resolver = new Resolver(callGraph);
-		resolver.resolveMethods();
+		resolver.resolveAll();
 		
 		callGraph.print();
 		return callGraph;

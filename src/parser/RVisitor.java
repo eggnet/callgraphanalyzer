@@ -85,6 +85,14 @@ public class RVisitor extends ASTVisitor {
 		
 		// The resolving has failed
 		if(resolved == null) {
+			if(!parameters.isEmpty()) {
+				List<Method> possibleResolves = fuzzyResolveParameters(type, methodName, parameters);
+				for(Method m: possibleResolves) {
+					method.addFuzzyCall(m);
+					m.addFuzzyCalledBy(method);
+				}
+			}
+			
 			return super.visit(node);
 		}
 		
@@ -331,20 +339,26 @@ public class RVisitor extends ASTVisitor {
 	 * @param parameters
 	 * @return
 	 */
-	private List<Method> fuzzyResolveParameters(List<String> parameters) {
-		List<ArrayList<String>> fuzzyParameters = recursiveResolveFuzzy(parameters);
+	private List<Method> fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
+		List<ArrayList<String>> fuzzyParameters = getFuzzyParameters(parameters);
+		List<Method> fuzzyMethods = new ArrayList<Method>();
 		
 		for(ArrayList<String> list: fuzzyParameters) {
-			for(String s: list) {
-				System.out.print(s + ", ");
-			}
-			System.out.println();
+			String methodToResolve = methodNameBuilder(type, methodName, list);
+			
+			System.out.println("Need to resolve the method: " + methodToResolve);
+			
+			Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
+					methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+			
+			if(resolved != null)
+				fuzzyMethods.add(resolved);
 		}
 		
-		return null;
+		return fuzzyMethods;
 	}
 	
-	private List<ArrayList<String>> recursiveResolveFuzzy(List<String> front) {
+	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {
 		List<ArrayList<String>> combinations = new ArrayList<ArrayList<String>>();
 		List<ArrayList<String>> oldCombinations = new ArrayList<ArrayList<String>>();
 		String type = front.get(front.size()-1);
@@ -405,8 +419,8 @@ public class RVisitor extends ASTVisitor {
 		Clazz superClass = null;
 		Clazz superInterface = null;
 		if(base != null) {
-			for(superClass = base;superClass != null; superClass = base.getSuperClazz()) {
-				result.add(superClass.getName().substring(superClass.getName().lastIndexOf(".")));
+			for(superClass = base;superClass != null; superClass = superClass.getSuperClazz()) {
+				result.add(superClass.getName().substring(superClass.getName().lastIndexOf(".")+1));
 				result.addAll(getInterfaces(superClass));
 			}
 		}
@@ -424,7 +438,7 @@ public class RVisitor extends ASTVisitor {
 		List<String> interfaces = new ArrayList<String>();
 		
 		for(Clazz inter: clazz.getInterfaces()) {
-			interfaces.add(inter.getName().substring(inter.getName().lastIndexOf(".")));
+			interfaces.add(inter.getName().substring(inter.getName().lastIndexOf(".")+1));
 			interfaces.addAll(getInterfaces(inter));
 		}
 		
@@ -530,7 +544,8 @@ public class RVisitor extends ASTVisitor {
 	private boolean isLiteral(String literal) {
 		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
 				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
-				literal.equals("float") || literal.equals("boolean") || literal.equals("char"))
+				literal.equals("float") || literal.equals("boolean") || literal.equals("char") ||
+				literal.equals("null"))
 			return true;
 		else
 			return false;
