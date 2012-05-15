@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -219,6 +220,12 @@ public class RVisitor extends ASTVisitor {
 			return resolveExpression(((Assignment)expression).getLeftHandSide());
 		}
 		
+		// Handle field access
+		else if(expression instanceof FieldAccess) {
+			// This also handles this expressions kind of.
+			return resolveFieldAccess((FieldAccess)expression);
+		}
+		
 		return null;
 	}
 	
@@ -282,6 +289,17 @@ public class RVisitor extends ASTVisitor {
 		return lookupClassField(type, qualifiedName.getName().toString());
 	}
 	
+	private String resolveFieldAccess(FieldAccess fieldAccess) {
+		String className = null;
+		
+		if(fieldAccess.getExpression() != null)
+			className = resolveExpression(fieldAccess.getExpression());
+		else
+			className = this.clazz.getName();
+		
+		return lookupClassField(className, fieldAccess.getName().getFullyQualifiedName());
+	}
+	
 	private String resolveNumberLiteral(NumberLiteral numberLiteral) {
 		if(numberLiteral.getToken().contains("F") || numberLiteral.getToken().contains("f"))
 			return "float";
@@ -333,10 +351,7 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private String resolveThisExpression(ThisExpression thisExpression) {
-		if(thisExpression.getQualifier() != null)
-			return resolveExpression(thisExpression.getQualifier());
-		else
-			return clazz.getName();
+		return clazz.getName();
 	}
 	
 	private String binaryNumericPromotion(String left, String right) {
@@ -425,7 +440,14 @@ public class RVisitor extends ASTVisitor {
 		}
 		
 		// Do the last step
-		if(type != null && oldCombinations.size() != 0) {
+		if(oldCombinations.size() == 0 && type != null) {
+			for(String typeName: getSuperAndInterfaces(type)) {
+				ArrayList<String> list = new ArrayList<String>();
+				list.add(typeName);
+				combinations.add(list);
+			}
+		}
+		else if(type != null && oldCombinations.size() != 0) {
 			for(String typeName: getSuperAndInterfaces(type)) {
 				for(ArrayList<String> ending: oldCombinations) {
 					ArrayList<String> list = new ArrayList<String>();
