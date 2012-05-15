@@ -36,7 +36,7 @@ public class Comparator {
 		{
 			addedFiles.clear();
 			deletedFiles.clear();
-			modifiedFiles.clear();
+			modifiedFileMethodMap.clear();
 			modifiedBinaryFiles.clear();
 		}
 		
@@ -54,9 +54,9 @@ public class Comparator {
 				System.out.println("+-[BIN]\t" + file + " in " + commitID);
 			}
 			
-			for(String file : modifiedFiles.keySet())
+			for(String file : modifiedFileMethodMap.keySet())
 			{
-				ModifiedMethod methods = modifiedFiles.get(file);
+				ModifiedMethod methods = modifiedFileMethodMap.get(file);
 				System.out.println("+-\t" + file);
 				for(Method mo : methods.oldMethods)
 					System.out.println("\tModified old method: " + mo.getName());
@@ -67,13 +67,13 @@ public class Comparator {
 		
 		public Set<String> addedFiles = new HashSet<String>();
 		public Set<String> deletedFiles = new HashSet<String>();
-		public Map<String, ModifiedMethod> modifiedFiles = new HashMap<String, ModifiedMethod>();
+		public Map<String, ModifiedMethod> modifiedFileMethodMap = new HashMap<String, ModifiedMethod>();
 		public Map<String, String> modifiedBinaryFiles = new HashMap<String, String>();
 	}
 	
 	private CallGraphDb db;
 	private filediffer differ;
-	private CallGraphAnalyzer CallGraphAnalyzer;
+	private CallGraphAnalyzer cga;
 	private CallGraph newCallGraph;
 	private CallGraph oldCallGraph;
 	public Map<String, String> FileMap;
@@ -116,7 +116,7 @@ public class Comparator {
 		}
 		
 		// check and create our owners.
-		this.CallGraphAnalyzer = cga;
+		this.cga = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		
@@ -245,10 +245,10 @@ public class Comparator {
 		}
 		
 		// Insert to modifiedMethod map
-		if(!this.compareResult.modifiedFiles.containsKey(fileName))
+		if(!this.compareResult.modifiedFileMethodMap.containsKey(fileName))
 		{
 			ModifiedMethod mm = new ModifiedMethod(oldMethods, newMethods);
-			this.compareResult.modifiedFiles.put(fileName, mm);
+			this.compareResult.modifiedFileMethodMap.put(fileName, mm);
 		}
 	}
 	
