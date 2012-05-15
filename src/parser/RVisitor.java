@@ -17,8 +17,10 @@ import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
@@ -28,6 +30,7 @@ import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -54,6 +57,24 @@ public class RVisitor extends ASTVisitor {
 		this.method = method;
 	}
 	
+	@Override
+	public boolean visit(MethodDeclaration node) {
+		// Add the parameter names and types to the variable mapping
+		List<SingleVariableDeclaration> list = node.parameters();
+		mappings.newMap();
+		for(SingleVariableDeclaration var: list) {
+			Mapping m = new Mapping(var.getType().toString(), var.getName().getFullyQualifiedName());
+			mappings.addMapping(var.getName().getFullyQualifiedName(), m);
+		}
+		
+		return super.visit(node);
+	}
+	
+	@Override
+	public void endVisit(MethodDeclaration node) {
+		mappings.removeMap();
+	}
+	
 	/**
 	 * This is the main item we are looking for 
 	 * to resolve and will be our entry point.
@@ -68,8 +89,10 @@ public class RVisitor extends ASTVisitor {
 			type = clazz.getName();
 		
 		// This means we were unable to resolve the method invocation
-		if(type == null)
+		if(type == null) {
+			method.addUnresolvedCall(node.getName().getFullyQualifiedName());
 			return super.visit(node);
+		}
 		
 		// Get the method call
 		String methodName = node.getName().getFullyQualifiedName();
@@ -85,11 +108,18 @@ public class RVisitor extends ASTVisitor {
 		
 		// The resolving has failed
 		if(resolved == null) {
-			return super.visit(node);
+			// Try fuzzy resolving
+			if(!parameters.isEmpty()) {
+				resolved = fuzzyResolveParameters(type, methodName, parameters);
+			}
 		}
 		
-		method.addMethodCall(resolved);
-		resolved.addCalledBy(method);
+		if(resolved != null) {
+			method.addMethodCall(resolved);
+			resolved.addCalledBy(method);
+		}
+		else
+			method.addUnresolvedCall(methodToResolve);
 		
 		return super.visit(node);
 	}
@@ -176,7 +206,7 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof InfixExpression) {
 			String left = resolveExpression(((InfixExpression)expression).getLeftOperand());
 			String right = resolveExpression(((InfixExpression)expression).getRightOperand());
-			if(!left.equals(right))
+			if(left != null && !left.equals(right))
 				return binaryNumericPromotion(left, right);
 			else
 				return left;
@@ -188,6 +218,12 @@ public class RVisitor extends ASTVisitor {
 		// Handle assignment
 		else if(expression instanceof Assignment) {
 			return resolveExpression(((Assignment)expression).getLeftHandSide());
+		}
+		
+		// Handle field access
+		else if(expression instanceof FieldAccess) {
+			// This also handles this expressions kind of.
+			return resolveFieldAccess((FieldAccess)expression);
 		}
 		
 		return null;
@@ -224,7 +260,15 @@ public class RVisitor extends ASTVisitor {
 		}
 		else {
 			System.out.println("                             " + "Return type: unknown");
-			return null;
+			// The resolving has failed
+			// Try fuzzy resolving
+			if(!parameters.isEmpty())
+				resolved = fuzzyResolveParameters(type, methodName, parameters);
+			
+			if(resolved != null)
+				return resolved.getReturnType();
+			else
+				return null;
 		}
 	}
 	
@@ -243,6 +287,17 @@ public class RVisitor extends ASTVisitor {
 			type = resolveQualifiedName((QualifiedName)qualifiedName.getQualifier());
 		
 		return lookupClassField(type, qualifiedName.getName().toString());
+	}
+	
+	private String resolveFieldAccess(FieldAccess fieldAccess) {
+		String className = null;
+		
+		if(fieldAccess.getExpression() != null)
+			className = resolveExpression(fieldAccess.getExpression());
+		else
+			className = this.clazz.getName();
+		
+		return lookupClassField(className, fieldAccess.getName().getFullyQualifiedName());
 	}
 	
 	private String resolveNumberLiteral(NumberLiteral numberLiteral) {
@@ -296,20 +351,21 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private String resolveThisExpression(ThisExpression thisExpression) {
-		if(thisExpression.getQualifier() != null)
-			return resolveExpression(thisExpression.getQualifier());
-		else
-			return clazz.getName();
+		return clazz.getName();
 	}
 	
 	private String binaryNumericPromotion(String left, String right) {
-		if(left == "String" || right == "String")
+		if(left == null)
+			return right;
+		else if(right == null)
+			return left;
+		else if(left.equals("String") || right.equals("String"))
 			return "String";
-		else if(left == "double" || right == "double")
+		else if(left.equals("double") || right.equals("double"))
 			return "double";
-		else if(left == "float" || right == "float")
+		else if(left.equals("float") || right.equals("float"))
 			return "float";
-		else if(left == "long" || right == "long")
+		else if(left.equals("long") || right.equals("long"))
 			return "long";
 		else
 			return "int";
@@ -322,6 +378,126 @@ public class RVisitor extends ASTVisitor {
 			types.add(resolveExpression(expression));
 		
 		return types;
+	}
+	
+	/** 
+	 * This function will return all the possible parameter lists
+	 * that are possible for the given parameter list with inheritance
+	 * and interface implementation.
+	 * @param parameters
+	 * @return
+	 */
+	private Method fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
+		List<ArrayList<String>> fuzzyParameters = getFuzzyParameters(parameters);
+		List<Method> fuzzyMethods = new ArrayList<Method>();
+		
+		for(ArrayList<String> list: fuzzyParameters) {
+			String methodToResolve = methodNameBuilder(type, methodName, list);
+			
+			System.out.println("Need to resolve the method: " + methodToResolve);
+			
+			Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
+					methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+			
+			if(resolved != null)
+				return resolved;
+		}
+		
+		return null;
+	}
+	
+	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {
+		List<ArrayList<String>> combinations = new ArrayList<ArrayList<String>>();
+		List<ArrayList<String>> oldCombinations = new ArrayList<ArrayList<String>>();
+		String type = front.get(front.size()-1);
+		
+		for(front = front.subList(0, front.size()-1);!front.isEmpty(); front = front.subList(0, front.size()-1)) {
+			// The first case is that the we have no combinations yet.
+			if(oldCombinations.size() == 0 && type != null) {
+				for(String typeName: getSuperAndInterfaces(type)) {
+					ArrayList<String> list = new ArrayList<String>();
+					list.add(typeName);
+					combinations.add(list);
+				}
+			}
+			
+			// The second case is that we have combinations and a type
+			else if(type != null && oldCombinations.size() != 0) {
+				for(String typeName: getSuperAndInterfaces(type)) {
+					for(ArrayList<String> ending: oldCombinations) {
+						ArrayList<String> list = new ArrayList<String>();
+						list.add(typeName);
+						list.addAll(ending);
+						combinations.add(list);
+					}
+				}
+			}
+			
+			
+			oldCombinations = combinations;
+			combinations = new ArrayList<ArrayList<String>>();
+			type = front.get(front.size()-1);
+		}
+		
+		// Do the last step
+		if(oldCombinations.size() == 0 && type != null) {
+			for(String typeName: getSuperAndInterfaces(type)) {
+				ArrayList<String> list = new ArrayList<String>();
+				list.add(typeName);
+				combinations.add(list);
+			}
+		}
+		else if(type != null && oldCombinations.size() != 0) {
+			for(String typeName: getSuperAndInterfaces(type)) {
+				for(ArrayList<String> ending: oldCombinations) {
+					ArrayList<String> list = new ArrayList<String>();
+					list.add(typeName);
+					list.addAll(ending);
+					combinations.add(list);
+				}
+			}
+		}
+		
+		return combinations;
+	}
+	
+	private List<String> getSuperAndInterfaces(String className) {
+		List<String> result = new ArrayList<String>();
+		
+		// Check for literal
+		if(isLiteral(className)) {
+			result.add(className);
+			return result;
+		}
+		
+		Clazz base = lookupClassName(className);
+		Clazz superClass = null;
+		Clazz superInterface = null;
+		if(base != null) {
+			for(superClass = base;superClass != null; superClass = superClass.getSuperClazz()) {
+				result.add(superClass.getName().substring(superClass.getName().lastIndexOf(".")+1));
+				result.addAll(getInterfaces(superClass));
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * This returns an unresolved type list of all interfaces
+	 * that a given clazz implements.
+	 * @param clazz
+	 * @return
+	 */
+	private List<String> getInterfaces(Clazz clazz) {
+		List<String> interfaces = new ArrayList<String>();
+		
+		for(Clazz inter: clazz.getInterfaces()) {
+			interfaces.add(inter.getName().substring(inter.getName().lastIndexOf(".")+1));
+			interfaces.addAll(getInterfaces(inter));
+		}
+		
+		return interfaces;
 	}
 	
 	/**
@@ -418,6 +594,16 @@ public class RVisitor extends ASTVisitor {
 			return clazz;
 		
 		return null;
+	}
+	
+	private boolean isLiteral(String literal) {
+		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
+				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
+				literal.equals("float") || literal.equals("boolean") || literal.equals("char") ||
+				literal.equals("null"))
+			return true;
+		else
+			return false;
 	}
 	
 	/**

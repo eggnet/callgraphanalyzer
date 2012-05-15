@@ -68,7 +68,7 @@ public class Clazz {
 	public boolean hasUnqualifiedName(String unqualifiedName) {
 		String shortC = unqualifiedName;
 		if(shortC.contains("."))
-			shortC = shortC.substring(shortC.lastIndexOf("."));
+			shortC = shortC.substring(shortC.lastIndexOf(".")+1);
 		if(this.name.substring(this.name.lastIndexOf(".")+1).equals(shortC))
 			return true;
 		else
@@ -79,11 +79,30 @@ public class Clazz {
 		String shortM = unqualifiedMethod;
 		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
-			for(Method method: methods) {
+			for(Method method: clazz.methods) {
 				String unresolved = method.getName();
 				unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
 				if(unresolved.equals(shortM))
 					return method;
+				// Handle the case where parameters are null
+				else if(shortM.contains("null")) {
+					String[] unqualifiedParams = shortM.substring(shortM.lastIndexOf("(")+1, 
+							shortM.lastIndexOf(")")).split(",");
+					String[] methodParams = unresolved.substring(unresolved.lastIndexOf("(")+1, 
+							unresolved.lastIndexOf(")")).split(",");
+					boolean isMethod = true;
+					int i;
+					for(i = 0; i < methodParams.length && i < unqualifiedParams.length; i++) {
+						if(!unqualifiedParams[i].equals("null") && 
+								!methodParams[i].equals(unqualifiedParams[i])) {
+								isMethod = false;
+						}
+					}
+					if(methodParams.length != unqualifiedParams.length)
+						isMethod = false;
+					if(isMethod)
+						return method;
+				}
 			}
 		}
 		return null;

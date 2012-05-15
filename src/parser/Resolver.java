@@ -56,10 +56,95 @@ public class Resolver {
 	
 	public boolean resolveClazzes() {
 		for(Clazz clazz: callGraph.getAllClazzes()) {
-			// TODO This function needs to be redone
-			//resolveClazz(clazz);
+			resolveClazz(clazz);
 		}
 		return true;
+	}
+	
+	private boolean resolveClazz(Clazz clazz) {
+		File file = clazz.getFile();
+		
+		// Resolve all interfaces
+		for(String i: clazz.getUnresolvedInterfaces()) {
+			Clazz inter = lookupClassName(clazz, i);
+			if(inter != null && inter.isInterface())
+				clazz.getInterfaces().add(inter);
+		}
+		
+		// Resolve super clazz
+		if(clazz.getUnresolvedSuperClazz() != null) {
+			Clazz superClazz = lookupClassName(clazz, clazz.getUnresolvedSuperClazz());
+			if(superClazz != null)
+				clazz.setSuperClazz(superClazz);
+		}
+		
+		return true;
+	}
+	
+	private Clazz lookupClassName(Clazz clazz, String className) {
+		// Look through the package for the class name
+		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
+			if(packageClazz.hasUnqualifiedName(className))
+				return packageClazz;
+		}
+		
+		// Look through the imports for the class name
+		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
+		for (Clazz s : imports) {
+			if(s.hasUnqualifiedName(className))
+				return s;
+		}
+		
+		// Check the current class for the name
+		if(clazz.hasUnqualifiedName(className))
+			return clazz;
+		
+		return null;
+	}
+	
+	/**
+	 * This returns a list of all clazzes that are contained
+	 * inside of the given package.
+	 * @param pkg
+	 * @return
+	 */
+	public List<Clazz> getClazzesInPackage(String pkg) {
+		List<Clazz> clazzes = new ArrayList<Clazz>();
+		
+		for(Clazz clazz: callGraph.getAllClazzes()) {
+			if(clazz.getFile().getFilePackage().equals(pkg))
+				clazzes.add(clazz);
+		}
+		
+		return clazzes;
+	}
+	
+	/**
+	 * This will return a list of clazzes that are inside the
+	 * imported packages.
+	 * @param imports
+	 * @return
+	 */
+	public List<Clazz> getClazzesInImports(List<String> imports) {
+		Clazz tc = null;
+		try {
+			List<Clazz> clazzes = new ArrayList<Clazz>();
+			
+			for(Clazz clazz: callGraph.getAllClazzes()) {
+				tc = clazz;
+				for(String imp: imports) {
+					tc = clazz;
+					if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
+						clazzes.add(clazz);
+				}
+			}
+			
+			return clazzes;
+		}
+		catch (NullPointerException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	/**
