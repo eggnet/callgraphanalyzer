@@ -26,7 +26,7 @@ public class TestCallGraph {
 		List<Method> rgMethods = cg.getMethodsUsingCharacters("file_2", 0, 100);
 		assertEquals(rgMethods.size(), 1);
 		
-		// File 3 has 3 classes, 2 + 1 methods
+		// Changes happened inside methods
 		rgMethods = cg.getMethodsUsingCharacters("file_3", 0,199);
 		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
 		rgMethods = cg.getMethodsUsingCharacters("file_3", 200,299);
@@ -34,13 +34,39 @@ public class TestCallGraph {
 		rgMethods = cg.getMethodsUsingCharacters("file_3", 0,300);
 		assertEquals(rgMethods.size(), 3 ); //included class_2 methods
 		
+		// Changes happened In between methods
+		rgMethods = cg.getMethodsUsingCharacters("file_3", 107,205);
+		assertEquals(rgMethods.size(), 2 ); //included class_2 methods
+		boolean c1m0 = false;
+		boolean c2m0 = false;
+		for(Method m : rgMethods)
+		{
+			if(m.getName().equals("package_file_3.class_1.method_0"))
+				c1m0 = true;
+			if(m.getName().equals("package_file_3.class_2.method_0"))
+				c2m0 = true;
+		}
+		assertTrue(c2m0);
+		assertTrue(c1m0);
+		
+		// Changes with 0 or 1 char
+		rgMethods = cg.getMethodsUsingCharacters("file_4", 300,302);
+		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
+		rgMethods = cg.getMethodsUsingCharacters("file_4", 300,300);
+		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
+		
+		// Changes outside any method bound
+		rgMethods = cg.getMethodsUsingCharacters("file_4", 400,502);
+		assertEquals(rgMethods.size(), 0 );
+		rgMethods = cg.getMethodsUsingCharacters("file_4", 150,199);
+		assertEquals(rgMethods.size(), 0 );
 		
 		// File 4 has 4 classes, 3 + 2 + 1 methods
 		rgMethods = cg.getMethodsUsingCharacters("file_4", 0,500);
 		assertEquals(rgMethods.size(), 6 );
 	}
 	
-	public CallGraph generateDummyCallGraph()
+	public static CallGraph generateDummyCallGraph()
 	{
 		CallGraph cg = new CallGraph();
 		
@@ -66,6 +92,12 @@ public class TestCallGraph {
 			{
 				Clazz c = new Clazz();
 				String className = "class_" + j;
+				c.setName(className);
+				
+				// interface
+				Clazz inter = new Clazz();
+				String interclassName = "classinterface_" + j;
+				inter.setName(interclassName);
 				
 				// functions each
 				for(int k=0; k<j; k++)
@@ -82,6 +114,7 @@ public class TestCallGraph {
 				}
 				
 				newFile.addClazz(c);
+				newFile.addInterface(inter);
 			}
 			files.put(newFile.getFileName(),newFile);
 		}
