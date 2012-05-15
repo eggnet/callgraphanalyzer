@@ -92,7 +92,7 @@ public class Clazz {
 							unresolved.lastIndexOf(")")).split(",");
 					boolean isMethod = true;
 					int i;
-					for(i = 0; i < methodParams.length; i++) {
+					for(i = 0; i < methodParams.length && i < unqualifiedParams.length; i++) {
 						if(!unqualifiedParams[i].equals("null") && 
 								!methodParams[i].equals(unqualifiedParams[i])) {
 								isMethod = false;

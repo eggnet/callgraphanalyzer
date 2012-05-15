@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
@@ -28,6 +29,7 @@ import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -52,6 +54,24 @@ public class RVisitor extends ASTVisitor {
 		this.callGraph = callGraph;
 		this.clazz = clazz;
 		this.method = method;
+	}
+	
+	@Override
+	public boolean visit(MethodDeclaration node) {
+		// Add the parameter names and types to the variable mapping
+		List<SingleVariableDeclaration> list = node.parameters();
+		mappings.newMap();
+		for(SingleVariableDeclaration var: list) {
+			Mapping m = new Mapping(var.getType().toString(), var.getName().getFullyQualifiedName());
+			mappings.addMapping(var.getName().getFullyQualifiedName(), m);
+		}
+		
+		return super.visit(node);
+	}
+	
+	@Override
+	public void endVisit(MethodDeclaration node) {
+		mappings.removeMap();
 	}
 	
 	/**
@@ -185,7 +205,7 @@ public class RVisitor extends ASTVisitor {
 		else if(expression instanceof InfixExpression) {
 			String left = resolveExpression(((InfixExpression)expression).getLeftOperand());
 			String right = resolveExpression(((InfixExpression)expression).getRightOperand());
-			if(!left.equals(right))
+			if(left != null && !left.equals(right))
 				return binaryNumericPromotion(left, right);
 			else
 				return left;
@@ -320,7 +340,11 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private String binaryNumericPromotion(String left, String right) {
-		if(left.equals("String") || right.equals("String"))
+		if(left == null)
+			return right;
+		else if(right == null)
+			return left;
+		else if(left.equals("String") || right.equals("String"))
 			return "String";
 		else if(left.equals("double") || right.equals("double"))
 			return "double";
