@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.TypeParameter;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -111,6 +112,11 @@ public class Visitor extends ASTVisitor {
 		List<Type> interfaces = node.superInterfaceTypes();
 		for(Type i: interfaces)
 			currentClazz.addUnresolvedInterface(i.toString());
+		
+		// Add generic parameters if needed
+		List<TypeParameter> types = node.typeParameters();
+		for(TypeParameter type: types)
+			currentClazz.addGenericType(type.toString());
 	
 		return super.visit(node);
 	}

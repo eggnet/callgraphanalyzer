@@ -19,6 +19,8 @@ public class Clazz {
 	private Clazz 					superClazz;
 	private String 					unresolvedSuperClazz;
 	
+	private List<String>			genericTypes;
+	
 	private List<Mapping>			variables;
 	
 	private List<MethodInvocation> 	invocations;
@@ -30,6 +32,7 @@ public class Clazz {
 		subClazzes = new ArrayList<Clazz>();
 		unresolvedSuperClazz = "";
 		
+		genericTypes = new ArrayList<String>();
 		variables = new ArrayList<Mapping>();
 		
 		invocations = new ArrayList<MethodInvocation>();
@@ -49,6 +52,7 @@ public class Clazz {
 		unresolvedInterfaces = new ArrayList<String>();
 		unresolvedSuperClazz = "";
 		
+		genericTypes = new ArrayList<String>();
 		variables = new ArrayList<Mapping>();
 		
 		invocations = new ArrayList<MethodInvocation>();
@@ -69,6 +73,9 @@ public class Clazz {
 		String shortC = unqualifiedName;
 		if(shortC.contains("."))
 			shortC = shortC.substring(shortC.lastIndexOf(".")+1);
+		// Check for generic specification
+		if(shortC.contains("<") && shortC.contains(">"))
+			shortC = shortC.substring(0, shortC.lastIndexOf("<"));
 		if(this.name.substring(this.name.lastIndexOf(".")+1).equals(shortC))
 			return true;
 		else
@@ -76,6 +83,7 @@ public class Clazz {
 	}
 	
 	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
+		String type = unqualifiedMethod.substring(0, unqualifiedMethod.lastIndexOf("."));
 		String shortM = unqualifiedMethod;
 		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
@@ -86,26 +94,67 @@ public class Clazz {
 					return method;
 				// Handle the case where parameters are null
 				else if(shortM.contains("null")) {
-					String[] unqualifiedParams = shortM.substring(shortM.lastIndexOf("(")+1, 
-							shortM.lastIndexOf(")")).split(",");
-					String[] methodParams = unresolved.substring(unresolved.lastIndexOf("(")+1, 
-							unresolved.lastIndexOf(")")).split(",");
-					boolean isMethod = true;
-					int i;
-					for(i = 0; i < methodParams.length && i < unqualifiedParams.length; i++) {
-						if(!unqualifiedParams[i].equals("null") && 
-								!methodParams[i].equals(unqualifiedParams[i])) {
-								isMethod = false;
-						}
-					}
-					if(methodParams.length != unqualifiedParams.length)
-						isMethod = false;
-					if(isMethod)
+					if(unqualifiedMethodWithNull(shortM, unresolved))
+						return method;
+				}
+				// Handle generic parameters
+				else if(type.contains("<") && type.contains(">") &&
+						unqualifiedMethod.substring(unqualifiedMethod.lastIndexOf("("), unqualifiedMethod.lastIndexOf(")")).length() != 0) {
+					if(hasGenericMethod(type, shortM, method))
 						return method;
 				}
 			}
 		}
 		return null;
+	}
+	
+	private boolean unqualifiedMethodWithNull(String unqualifiedMethod, String unresoledMethod) {
+		String[] unqualifiedParams = unqualifiedMethod.substring(unqualifiedMethod.lastIndexOf("(")+1, 
+				unqualifiedMethod.lastIndexOf(")")).split(",");
+		String[] methodParams = unresoledMethod.substring(unresoledMethod.lastIndexOf("(")+1, 
+				unresoledMethod.lastIndexOf(")")).split(",");
+		boolean isMethod = true;
+		int i;
+		for(i = 0; i < methodParams.length && i < unqualifiedParams.length; i++) {
+			if(!unqualifiedParams[i].equals("null") && 
+					!methodParams[i].equals(unqualifiedParams[i])) {
+					isMethod = false;
+			}
+		}
+		if(methodParams.length != unqualifiedParams.length)
+			isMethod = false;
+		
+		return isMethod;
+	}
+	
+	private boolean hasGenericMethod(String type, String unqualified, Method method) {
+		String[] generics = type.substring(type.lastIndexOf("<")+1, type.lastIndexOf(">")).split(",");
+		String[] methodParams = method.getName().substring(method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
+		String[] unqualifiedParams = unqualified.substring(unqualified.lastIndexOf("(")+1, unqualified.lastIndexOf(")")).split(",");		
+		
+		if((methodParams.length != unqualifiedParams.length) || 
+				!method.getName().substring(method.getName().lastIndexOf(".")+1, method.getName().lastIndexOf("(")).equals(
+						unqualified.substring(0, unqualified.lastIndexOf("("))))
+			return false;
+		
+		boolean isMethod = true;
+		int i;
+		for(i = 0; i < methodParams.length; i++) {
+			if(this.genericTypes.contains(methodParams[i])) {
+				int index = this.genericTypes.indexOf(methodParams[i]);
+				try {
+					if(!unqualifiedParams[index].equals(generics[i])) {
+						isMethod = false;
+						break;
+					}
+				}
+				catch (Exception e) {
+					return false;
+				}
+			}
+		}
+		
+		return isMethod;
 	}
 	
 	public void print() {
@@ -126,6 +175,9 @@ public class Clazz {
 		System.out.println("    Sub Classes: ");
 		for(Clazz clazz: subClazzes)
 			System.out.println("      " + clazz.getName());
+		System.out.println("    Generic Parameters: ");
+		for(String s: genericTypes)
+			System.out.println("      " + s);
 		System.out.println("    Fields: ");
 		for(Mapping map: variables) 
 			System.out.println("      " + map.getType() + ": " + map.getVarName());
@@ -135,6 +187,10 @@ public class Clazz {
 	
 	public void addMethod(Method m) {
 		this.methods.add(m);
+	}
+	
+	public void addGenericType(String t) {
+		this.genericTypes.add(t);
 	}
 	
 	public void addUnresolvedInterface(String i) {
@@ -247,6 +303,14 @@ public class Clazz {
 
 	public void setInvocations(List<MethodInvocation> invocations) {
 		this.invocations = invocations;
+	}
+
+	public List<String> getGenericTypes() {
+		return genericTypes;
+	}
+
+	public void setGenericTypes(List<String> genericTypes) {
+		this.genericTypes = genericTypes;
 	}
 }
 

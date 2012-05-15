@@ -24,19 +24,28 @@ public class Method {
 	
 	
 	public Method() {
-		methodCalls = new ArrayList<Method>();
-		calledBy = new ArrayList<Method>();
-		
+		methodCalls 	= new ArrayList<Method>();
+		calledBy 		= new ArrayList<Method>();
 		unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
-		this.name = name;
-		this.clazz = clazz;
+		this.name 		 = name;
+		this.clazz 		 = clazz;
 		this.methodCalls = methodCalls;
-		calledBy = new ArrayList<Method>();
-		
-		unresolvedCalls = new ArrayList<String>();
+		this.calledBy 		 = new ArrayList<Method>();
+		this.unresolvedCalls = new ArrayList<String>();
+	}
+	
+	public Method(String name, Clazz clazz, int start, int end)
+	{
+		this.name 			= name;
+		this.clazz 			= clazz;
+		this.startLine 		= start;
+		this.endLine 		= end;
+		this.methodCalls 	= new ArrayList<Method>();
+		this.calledBy 		= new ArrayList<Method>();
+		this.unresolvedCalls = new ArrayList<String>();
 	}
 	
 	public void addCalledBy(Method m) {

@@ -38,26 +38,58 @@ public class TestClazz {
 		Clazz childClass = generateTestClazz();
 		
 		// Positives
-		Method m = childClass.hasUnqualifiedMethod("method_2");
-		assertEquals((m.getName()), "package.classLevel_3.method_2");
+		Method m = childClass.hasUnqualifiedMethod("method_2()");
+		assertEquals((m.getName()), "package.classLevel_3.method_2()");
 		
-		m = childClass.hasUnqualifiedMethod("method_0");
-		assertEquals((m.getName()), "package.classLevel_1.method_0");
+		m = childClass.hasUnqualifiedMethod("method_0()");
+		assertEquals((m.getName()), "package.classLevel_1.method_0()");
 		
-		m = childClass.hasUnqualifiedMethod("package.classLevel_1.method_0");
-		assertEquals((m.getName()), "package.classLevel_1.method_0");
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.method_0()");
+		assertEquals((m.getName()), "package.classLevel_1.method_0()");
 		
-		m = childClass.hasUnqualifiedMethod("package.classldfsadfsdfevel_1.method_0");
-		assertEquals((m.getName()), "package.classLevel_1.method_0");
+		m = childClass.hasUnqualifiedMethod("package.classldfsadfsdfevel_1.method_0()");
+		assertEquals((m.getName()), "package.classLevel_1.method_0()");
 		
-		m = childClass.hasUnqualifiedMethod("....................method_0");
-		assertEquals((m.getName()), "package.classLevel_1.method_0");
+		m = childClass.hasUnqualifiedMethod("....................method_0()");
+		assertEquals((m.getName()), "package.classLevel_1.method_0()");
 		
 		// negatives
 		m = childClass.hasUnqualifiedMethod("");
 		assertNull(m);
 		
 		m = childClass.hasUnqualifiedMethod("method_2ew");
+		assertNull(m);
+	}
+	
+	@Test
+	public void testHasUnqualifiedMethodNullValue() 
+	{
+		Clazz childClass = generateTestClazz();
+		
+		// Positives
+		Method m = childClass.hasUnqualifiedMethod("package.classLevel_0.function_0(int, string, int)");
+		assertEquals((m.getName()), "package.classLevel_0.function_0(int, string, int)");
+		
+		m = childClass.hasUnqualifiedMethod("A.function_1()");
+		assertEquals((m.getName()), "package.classLevel_0.function_1()");
+		
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_2(null, int)");
+		assertEquals((m.getName()), "package.classLevel_0.function_2(string, int)");
+		
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_2(string, null)");
+		assertEquals((m.getName()), "package.classLevel_0.function_2(string, int)");
+		
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_2(null, null)");
+		assertEquals((m.getName()), "package.classLevel_0.function_2(string, int)");
+		
+		m = childClass.hasUnqualifiedMethod("this.function_3(int)");
+		assertEquals((m.getName()), "package.classLevel_0.function_3(int)"); 
+		
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_3(null)");
+		assertEquals((m.getName()), "package.classLevel_0.function_3(int)"); 
+		
+		// negatives
+		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_3(null, null, null, int)");
 		assertNull(m);
 	}
 	
@@ -111,22 +143,30 @@ public class TestClazz {
 			// add methods
 			for(int j=0; j<i; j++)
 			{
-				Method m = new Method();
-				String methodName = "method_" + j;
+				String methodName = "method_" + j + "()";
 				String fullName = String.format("%s.%s.%s", "package", name, methodName);
-				m.setName(fullName);
-				
-				// Startline = j, end = j+1;
-				m.setStartLine(j*100);
-				m.setEndLine  ((j+1)*100);
+				Method m = new Method(fullName, clz, j*100, (j+1)*100 );
 				clz.addMethod(m);
 			}
 			// next level
 			ref = clz;
 		}
+		
+		// variable map for classLevel_0
 		List<Mapping> varMap = childClass.getVariables();
 		varMap.add(new Mapping("int", "childVar1"));
 		varMap.add(new Mapping("String", "childVar2"));
+		
+		// function signature for classLevel_0
+		Method m1 = new Method("package.classLevel_0.function_0(int, string, int)", childClass, 0, 0);
+		childClass.addMethod(m1);
+		Method m2 = new Method("package.classLevel_0.function_1()", childClass, 0, 0);
+		childClass.addMethod(m2);
+		Method m3 = new Method("package.classLevel_0.function_2(string, int)", childClass, 0, 0);
+		childClass.addMethod(m3);
+		Method m4 = new Method("package.classLevel_0.funciton_3(int)", childClass, 0, 0);
+		childClass.addMethod(m4);
+		
 		
 		return childClass;
 	}
