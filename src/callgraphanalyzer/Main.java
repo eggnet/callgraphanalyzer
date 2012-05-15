@@ -16,12 +16,6 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		CallGraphDb db = new CallGraphDb();
-		db.connect(args[0]);
-		db.setBranchName(args[1]);
-				
-		Comparator compare = new Comparator(db, args[2], args[3], new CallGraphAnalyzer());
-		compare.CompareCommits();
-
 		try {
 			if (args.length < 4 )
 			{
@@ -32,8 +26,12 @@ public class Main {
 			{
 				try 
 				{
-					// Read in scm2sql db input
-					callGraphAnalyzer.readDB(args[0], args[1], args[2]);
+					db.connect(args[0]);
+					db.setBranchName(args[1]);
+					Comparator compare = new Comparator(db, args[2], args[3], new CallGraphAnalyzer());
+					
+					// TODO @braden link this with the ownership project and call it from here.
+					compare.CompareCommits();
 				} 
 				catch (Exception e) 
 				{
