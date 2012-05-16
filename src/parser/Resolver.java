@@ -81,7 +81,13 @@ public class Resolver {
 		return true;
 	}
 	
+	private String stripGenericParameters(String className) {
+		return className.substring(0, className.indexOf("<"));
+	}
+	
 	private Clazz lookupClassName(Clazz clazz, String className) {
+		if(className.contains("<") && className.contains(">"))
+			className = stripGenericParameters(className);
 		// Look through the package for the class name
 		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
 			if(packageClazz.hasUnqualifiedName(className))

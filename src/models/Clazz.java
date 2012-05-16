@@ -83,8 +83,6 @@ public class Clazz {
 	}
 	
 	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
-		if(findTypeDivider(unqualifiedMethod) == 0)
-			findTypeDivider(unqualifiedMethod);
 		String unType = unqualifiedMethod.substring(0, findTypeDivider(unqualifiedMethod));
 		String unMethodName = unqualifiedMethod.substring(
 				findTypeDivider(unqualifiedMethod)+1, unqualifiedMethod.lastIndexOf("("));
@@ -160,7 +158,7 @@ public class Clazz {
 	 */
 	private boolean compareArguments(String[] unArguments, String[] arguments) {
 		for(int i = 0; i < unArguments.length; i++) {
-			if(!unArguments[i].equals(arguments[i]) && !unArguments[i].equals("null"))
+			if(!unArguments[i].trim().equals(arguments[i].trim()) && !unArguments[i].trim().equals("null"))
 				return false;
 		}
 		
