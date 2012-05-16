@@ -103,8 +103,7 @@ public class RVisitor extends ASTVisitor {
 		
 		System.out.println("Need to resolve the method: " + methodToResolve);
 		
-		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
-				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+		Method resolved = lookupClassMethod(methodToResolve);
 		
 		// The resolving has failed
 		if(resolved == null) {
@@ -250,8 +249,7 @@ public class RVisitor extends ASTVisitor {
 		
 		System.out.println("Need to look up the type of: " + methodToResolve);
 		
-		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
-				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+		Method resolved = lookupClassMethod(methodToResolve);
 		
 		if(resolved != null) {
 			System.out.println("                             " + "Return type: " + 
@@ -399,8 +397,7 @@ public class RVisitor extends ASTVisitor {
 			
 			System.out.println("Need to resolve the method: " + methodToResolve);
 			
-			Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
-					methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+			Method resolved = lookupClassMethod(methodToResolve);
 			
 			if(resolved != null)
 				return resolved;
@@ -547,8 +544,7 @@ public class RVisitor extends ASTVisitor {
 
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
 		
-		Method resolved = lookupClassMethod(methodToResolve.substring(0, methodToResolve.lastIndexOf(".")), 
-				methodToResolve.substring(methodToResolve.lastIndexOf(".")));
+		Method resolved = lookupClassMethod(methodToResolve);
 		
 		// The resolving has failed
 		if(resolved == null) {
@@ -582,22 +578,34 @@ public class RVisitor extends ASTVisitor {
 		return clazz.lookupField(field);
 	}
 	
-	private Method lookupClassMethod(String className, String method) {
+	private Method lookupClassMethod(String methodToResolve) {
+		String className = methodToResolve.substring(0, findTypeDivider(methodToResolve));
 		// Look through the package for the class name and field
 		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
 			if(packageClazz.hasUnqualifiedName(className))
-				return packageClazz.hasUnqualifiedMethod(className + method);
+				return packageClazz.hasUnqualifiedMethod(methodToResolve);
 		}
 
 		// Look through the imports for the class name and field
 		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
 		for (Clazz s : imports) {
 			if(s.hasUnqualifiedName(className))
-				return s.hasUnqualifiedMethod(method);
+				return s.hasUnqualifiedMethod(methodToResolve);
 		}
 
 		// Check the current class for the field
-		return clazz.hasUnqualifiedMethod(method);
+		return clazz.hasUnqualifiedMethod(methodToResolve);
+	}
+	
+	private int findTypeDivider(String methodName) {
+		int index = -1;
+		for(int i = 0; i < methodName.length(); i++) {
+			if(methodName.charAt(i) == '.')
+				index = i;
+			if(methodName.charAt(i) == '(')
+				break;
+		}
+		return index;
 	}
 	
 	private Clazz lookupClassName(String className) {

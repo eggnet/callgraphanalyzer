@@ -38,13 +38,7 @@ public class TestClazz {
 		Clazz childClass = generateTestClazz();
 		
 		// Positives
-		Method m = childClass.hasUnqualifiedMethod("method_2()");
-		assertEquals((m.getName()), "package.classLevel_3.method_2()");
-		
-		m = childClass.hasUnqualifiedMethod("method_0()");
-		assertEquals((m.getName()), "package.classLevel_1.method_0()");
-		
-		m = childClass.hasUnqualifiedMethod("package.classLevel_1.method_0()");
+		Method m = childClass.hasUnqualifiedMethod("package.classLevel_1.method_0()");
 		assertEquals((m.getName()), "package.classLevel_1.method_0()");
 		
 		m = childClass.hasUnqualifiedMethod("package.classldfsadfsdfevel_1.method_0()");
@@ -52,13 +46,6 @@ public class TestClazz {
 		
 		m = childClass.hasUnqualifiedMethod("....................method_0()");
 		assertEquals((m.getName()), "package.classLevel_1.method_0()");
-		
-		// negatives
-		m = childClass.hasUnqualifiedMethod("");
-		assertNull(m);
-		
-		m = childClass.hasUnqualifiedMethod("method_2ew");
-		assertNull(m);
 	}
 	
 	@Test
@@ -81,9 +68,6 @@ public class TestClazz {
 		
 		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_2(null, null)");
 		assertEquals((m.getName()), "package.classLevel_0.function_2(string, int)");
-		
-		m = childClass.hasUnqualifiedMethod("this.function_3(int)");
-		assertEquals((m.getName()), "package.classLevel_0.function_3(int)"); 
 		
 		m = childClass.hasUnqualifiedMethod("package.classLevel_1.function_3(null)");
 		assertEquals((m.getName()), "package.classLevel_0.function_3(int)"); 
@@ -164,7 +148,7 @@ public class TestClazz {
 		childClass.addMethod(m2);
 		Method m3 = new Method("package.classLevel_0.function_2(string, int)", childClass, 0, 0);
 		childClass.addMethod(m3);
-		Method m4 = new Method("package.classLevel_0.funciton_3(int)", childClass, 0, 0);
+		Method m4 = new Method("package.classLevel_0.function_3(int)", childClass, 0, 0);
 		childClass.addMethod(m4);
 		
 		

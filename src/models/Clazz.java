@@ -83,70 +83,105 @@ public class Clazz {
 	}
 	
 	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
-		String type = unqualifiedMethod.substring(0, unqualifiedMethod.lastIndexOf("."));
-		String shortM = unqualifiedMethod;
-		shortM = shortM.substring(shortM.lastIndexOf(".")+1);
+		String unType = unqualifiedMethod.substring(0, findTypeDivider(unqualifiedMethod));
+		String unMethodName = unqualifiedMethod.substring(
+				findTypeDivider(unqualifiedMethod)+1, unqualifiedMethod.lastIndexOf("("));
+		String[] unArguments = unqualifiedMethod.substring(
+				unqualifiedMethod.lastIndexOf("(")+1, unqualifiedMethod.lastIndexOf(")")).split(",");
+		
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
-			for(Method method: clazz.methods) {
-				String unresolved = method.getName();
-				unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1);
-				if(unresolved.equals(shortM))
+			for(Method method: clazz.getMethods()) {
+				String type = method.getName().substring(0, findTypeDivider(method.getName()));
+				String methodName = method.getName().substring(
+						findTypeDivider(method.getName())+1, method.getName().lastIndexOf("("));
+				String[] arguments = method.getName().substring(
+						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
+				
+				// Check if method names match
+				if(!unMethodName.equals(methodName))
+					continue;
+				
+				// Check if arguments are the same size
+				if(unArguments.length != arguments.length)
+					continue;
+				
+				// Strip any generics
+				unArguments = stripGenericParameters(unArguments);
+				arguments = stripGenericParameters(arguments);
+				
+				// Compare parameters
+				if(compareArguments(unArguments, arguments))
 					return method;
-				// Handle the case where parameters are null
-				else if(shortM.contains("null")) {
-					if(unqualifiedMethodWithNull(shortM, unresolved))
+				// Check for generic method
+				if(unType.contains("<") && unType.contains(">"))
+					if(hasGenericMethod(unType, unArguments, arguments))
 						return method;
-				}
-				// Handle generic parameters
-				else if(type.contains("<") && type.contains(">") &&
-						unqualifiedMethod.substring(unqualifiedMethod.lastIndexOf("("), unqualifiedMethod.lastIndexOf(")")).length() != 0) {
-					if(hasGenericMethod(type, shortM, method))
-						return method;
-				}
 			}
 		}
 		return null;
 	}
 	
-	private boolean unqualifiedMethodWithNull(String unqualifiedMethod, String unresoledMethod) {
-		String[] unqualifiedParams = unqualifiedMethod.substring(unqualifiedMethod.lastIndexOf("(")+1, 
-				unqualifiedMethod.lastIndexOf(")")).split(",");
-		String[] methodParams = unresoledMethod.substring(unresoledMethod.lastIndexOf("(")+1, 
-				unresoledMethod.lastIndexOf(")")).split(",");
-		boolean isMethod = true;
-		int i;
-		for(i = 0; i < methodParams.length && i < unqualifiedParams.length; i++) {
-			if(!unqualifiedParams[i].equals("null") && 
-					!methodParams[i].equals(unqualifiedParams[i])) {
-					isMethod = false;
-			}
+	private int findTypeDivider(String methodName) {
+		int index = -1;
+		for(int i = 0; i < methodName.length(); i++) {
+			if(methodName.charAt(i) == '.')
+				index = i;
+			if(methodName.charAt(i) == '(')
+				break;
 		}
-		if(methodParams.length != unqualifiedParams.length)
-			isMethod = false;
-		
-		return isMethod;
+		return index;
 	}
 	
-	private boolean hasGenericMethod(String type, String unqualified, Method method) {
-		String[] generics = type.substring(type.lastIndexOf("<")+1, type.lastIndexOf(">")).split(",");
-		String[] methodParams = method.getName().substring(method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
-		String[] unqualifiedParams = unqualified.substring(unqualified.lastIndexOf("(")+1, unqualified.lastIndexOf(")")).split(",");		
+	/**
+	 * This function will strip out any of the generic parameter types
+	 * from a list of arguments leaving just the generic class type.
+	 * @param parameters
+	 * @return
+	 */
+	private String[] stripGenericParameters(String[] parameters) {
+		for(int i = 0; i < parameters.length; i++) {
+			if(parameters[i].contains("<") && parameters[i].contains(">")) {
+				parameters[i] = parameters[i].substring(0, parameters[i].indexOf("<"));
+			}
+		}
 		
-		if((methodParams.length != unqualifiedParams.length) || 
-				!method.getName().substring(method.getName().lastIndexOf(".")+1, method.getName().lastIndexOf("(")).equals(
-						unqualified.substring(0, unqualified.lastIndexOf("("))))
-			return false;
+		return parameters;
+	}
+	
+	/**
+	 * This function will tell you if two set of type arguments
+	 * are matching or not. If one argument is null then the
+	 * check is ignored.
+	 * @param unArguments
+	 * @param arguments
+	 * @return
+	 */
+	private boolean compareArguments(String[] unArguments, String[] arguments) {
+		for(int i = 0; i < unArguments.length; i++) {
+			if(!unArguments[i].trim().equals(arguments[i].trim()) && !unArguments[i].trim().equals("null"))
+				return false;
+		}
 		
-		boolean isMethod = true;
-		int i;
-		for(i = 0; i < methodParams.length; i++) {
-			if(this.genericTypes.contains(methodParams[i])) {
-				int index = this.genericTypes.indexOf(methodParams[i]);
+		return true;
+	}
+	
+	/**
+	 * This function will convert generic parameters back to their generic types
+	 * and check if the function's arguments match.
+	 * @param unType
+	 * @param unArguments
+	 * @param arguments
+	 * @return
+	 */
+	private boolean hasGenericMethod(String unType, String[] unArguments, String[] arguments) {
+		String[] generics = unType.substring(unType.indexOf("<")+1, unType.lastIndexOf(">")).split(",");
+		
+		for(int i = 0; i < arguments.length; i++) {
+			if(this.genericTypes.contains(arguments[i])) {
+				int index = this.genericTypes.indexOf(arguments[i]);
 				try {
-					if(!unqualifiedParams[index].equals(generics[i])) {
-						isMethod = false;
-						break;
-					}
+					if(!unArguments[index].equals(generics[i]))
+						return false;
 				}
 				catch (Exception e) {
 					return false;
@@ -154,7 +189,7 @@ public class Clazz {
 			}
 		}
 		
-		return isMethod;
+		return true;
 	}
 	
 	public void print() {
