@@ -407,6 +407,18 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {
+		// Remove all generic parameter types
+		for(int i = 0; i < front.size(); i++) {
+			try {
+				if(front.get(i).contains("<") && front.get(i).contains(">")) {
+					front.set(i,  front.get(i).substring(0, front.get(i).indexOf("<")));
+				} 
+			}
+			catch (Exception e) {
+				continue;
+			}
+		}
+		
 		List<ArrayList<String>> combinations = new ArrayList<ArrayList<String>>();
 		List<ArrayList<String>> oldCombinations = new ArrayList<ArrayList<String>>();
 		String type = front.get(front.size()-1);

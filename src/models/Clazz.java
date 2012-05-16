@@ -117,6 +117,8 @@ public class Clazz {
 					if(hasGenericMethod(unType, unArguments, arguments))
 						return method;
 			}
+			// Move the type to the super class
+			unType = clazz.getUnresolvedSuperClazz();
 		}
 		return null;
 	}
