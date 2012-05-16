@@ -83,17 +83,19 @@ public class Clazz {
 	}
 	
 	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
-		String unType = unqualifiedMethod.substring(0, unqualifiedMethod.lastIndexOf("."));
+		if(findTypeDivider(unqualifiedMethod) == 0)
+			findTypeDivider(unqualifiedMethod);
+		String unType = unqualifiedMethod.substring(0, findTypeDivider(unqualifiedMethod));
 		String unMethodName = unqualifiedMethod.substring(
-				unqualifiedMethod.lastIndexOf(".")+1, unqualifiedMethod.lastIndexOf("("));
+				findTypeDivider(unqualifiedMethod)+1, unqualifiedMethod.lastIndexOf("("));
 		String[] unArguments = unqualifiedMethod.substring(
 				unqualifiedMethod.lastIndexOf("(")+1, unqualifiedMethod.lastIndexOf(")")).split(",");
 		
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
 			for(Method method: clazz.getMethods()) {
-				String type = method.getName().substring(0, method.getName().lastIndexOf("."));
+				String type = method.getName().substring(0, findTypeDivider(method.getName()));
 				String methodName = method.getName().substring(
-						method.getName().lastIndexOf(".")+1, method.getName().lastIndexOf("("));
+						findTypeDivider(method.getName())+1, method.getName().lastIndexOf("("));
 				String[] arguments = method.getName().substring(
 						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
 				
@@ -113,11 +115,23 @@ public class Clazz {
 				if(compareArguments(unArguments, arguments))
 					return method;
 				// Check for generic method
-				if(hasGenericMethod(unType, unArguments, arguments))
-					return method;
+				if(unType.contains("<") && unType.contains(">"))
+					if(hasGenericMethod(unType, unArguments, arguments))
+						return method;
 			}
 		}
 		return null;
+	}
+	
+	private int findTypeDivider(String methodName) {
+		int index = -1;
+		for(int i = 0; i < methodName.length(); i++) {
+			if(methodName.charAt(i) == '.')
+				index = i;
+			if(methodName.charAt(i) == '(')
+				break;
+		}
+		return index;
 	}
 	
 	/**
