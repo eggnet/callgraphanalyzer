@@ -29,7 +29,6 @@ public class Main {
 					Comparator compare = new Comparator(db, args[2], args[3], cga);					
 					// Setup the owner table.
 					ownerMgr.init(args[0], args[1]);
-
 					compare.CompareCommits();
 					cga.generateRelationships(compare.getCompareResult());
 				} 
