@@ -1,11 +1,7 @@
 package callgraphanalyzer;
 
-import models.CallGraph;
-import parser.Parser;
-import parser.Resolver;
 import db.CallGraphDb;
-import db.DbConnection;
-
+import ownership.OwnerManager;;
 public class Main {
 
 	private static CallGraphAnalyzer callGraphAnalyzer = new CallGraphAnalyzer();
@@ -17,6 +13,7 @@ public class Main {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		CallGraphDb db = new CallGraphDb();
 		CallGraphAnalyzer cga = new CallGraphAnalyzer();
+		OwnerManager ownerMgr = new OwnerManager();
 		try {
 			if (args.length < 4 )
 			{
@@ -30,7 +27,9 @@ public class Main {
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
 					Comparator compare = new Comparator(db, args[2], args[3], cga);					
-					// TODO @braden link this with the ownership project and call it from here.
+					// Setup the owner table.
+					ownerMgr.init(args[0], args[1]);
+
 					compare.CompareCommits();
 					cga.generateRelationships(compare.getCompareResult());
 				} 
