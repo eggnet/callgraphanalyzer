@@ -256,7 +256,10 @@ public class RVisitor extends ASTVisitor {
 		if(resolved != null) {
 			System.out.println("                             " + "Return type: " + 
 					resolved.getReturnType());
-			return resolved.getReturnType();
+			if(isGeneric(type))
+				return getGenericReturnType(type, resolved);
+			else
+				return resolved.getReturnType();
 		}
 		else {
 			System.out.println("                             " + "Return type: unknown");
@@ -461,6 +464,28 @@ public class RVisitor extends ASTVisitor {
 		return combinations;
 	}
 	
+	/**
+	 * This method should resolve generic return types to actual
+	 * return types.
+	 * @param type
+	 * @param method
+	 * @return
+	 */
+	private String getGenericReturnType(String type, Method method) {
+		String types = type.substring(type.lastIndexOf("<")+1, type.lastIndexOf(">"));
+		String[] generics = types.split(",");
+		List<String> genericParameters = method.getClazz().getGenericTypes();
+		
+		int i = 0;
+		for(String genericType: genericParameters) {
+			if(genericType.equals(method.getReturnType()))
+				return generics[i];
+			i++;
+		}
+		
+		return null;
+	}
+	
 	private List<String> getSuperAndInterfaces(String className) {
 		List<String> result = new ArrayList<String>();
 		
@@ -561,7 +586,7 @@ public class RVisitor extends ASTVisitor {
 		// Look through the package for the class name and field
 		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
 			if(packageClazz.hasUnqualifiedName(className))
-				return packageClazz.hasUnqualifiedMethod(method);
+				return packageClazz.hasUnqualifiedMethod(className + method);
 		}
 
 		// Look through the imports for the class name and field
@@ -601,6 +626,13 @@ public class RVisitor extends ASTVisitor {
 				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
 				literal.equals("float") || literal.equals("boolean") || literal.equals("char") ||
 				literal.equals("null"))
+			return true;
+		else
+			return false;
+	}
+	
+	private boolean isGeneric(String type) {
+		if(type.contains("<") && type.contains(">"))
 			return true;
 		else
 			return false;
