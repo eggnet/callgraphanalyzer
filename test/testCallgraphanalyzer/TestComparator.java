@@ -97,7 +97,7 @@ public class TestComparator {
 		CompareResult result = compare.getCompareResult();
 		assertEquals(result.modifiedBinaryFiles.size(), 0);
 		assertEquals(result.deletedFiles.size(), 0);
-		assertEquals(result.modifiedFiles.size(), 0);
+		assertEquals(result.modifiedFileMethodMap.size(), 0);
 		assertEquals(result.addedFiles.size(), 19);
 		
 		assertTrue( result.addedFiles.contains("src/binary/eula.dll") &&
@@ -120,7 +120,7 @@ public class TestComparator {
 		CompareResult result = compare.getCompareResult();
 		assertEquals(result.addedFiles.size(), 19);
 		assertEquals(result.deletedFiles.size(),0);
-		assertEquals(result.modifiedFiles.size(),0);
+		assertEquals(result.modifiedFileMethodMap.size(),0);
 		assertEquals(result.modifiedBinaryFiles.size(),0);
 	}
 	
@@ -138,15 +138,15 @@ public class TestComparator {
 		CompareResult result = compare.getCompareResult();
 		assertEquals(result.addedFiles.size(), 2);
 		assertEquals(result.deletedFiles.size(),0);
-		assertEquals(result.modifiedFiles.size(),2);
+		assertEquals(result.modifiedFileMethodMap.size(),2);
 		assertEquals(result.modifiedBinaryFiles.size(),0);
 		
 		// Function changed
-		ModifiedMethod methods = result.modifiedFiles.get("src/pak/B.java");
+		ModifiedMethod methods = result.modifiedFileMethodMap.get("src/pak/B.java");
 		assertEquals(methods.oldMethods.size(), 4);
 		assertEquals(methods.newMethods.size(), 7);
 		
-		methods = result.modifiedFiles.get("src/test/Child.java");
+		methods = result.modifiedFileMethodMap.get("src/test/Child.java");
 		assertEquals(methods.oldMethods.size(),0);
 		assertEquals(methods.newMethods.size(),1);
 	}

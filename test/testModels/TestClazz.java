@@ -1,18 +1,18 @@
 package testModels;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import models.Clazz;
+import models.Mapping;
+import models.Method;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
-import testModels.TestCallGraph;
-import models.File;
-import models.Clazz;
-import models.CallGraph;
-import models.Method;
-import models.Mapping;
 
 public class TestClazz {
 

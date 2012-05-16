@@ -1,10 +1,11 @@
 package testModels;
 
-import static org.junit.Assert.*;
-import testModels.TestCallGraph;
-import org.junit.Test;
-import models.File;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import models.CallGraph;
+import models.File;
+
+import org.junit.Test;
 
 public class TestFile {
 

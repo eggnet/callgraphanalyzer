@@ -16,6 +16,7 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		CallGraphDb db = new CallGraphDb();
+		CallGraphAnalyzer cga = new CallGraphAnalyzer();
 		try {
 			if (args.length < 4 )
 			{
@@ -28,10 +29,10 @@ public class Main {
 				{
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
-					Comparator compare = new Comparator(db, args[2], args[3], new CallGraphAnalyzer());
-					
+					Comparator compare = new Comparator(db, args[2], args[3], cga);					
 					// TODO @braden link this with the ownership project and call it from here.
 					compare.CompareCommits();
+					cga.generateRelationships(compare.getCompareResult());
 				} 
 				catch (Exception e) 
 				{
