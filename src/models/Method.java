@@ -170,4 +170,20 @@ public class Method {
 	public void setUnresolvedCalls(List<String> unresolvedCalls) {
 		this.unresolvedCalls = unresolvedCalls;
 	}
+
+	public List<Method> getFuzzyCalls() {
+		return fuzzyCalls;
+	}
+
+	public void setFuzzyCalls(List<Method> fuzzyCalls) {
+		this.fuzzyCalls = fuzzyCalls;
+	}
+
+	public List<Method> getFuzzyCalledBy() {
+		return fuzzyCalledBy;
+	}
+
+	public void setFuzzyCalledBy(List<Method> fuzzyCalledBy) {
+		this.fuzzyCalledBy = fuzzyCalledBy;
+	}
 }

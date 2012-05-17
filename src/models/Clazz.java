@@ -97,7 +97,8 @@ public class Clazz {
 			return false;
 	}
 	
-	public Method hasMethod(String methodToResolve) {
+	public List<Method> hasMethod(String methodToResolve) {
+		List<Method> returnMethods = new ArrayList<Method>();
 		
 		String unType = methodToResolve.substring(0, findTypeDivider(methodToResolve));
 		String unMethodName = methodToResolve.substring(
@@ -131,17 +132,19 @@ public class Clazz {
 				arguments = stripGenericParameters(arguments);
 				
 				// Compare parameters
-				if(compareArguments(unArguments, arguments))
-					return method;
+				if(compareArguments(unArguments, arguments)) {
+					returnMethods.add(method);
+					continue;
+				}
 				// Check for generic method
 				if(unType.contains("<") && unType.contains(">"))
 					if(hasGenericMethod(unType, unArguments, arguments))
-						return method;
+						returnMethods.add(method);
 			}
 			// Move the type to the super class
 			unType = clazz.getUnresolvedSuperClazz();
 		}
-		return null;
+		return returnMethods;
 	}
 	
 	private int findTypeDivider(String methodName) {

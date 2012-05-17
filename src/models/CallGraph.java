@@ -206,8 +206,10 @@ public class CallGraph {
 	        Map.Entry pairs = (Map.Entry)it.next();
 	        Method m = (Method) pairs.getValue();
 	        resolved += m.getMethodCalls().size();
+	        resolved += m.getFuzzyCalls().size();
 	        total += m.getMethodCalls().size();
 	        total += m.getUnresolvedCalls().size();
+	        total += m.getFuzzyCalls().size();
 	    }
 		
 		System.out.println("TOTAL RESOLVED CALLS: " + resolved);

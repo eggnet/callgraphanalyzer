@@ -109,38 +109,29 @@ public class RVisitor extends ASTVisitor {
 		
 		System.out.println("Need to resolve the method: " + methodToResolve);
 		
-		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
-		List<Method> fuzzyResolved = null;;
+		List<Method> resolved = lookupClassMethod(type, methodName, methodToResolve);
 		
-		// The resolving has failed
-		if(resolved == null) {
-			// Try fuzzy resolving
+		if(resolved.isEmpty()) {
+			// Try inherit resolving
 			if(!parameters.isEmpty()) {
-				fuzzyResolved = fuzzyResolveParameters(type, methodName, parameters);
+				resolved = inheritResolveParameters(type, methodName, parameters);
 			}
-			if(fuzzyResolved != null) {
-				if(fuzzyResolved.size() == 0) {
-					method.addUnresolvedCall(methodToResolve);
-				}
-				else if(fuzzyResolved.size() == 1) {
-					method.addMethodCall(fuzzyResolved.get(0));
-					fuzzyResolved.get(0).addCalledBy(method);
-				}
-				else {
-					for(Method res: fuzzyResolved) {
-						method.addFuzzyCall(res);
-						res.addFuzzyCalledBy(method);
-					}
+		}
+		if(!resolved.isEmpty()) {
+			if(resolved.size() == 1) {
+				method.addMethodCall(resolved.get(0));
+				resolved.get(0).addCalledBy(method);
+			}
+			else {
+				for(Method res: resolved) {
+					method.addFuzzyCall(res);
+					res.addFuzzyCalledBy(method);
 				}
 			}
-			else 
-				method.addUnresolvedCall(node.toString());
-			
 		}
-		else {
-			method.addMethodCall(resolved);
-			resolved.addCalledBy(method);
-		}
+		// The resolve has failed
+		else
+			method.addUnresolvedCall(node.toString());
 		
 		return super.visit(node);
 	}
@@ -273,31 +264,20 @@ public class RVisitor extends ASTVisitor {
 
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
 
-		System.out.println("Need to resolve the method: " + methodToResolve);
-
-		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
+		List<Method> resolved = lookupClassMethod(type, methodName, methodToResolve);
 		
-		if(resolved != null) {
-			System.out.println("                             " + "Return type: " + resolved.getReturnType());
-			return resolved.getReturnType();
-		}
-		else {
-			System.out.println("                             " + "Return type: unknown");
-			// The resolving has failed
-			// Try fuzzy resolving
-			List<Method> fuzzyResolved = null;
-			if(!parameters.isEmpty())
-				fuzzyResolved = fuzzyResolveParameters(type, methodName, parameters);
-			
-			if(fuzzyResolved != null) {
-				if(fuzzyResolved.size() == 1)
-					return fuzzyResolved.get(0).getReturnType();
-				else
-					return null;
+		if(resolved.isEmpty()) {
+			// Try inherit resolving
+			if(!parameters.isEmpty()) {
+				resolved = inheritResolveParameters(type, methodName, parameters);
 			}
-			else
-				return null;
 		}
+		if(resolved.size() == 1) {
+			return resolved.get(0).getReturnType();
+		}
+		// The resolve has failed
+		else
+			return null;
 	}
 	
 	private String resolveSimpleName(SimpleName name) {
@@ -452,26 +432,22 @@ public class RVisitor extends ASTVisitor {
 	 * @param parameters
 	 * @return
 	 */
-	private List<Method> fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
-		List<ArrayList<String>> fuzzyParameters = getFuzzyParameters(parameters);
-		List<Method> fuzzyMethods = new ArrayList<Method>();
+	private List<Method> inheritResolveParameters(String type, String methodName, List<String> parameters) {
+		List<ArrayList<String>> inheritParameters = getInheritParameters(parameters);
+		List<Method> inheritMethods = new ArrayList<Method>();
 		
-		List<Method> resolved = new ArrayList<Method>();
-		
-		for(ArrayList<String> list: fuzzyParameters) {
+		for(ArrayList<String> list: inheritParameters) {
 			String methodToResolve = methodNameBuilder(type, methodName, list);
 			
-			System.out.println("Need to resolve the method: " + methodToResolve);
-			
-			Method resolvedMethod = lookupClassMethod(type, methodName, methodToResolve);
-			if(resolvedMethod != null)
-				resolved.add(resolvedMethod);
+			List<Method> resolvedMethod = lookupClassMethod(type, methodName, methodToResolve);
+			if(!resolvedMethod.isEmpty())
+				inheritMethods.addAll(resolvedMethod);
 		}
 		
-		return resolved;
+		return inheritMethods;
 	}
 	
-	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {
+	private List<ArrayList<String>> getInheritParameters(List<String> front) {
 		// Remove all generic parameter types
 		for(int i = 0; i < front.size(); i++) {
 			try {
@@ -623,17 +599,26 @@ public class RVisitor extends ASTVisitor {
 
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
 		
-		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
+		List<Method> resolved = lookupClassMethod(type, methodName, methodToResolve);
 		
 		// The resolving has failed
-		if(resolved == null) {
+		if(resolved.isEmpty()) {
 			method.addUnresolvedCall(node.toString());
 			return super.visit(node);
 		}
-		
-		if(resolved != null) {
-			method.addMethodCall(resolved);
-			resolved.addCalledBy(method);
+		// We resolved
+		else {
+			if(resolved.size() == 1) {
+				method.addMethodCall(resolved.get(0));
+				resolved.get(0).addCalledBy(method);
+			}
+			// We fuzzy resolved.
+			else {
+				for(Method m: resolved) {
+					method.addFuzzyCall(m);
+					m.addFuzzyCalledBy(method);
+				}
+			}
 		}
 		
 		return super.visit(node);
@@ -666,13 +651,14 @@ public class RVisitor extends ASTVisitor {
 	 * @param methodToResolve
 	 * @return
 	 */
-	private Method lookupClassMethod(String type, String methodName, String methodToResolve) {
+	private List<Method> lookupClassMethod(String type, String methodName, String methodToResolve) {
+		List<Method> returnMethods = new ArrayList<Method>();
 		Clazz callingClazz = callGraph.getClazzes().get(type);
 		
 		if(callingClazz != null)
-			return callingClazz.hasMethod(methodToResolve);
+			returnMethods.addAll(callingClazz.hasMethod(methodToResolve));
 		
-		return null;
+		return returnMethods;
 	}
 	
 	private String methodNameBuilder(String type, String methodName, List<String> parameterTypes) {
@@ -711,7 +697,7 @@ public class RVisitor extends ASTVisitor {
 			varName = frag.getName();
 		}
 		Mapping m = new Mapping(node.getType().toString(), varName.getFullyQualifiedName());
-		mappings.addMapping(node.fragments().get(0).toString(), m);
+		mappings.addMapping(varName.getFullyQualifiedName(), m);
 		
 		return super.visit(node);
 	}
