@@ -108,6 +108,8 @@ public class CallGraph {
 	        File currentFile = (File) pairs.getValue();
 	        currentFile.print();
 	    }
+		
+		printResolveStatistics();
 	}
 	
 	/**
@@ -193,6 +195,25 @@ public class CallGraph {
 			return clazz;
 		
 		return null;
+	}
+	
+	public void printResolveStatistics() {
+		int resolved = 0;
+		int total = 0;
+		Iterator it = methods.entrySet().iterator();
+		
+		while (it.hasNext()) {
+	        Map.Entry pairs = (Map.Entry)it.next();
+	        Method m = (Method) pairs.getValue();
+	        resolved += m.getMethodCalls().size();
+	        total += m.getMethodCalls().size();
+	        total += m.getUnresolvedCalls().size();
+	    }
+		
+		System.out.println("TOTAL RESOLVED CALLS: " + resolved);
+		System.out.println("TOTAL CALLS:          " + total);
+		System.out.println();
+		System.out.println("ABLE TO RESOLVE: " + ((double)resolved/(double)total)*100 + "% OF ALL CALLS");
 	}
 	
 	private String stripGenericParameters(String className) {

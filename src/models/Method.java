@@ -162,4 +162,12 @@ public class Method {
 	public void setNode(MethodDeclaration node) {
 		this.node = node;
 	}
+
+	public List<String> getUnresolvedCalls() {
+		return unresolvedCalls;
+	}
+
+	public void setUnresolvedCalls(List<String> unresolvedCalls) {
+		this.unresolvedCalls = unresolvedCalls;
+	}
 }

@@ -39,6 +39,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.sun.xml.internal.ws.org.objectweb.asm.Type;
+
 import callgraphanalyzer.Mappings;
 import callgraphanalyzer.Resources;
 
@@ -431,12 +433,13 @@ public class RVisitor extends ASTVisitor {
 		
 		for(int i = 0; i < types.size(); i++) {
 			// Turn null into the string null
-			if(types.get(i) == null) {
+			if(types.get(i) == null)
 				types.set(i, "null");
-			}
-			else if(types.get(i).contains(".")) {
-				types.set(i, types.get(i).substring(types.get(i).lastIndexOf(".")));
-			}
+			else if(Resources.isLiteral(types.get(i)))
+				continue;
+			else if(!callGraph.getClazzes().containsKey(types.get(i)))
+				types.set(i, "null");
+			
 		}
 		
 		return types;
@@ -544,7 +547,7 @@ public class RVisitor extends ASTVisitor {
 	 */
 	private String getGenericReturnType(String type, Method method) {
 		String types = type.substring(type.lastIndexOf("<")+1, type.lastIndexOf(">"));
-		String[] generics = types.split(",");
+		String[] generics = types.split(",(?![^<>]*>");
 		List<String> genericParameters = method.getClazz().getGenericTypes();
 		
 		int i = 0;

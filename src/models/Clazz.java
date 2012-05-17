@@ -103,7 +103,7 @@ public class Clazz {
 		String unMethodName = methodToResolve.substring(
 				findTypeDivider(methodToResolve)+1, methodToResolve.lastIndexOf("("));
 		String[] unArguments = methodToResolve.substring(
-				methodToResolve.lastIndexOf("(")+1, methodToResolve.lastIndexOf(")")).split(",");
+				methodToResolve.lastIndexOf("(")+1, methodToResolve.lastIndexOf(")")).split(",(?![^<>]*>)");
 		
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
 			for(Method method: clazz.getMethods()) {
@@ -111,7 +111,7 @@ public class Clazz {
 				String methodName = method.getName().substring(
 						findTypeDivider(method.getName())+1, method.getName().lastIndexOf("("));
 				String[] arguments = method.getName().substring(
-						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
+						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",(?![^<>]*>)");
 				
 				// Strip any generics in method name
 				if(unMethodName.contains("<") && unMethodName.contains(">")) {
