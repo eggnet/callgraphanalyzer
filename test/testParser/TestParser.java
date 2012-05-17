@@ -2,7 +2,9 @@ package testParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
+import java.io.IOException;
 import java.util.List;
 
 import models.CallGraph;
@@ -96,6 +98,9 @@ public class TestParser {
 		assertEquals(classes.size(), 1);
 		assertEquals(classes.get(0).getName(), "mypackage.classA");
 		assertEquals(classes.get(0).getFile().getFileName(), fileName);
+		assertFalse(classes.get(0).isInterface());
+		assertEquals(classes.get(0).getUnresolvedInterfaces().size(), 1);
+		assertEquals(classes.get(0).getUnresolvedInterfaces().get(0), "classAbase");
 
 		// Multiple class
 		rawFile = "package mypackage;\nimport models.clazz;\nprivate class classB(){\npublic class insideClassC{}\n};\n";
@@ -107,13 +112,132 @@ public class TestParser {
 		boolean classB = false;
 		boolean classC = false;
 		for (Clazz c : classes) {
-			if (c.getName().equals("mypackage.insideClassC"))
+			if (c.getName().equals("mypackage.insideClassC") && !c.isInterface() && c.getFile().getFileName().equals(fileName))
 				classC = true;
-			if (c.getName().equals("mypackage.classB"))
+			if (c.getName().equals("mypackage.classB") && !c.isInterface() && c.getFile().getFileName().equals(fileName))
 				classB = true;
 		}
 		assertTrue(classC);
 		assertTrue(classB);
 	}
+	
+	@Test
+	public void testVisitorVisitTypeDeclarationClassUnresolvedSuperClass() {
+		CallGraph cg = new CallGraph();
+		Parser parser = new Parser(cg);
 
+		// Single class
+		String fileName = "src/test/classA.java";
+		String rawFile = "package mypackage;\n" +
+						 "import models.clazz;\n" +
+						 "public class classA extends classAbase{\n" +
+						 	"public class Achild extends AchildBase{\n" +
+						 		"public void doSomething(){}\n" +
+						 	"}\n" +
+						 	"public class Bchild extends BchildBase{\n" +
+					 			"public void doSomethingElse(){}\n" +
+					 		"}\n" +
+						 "}\n";
+		
+		parser.parseFileFromString(fileName, rawFile);
+		File f = cg.containsFile(fileName);
+		List<Clazz> classes = f.getFileClazzes();
+
+		assertEquals(classes.size(), 3);
+
+		boolean Bchild = false;
+		boolean Achild = false;
+		boolean classA = false;
+		for (Clazz c : classes) {
+			if (c.getName().equals("mypackage.classA") && c.getUnresolvedSuperClazz().equals("classAbase"))
+				classA = true;
+			if (c.getName().equals("mypackage.Achild") && c.getUnresolvedSuperClazz().equals("AchildBase"))
+				Achild = true;
+			if (c.getName().equals("mypackage.Bchild") && c.getUnresolvedSuperClazz().equals("BchildBase"))
+				Bchild = true;
+		}
+		assertTrue(classA);
+		assertTrue(Achild);
+		assertTrue(Bchild);
+	}
+	
+	@Test
+	public void testVisitorVisitTypeDeclarationClassUnresolvedInterface() {
+		CallGraph cg = new CallGraph();
+		Parser parser = new Parser(cg);
+
+		// Single class
+		String fileName = "src/test/classA.java";
+		String rawFile = "package mypackage;\n" +
+						 "import models.clazz;\n" +
+						 "public class classA implements A1, A2, A3{\n" +
+						 	"public class Achild implements Achild1, Achild2{\n" +
+						 		"public void doSomething(){}\n" +
+						 	"}\n" +
+						 "}\n";
+		
+		parser.parseFileFromString(fileName, rawFile);
+		File f = cg.containsFile(fileName);
+		List<Clazz> classes = f.getFileClazzes();
+
+		assertEquals(classes.size(), 2);
+
+		boolean classA = false;
+		boolean Achild = false;
+		for (Clazz c : classes) {
+			if (c.getName().equals("mypackage.classA") && c.getUnresolvedInterfaces().contains("A1")
+			 										   && c.getUnresolvedInterfaces().contains("A2")
+			 										   && c.getUnresolvedInterfaces().contains("A3"))
+				classA = true;
+			if (c.getName().equals("mypackage.Achild") && c.getUnresolvedInterfaces().contains("Achild1")
+													   && c.getUnresolvedInterfaces().contains("Achild2"))
+				Achild = true;
+		}
+		assertTrue(classA);
+		assertTrue(Achild);
+	}
+	
+	@Test
+	public void testVisitorVisitTypeDeclarationClassGenericType() {
+		CallGraph cg = new CallGraph();
+		Parser parser = new Parser(cg);
+
+		// Single class
+		String fileName = "src/test/classA.java";
+		String rawFile = "package mypackage;\n" +
+						 "import models.clazz;\n" +
+						 "public class classA<K, E> extends abstractA<K, E> implements mapA<K, E>{\n" +
+						 "public class classB<K>{\n}\n" +
+						 "}\n";
+		
+		parser.parseFileFromString(fileName, rawFile);
+		File f = cg.containsFile(fileName);
+		List<Clazz> classes = f.getFileClazzes();
+
+		assertEquals(classes.size(), 2);
+		assertEquals(classes.get(1).getGenericTypes().size(), 2);
+		assertTrue(classes.get(1).getGenericTypes().contains("K"));
+		assertTrue(classes.get(1).getGenericTypes().contains("E"));
+		assertEquals(classes.get(0).getGenericTypes().size(), 1);
+		assertTrue(classes.get(0).getGenericTypes().contains("K"));
+	}
+
+	@Test
+	public void testVisitorVisitMethodDeclaration() throws IOException {
+		CallGraph cg = new CallGraph();
+		Parser parser = new Parser(cg);
+
+		// Single class
+		String fileName = "test/testParser/TestParser.java";
+		String rawFile = Parser.readFileToString(fileName);
+		parser.parseFileFromString(fileName, rawFile);
+		File f = cg.containsFile(fileName);
+		List<Clazz> classes = f.getFileClazzes();
+
+		assertEquals(f.getFileName(), "test/testParser/TestParser.java" );
+		assertEquals(f.getFileImports().size(), 10);
+		assertEquals(classes.size(), 1);
+		assertEquals(classes.get(0).getName(), "testParser.TestParser" );
+		assertEquals(classes.get(0).getMethods().size(), 7 );
+	}
 }
