@@ -9,8 +9,8 @@ import models.Clazz;
 import models.Mapping;
 import models.Method;
 
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CastExpression;
@@ -22,7 +22,6 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
@@ -41,6 +40,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import callgraphanalyzer.Mappings;
+import callgraphanalyzer.Resources;
 
 public class RVisitor extends ASTVisitor {
 	
@@ -57,6 +57,9 @@ public class RVisitor extends ASTVisitor {
 		this.method = method;
 	}
 	
+	/**
+	 * We need to grab the parameter variables here.
+	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
 		// Add the parameter names and types to the variable mapping
@@ -66,7 +69,6 @@ public class RVisitor extends ASTVisitor {
 			Mapping m = new Mapping(var.getType().toString(), var.getName().getFullyQualifiedName());
 			mappings.addMapping(var.getName().getFullyQualifiedName(), m);
 		}
-		
 		return super.visit(node);
 	}
 	
@@ -81,44 +83,62 @@ public class RVisitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
-		// Get the type
+		// Get the fully qualified type
 		String type = null;
 		if(node.getExpression() != null)
 			type = resolveExpression(node.getExpression());
 		else
 			type = clazz.getName();
 		
-		// This means we were unable to resolve the method invocation
+		// This means we were unable to resolve expression of
+		// the method invocation
 		if(type == null) {
-			method.addUnresolvedCall(node.getName().getFullyQualifiedName());
+			method.addUnresolvedCall(node.toString());
 			return super.visit(node);
 		}
 		
 		// Get the method call
 		String methodName = node.getName().getFullyQualifiedName();
 		
+		// Get the fully qualified parameter types
 		List<String> parameters = resolveParameters(node.arguments());
 		
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
 		
 		System.out.println("Need to resolve the method: " + methodToResolve);
 		
-		Method resolved = lookupClassMethod(methodToResolve);
+		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
+		List<Method> fuzzyResolved = null;;
 		
 		// The resolving has failed
 		if(resolved == null) {
 			// Try fuzzy resolving
 			if(!parameters.isEmpty()) {
-				resolved = fuzzyResolveParameters(type, methodName, parameters);
+				fuzzyResolved = fuzzyResolveParameters(type, methodName, parameters);
 			}
+			if(fuzzyResolved != null) {
+				if(fuzzyResolved.size() == 0) {
+					method.addUnresolvedCall(methodToResolve);
+				}
+				else if(fuzzyResolved.size() == 1) {
+					method.addMethodCall(fuzzyResolved.get(0));
+					fuzzyResolved.get(0).addCalledBy(method);
+				}
+				else {
+					for(Method res: fuzzyResolved) {
+						method.addFuzzyCall(res);
+						res.addFuzzyCalledBy(method);
+					}
+				}
+			}
+			else 
+				method.addUnresolvedCall(node.toString());
+			
 		}
-		
-		if(resolved != null) {
+		else {
 			method.addMethodCall(resolved);
 			resolved.addCalledBy(method);
 		}
-		else
-			method.addUnresolvedCall(methodToResolve);
 		
 		return super.visit(node);
 	}
@@ -161,11 +181,11 @@ public class RVisitor extends ASTVisitor {
 		}
 		// Handle Type literal
 		else if(expression instanceof TypeLiteral) {
-			return ((TypeLiteral)expression).getType().toString();
+			return resolveTypeLiteral((TypeLiteral)expression);
 		}
 		// Handle cast expression
 		else if(expression instanceof CastExpression) {
-			return ((CastExpression)expression).getType().toString();
+			return resolveCastExpression((CastExpression)expression);
 		}
 		// Handle field access NOTE: Even though it says QualifiedName, it
 		// still behaves as a field access
@@ -229,45 +249,50 @@ public class RVisitor extends ASTVisitor {
 	}
 	
 	private String resolveMethodInvocation(MethodInvocation methodInvocation) {
-		// Get the type
+		// Get the fully qualified type
 		String type = null;
 		if(methodInvocation.getExpression() != null)
 			type = resolveExpression(methodInvocation.getExpression());
 		else
 			type = clazz.getName();
-		
-		// This means that the type was unresolvable and we have failed at resolving.
-		if(type == null)
+
+		// This means we were unable to resolve expression of
+		// the method invocation
+		if(type == null) {
+			method.addUnresolvedCall(methodInvocation.toString());
 			return null;
+		}
 
 		// Get the method call
 		String methodName = methodInvocation.getName().getFullyQualifiedName();
 
+		// Get the fully qualified parameter types
 		List<String> parameters = resolveParameters(methodInvocation.arguments());
 
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
-		
-		System.out.println("Need to look up the type of: " + methodToResolve);
-		
-		Method resolved = lookupClassMethod(methodToResolve);
+
+		System.out.println("Need to resolve the method: " + methodToResolve);
+
+		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
 		
 		if(resolved != null) {
-			System.out.println("                             " + "Return type: " + 
-					resolved.getReturnType());
-			if(isGeneric(type))
-				return getGenericReturnType(type, resolved);
-			else
-				return resolved.getReturnType();
+			System.out.println("                             " + "Return type: " + resolved.getReturnType());
+			return resolved.getReturnType();
 		}
 		else {
 			System.out.println("                             " + "Return type: unknown");
 			// The resolving has failed
 			// Try fuzzy resolving
+			List<Method> fuzzyResolved = null;
 			if(!parameters.isEmpty())
-				resolved = fuzzyResolveParameters(type, methodName, parameters);
+				fuzzyResolved = fuzzyResolveParameters(type, methodName, parameters);
 			
-			if(resolved != null)
-				return resolved.getReturnType();
+			if(fuzzyResolved != null) {
+				if(fuzzyResolved.size() == 1)
+					return fuzzyResolved.get(0).getReturnType();
+				else
+					return null;
+			}
 			else
 				return null;
 		}
@@ -276,7 +301,15 @@ public class RVisitor extends ASTVisitor {
 	private String resolveSimpleName(SimpleName name) {
 		String type = mappings.lookupType(name.toString());
 		if(type == null)
-			return clazz.lookupField(name.toString());
+			type = clazz.lookupField(callGraph, name.toString());
+		else {
+			Clazz typeClazz = null;
+			if(!Resources.isLiteral(type)) {
+				typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
+				if(typeClazz != null)
+					type = typeClazz.getName();
+			}
+		}
 		return type;
 	}
 	
@@ -288,6 +321,24 @@ public class RVisitor extends ASTVisitor {
 			type = resolveQualifiedName((QualifiedName)qualifiedName.getQualifier());
 		
 		return lookupClassField(type, qualifiedName.getName().toString());
+	}
+	
+	private String resolveTypeLiteral(TypeLiteral node) {
+		String type = null;
+		Clazz typeClazz = callGraph.lookupUnqualifiedClassName(clazz, node.getType().toString());
+		if(typeClazz != null)
+			type = typeClazz.getName();
+		return type;
+	}
+	
+	private String resolveCastExpression(CastExpression node) {
+		String type = node.getType().toString();
+		if(!Resources.isLiteral(type)) {
+			Clazz typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
+			if(typeClazz != null)
+				type = typeClazz.getName();
+		}
+		return type;
 	}
 	
 	private String resolveFieldAccess(FieldAccess fieldAccess) {
@@ -322,7 +373,7 @@ public class RVisitor extends ASTVisitor {
 			superClazz = clazz.getSuperClazz();
 		else {
 			className = resolveExpression(access.getQualifier());
-			Clazz lookupClazz = lookupClassName(className);
+			Clazz lookupClazz = callGraph.getClazzes().get(className);
 			if(lookupClazz != null)
 				superClazz = lookupClazz.getSuperClazz();
 		}
@@ -340,7 +391,7 @@ public class RVisitor extends ASTVisitor {
 			superClazz = clazz.getSuperClazz();
 		else {
 			className = resolveExpression(invocation.getQualifier());
-			Clazz lookupClazz = lookupClassName(className);
+			Clazz lookupClazz = callGraph.getClazzes().get(className);
 			if(lookupClazz != null)
 				superClazz = lookupClazz.getSuperClazz();
 		}
@@ -378,6 +429,16 @@ public class RVisitor extends ASTVisitor {
 		for(Expression expression: parameters)
 			types.add(resolveExpression(expression));
 		
+		for(int i = 0; i < types.size(); i++) {
+			// Turn null into the string null
+			if(types.get(i) == null) {
+				types.set(i, "null");
+			}
+			else if(types.get(i).contains(".")) {
+				types.set(i, types.get(i).substring(types.get(i).lastIndexOf(".")));
+			}
+		}
+		
 		return types;
 	}
 	
@@ -388,22 +449,23 @@ public class RVisitor extends ASTVisitor {
 	 * @param parameters
 	 * @return
 	 */
-	private Method fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
+	private List<Method> fuzzyResolveParameters(String type, String methodName, List<String> parameters) {
 		List<ArrayList<String>> fuzzyParameters = getFuzzyParameters(parameters);
 		List<Method> fuzzyMethods = new ArrayList<Method>();
+		
+		List<Method> resolved = new ArrayList<Method>();
 		
 		for(ArrayList<String> list: fuzzyParameters) {
 			String methodToResolve = methodNameBuilder(type, methodName, list);
 			
 			System.out.println("Need to resolve the method: " + methodToResolve);
 			
-			Method resolved = lookupClassMethod(methodToResolve);
-			
-			if(resolved != null)
-				return resolved;
+			Method resolvedMethod = lookupClassMethod(type, methodName, methodToResolve);
+			if(resolvedMethod != null)
+				resolved.add(resolvedMethod);
 		}
 		
-		return null;
+		return resolved;
 	}
 	
 	private List<ArrayList<String>> getFuzzyParameters(List<String> front) {
@@ -499,17 +561,17 @@ public class RVisitor extends ASTVisitor {
 		List<String> result = new ArrayList<String>();
 		
 		// Check for literal
-		if(isLiteral(className)) {
+		if(Resources.isLiteral(className)) {
 			result.add(className);
 			return result;
 		}
 		
-		Clazz base = lookupClassName(className);
+		Clazz base = callGraph.lookupUnqualifiedClassName(clazz, className);
 		Clazz superClass = null;
 		Clazz superInterface = null;
 		if(base != null) {
 			for(superClass = base;superClass != null; superClass = superClass.getSuperClazz()) {
-				result.add(superClass.getName().substring(superClass.getName().lastIndexOf(".")+1));
+				result.add(superClass.getName());
 				result.addAll(getInterfaces(superClass));
 			}
 		}
@@ -527,7 +589,7 @@ public class RVisitor extends ASTVisitor {
 		List<String> interfaces = new ArrayList<String>();
 		
 		for(Clazz inter: clazz.getInterfaces()) {
-			interfaces.add(inter.getName().substring(inter.getName().lastIndexOf(".")+1));
+			interfaces.add(inter.getName());
 			interfaces.addAll(getInterfaces(inter));
 		}
 		
@@ -543,6 +605,8 @@ public class RVisitor extends ASTVisitor {
 	public boolean visit(ClassInstanceCreation node) {
 		// Get the type
 		String type = node.getType().toString();
+		if(callGraph.lookupUnqualifiedClassName(clazz, type) != null)
+			type = callGraph.lookupUnqualifiedClassName(clazz, type).getName();
 
 		// This means we were unable to resolve the method invocation
 		if(type == null)
@@ -556,151 +620,56 @@ public class RVisitor extends ASTVisitor {
 
 		String methodToResolve = methodNameBuilder(type, methodName, parameters);
 		
-		Method resolved = lookupClassMethod(methodToResolve);
+		Method resolved = lookupClassMethod(type, methodName, methodToResolve);
 		
 		// The resolving has failed
 		if(resolved == null) {
+			method.addUnresolvedCall(node.toString());
 			return super.visit(node);
 		}
 		
-		method.addMethodCall(resolved);
-		resolved.addCalledBy(method);
+		if(resolved != null) {
+			method.addMethodCall(resolved);
+			resolved.addCalledBy(method);
+		}
 		
 		return super.visit(node);
 	}
 	
+	/**
+	 * This will return the fully qualified type name for
+	 * a given fully qualified class name and field name.
+	 * @param className
+	 * @param field
+	 * @return
+	 */
 	private String lookupClassField(String className, String field) {
 		if(className == null || field == null)
 			return null;
 		
-		// Look through the package for the class name and field
-		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
-			if(packageClazz.hasUnqualifiedName(className))
-				return packageClazz.lookupField(field);
-		}
+		Clazz typeClazz = callGraph.getClazzes().get(className);
 		
-		// Look through the imports for the class name and field
-		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
-		for (Clazz s : imports) {
-			if(s.hasUnqualifiedName(className))
-				return s.lookupField(field);
-		}
+		// This means we were unable to look up the class for the field.
+		if(typeClazz == null)
+			return null;
 		
-		// Check the current class for the field
-		return clazz.lookupField(field);
+		return typeClazz.lookupField(callGraph, field);
 	}
 	
-	private Method lookupClassMethod(String methodToResolve) {
-		String className = methodToResolve.substring(0, findTypeDivider(methodToResolve));
-		// Look through the package for the class name and field
-		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
-			if(packageClazz.hasUnqualifiedName(className))
-				return packageClazz.hasUnqualifiedMethod(methodToResolve);
-		}
-
-		// Look through the imports for the class name and field
-		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
-		for (Clazz s : imports) {
-			if(s.hasUnqualifiedName(className))
-				return s.hasUnqualifiedMethod(methodToResolve);
-		}
-
-		// Check the current class for the field
-		return clazz.hasUnqualifiedMethod(methodToResolve);
-	}
-	
-	private int findTypeDivider(String methodName) {
-		int index = -1;
-		for(int i = 0; i < methodName.length(); i++) {
-			if(methodName.charAt(i) == '.')
-				index = i;
-			if(methodName.charAt(i) == '(')
-				break;
-		}
-		return index;
-	}
-	
-	private Clazz lookupClassName(String className) {
-		// Look through the package for the class name
-		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
-			if(packageClazz.hasUnqualifiedName(className))
-				return packageClazz;
-		}
+	/**
+	 * This will return a list of all possible methods that
+	 * could be called by this class and method name.
+	 * @param type
+	 * @param methodToResolve
+	 * @return
+	 */
+	private Method lookupClassMethod(String type, String methodName, String methodToResolve) {
+		Clazz callingClazz = callGraph.getClazzes().get(type);
 		
-		// Look through the imports for the class name
-		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
-		for (Clazz s : imports) {
-			if(s.hasUnqualifiedName(className))
-				return s;
-		}
-		
-		// Check the current class for the name
-		if(clazz.hasUnqualifiedName(className))
-			return clazz;
+		if(callingClazz != null)
+			return callingClazz.hasMethod(methodToResolve);
 		
 		return null;
-	}
-	
-	private boolean isLiteral(String literal) {
-		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
-				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
-				literal.equals("float") || literal.equals("boolean") || literal.equals("char") ||
-				literal.equals("null"))
-			return true;
-		else
-			return false;
-	}
-	
-	private boolean isGeneric(String type) {
-		if(type.contains("<") && type.contains(">"))
-			return true;
-		else
-			return false;
-	}
-	
-	/**
-	 * This returns a list of all clazzes that are contained
-	 * inside of the given package.
-	 * @param pkg
-	 * @return
-	 */
-	public List<Clazz> getClazzesInPackage(String pkg) {
-		List<Clazz> clazzes = new ArrayList<Clazz>();
-		
-		for(Clazz clazz: callGraph.getAllClazzes()) {
-			if(clazz.getFile().getFilePackage().equals(pkg))
-				clazzes.add(clazz);
-		}
-		
-		return clazzes;
-	}
-	
-	/**
-	 * This will return a list of clazzes that are inside the
-	 * imported packages.
-	 * @param imports
-	 * @return
-	 */
-	public List<Clazz> getClazzesInImports(List<String> imports) {
-		Clazz tc = null;
-		try {
-			List<Clazz> clazzes = new ArrayList<Clazz>();
-			
-			for(Clazz clazz: callGraph.getAllClazzes()) {
-				tc = clazz;
-				for(String imp: imports) {
-					tc = clazz;
-					if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
-						clazzes.add(clazz);
-				}
-			}
-			
-			return clazzes;
-		}
-		catch (NullPointerException e) {
-			e.printStackTrace();
-			return null;
-		}
 	}
 	
 	private String methodNameBuilder(String type, String methodName, List<String> parameterTypes) {

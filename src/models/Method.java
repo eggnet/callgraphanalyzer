@@ -18,6 +18,9 @@ public class Method {
 	private List<Method> 		methodCalls;
 	private List<Method>		calledBy;
 	
+	private List<Method> 		fuzzyCalls;
+	private List<Method>		fuzzyCalledBy;
+	
 	private List<String>		unresolvedCalls;
 	
 	private MethodDeclaration	node;
@@ -26,6 +29,8 @@ public class Method {
 	public Method() {
 		methodCalls 	= new ArrayList<Method>();
 		calledBy 		= new ArrayList<Method>();
+		fuzzyCalls 		= new ArrayList<Method>();
+		fuzzyCalledBy 	= new ArrayList<Method>();
 		unresolvedCalls = new ArrayList<String>();
 	}
 	
@@ -34,6 +39,10 @@ public class Method {
 		this.clazz 		 = clazz;
 		this.methodCalls = methodCalls;
 		this.calledBy 		 = new ArrayList<Method>();
+		
+		fuzzyCalls 		= new ArrayList<Method>();
+		fuzzyCalledBy 	= new ArrayList<Method>();
+		
 		this.unresolvedCalls = new ArrayList<String>();
 	}
 	
@@ -45,7 +54,19 @@ public class Method {
 		this.endLine 		= end;
 		this.methodCalls 	= new ArrayList<Method>();
 		this.calledBy 		= new ArrayList<Method>();
+		fuzzyCalls 		= new ArrayList<Method>();
+		fuzzyCalledBy 	= new ArrayList<Method>();
 		this.unresolvedCalls = new ArrayList<String>();
+	}
+	
+	public void addFuzzyCalledBy(Method m) {
+		if(!fuzzyCalledBy.contains(m))
+			this.fuzzyCalledBy.add(m);
+	}
+	
+	public void addFuzzyCall(Method m) {
+		if(!fuzzyCalls.contains(m))
+			this.fuzzyCalls.add(m);
 	}
 	
 	public void addCalledBy(Method m) {
@@ -65,11 +86,18 @@ public class Method {
 	
 	public void print() {
 		System.out.println("    METHOD: " + name);
+		System.out.println("      Return Type: " + returnType);
 		System.out.println("      Calls: ");
 		for(Method m: methodCalls)
 			System.out.println("        " + m.getName());
 		System.out.println("      Called By: ");
 		for(Method m: calledBy)
+			System.out.println("        " + m.getName());
+		System.out.println("      Fuzzy Calls: ");
+		for(Method m: fuzzyCalls)
+			System.out.println("        " + m.getName());
+		System.out.println("      Fuzzy Called By: ");
+		for(Method m: fuzzyCalledBy)
 			System.out.println("        " + m.getName());
 		System.out.println("      Unresolved Calls: (" + unresolvedCalls.size() + ")");
 		for(String m: unresolvedCalls)

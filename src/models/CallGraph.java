@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 public class CallGraph {
 	
@@ -109,6 +108,95 @@ public class CallGraph {
 	        File currentFile = (File) pairs.getValue();
 	        currentFile.print();
 	    }
+	}
+	
+	/**
+	 * This returns a list of all clazzes that are contained
+	 * inside of the given package.
+	 * @param pkg
+	 * @return
+	 */
+	public List<Clazz> getClazzesInPackage(String pkg) {
+		List<Clazz> clazzes = new ArrayList<Clazz>();
+		
+		for(Clazz clazz: getAllClazzes()) {
+			if(clazz.getFile().getFilePackage().equals(pkg))
+				clazzes.add(clazz);
+		}
+		
+		return clazzes;
+	}
+	
+	/**
+	 * This will return a list of clazzes that are inside the
+	 * imported packages.
+	 * @param imports
+	 * @return
+	 */
+	public List<Clazz> getClazzesInImports(List<String> imports) {
+		Clazz tc = null;
+		try {
+			List<Clazz> clazzes = new ArrayList<Clazz>();
+			
+			for(Clazz clazz: getAllClazzes()) {
+				tc = clazz;
+				for(String imp: imports) {
+					tc = clazz;
+					if(clazz.getName().equals(imp) || clazz.getFile().getFilePackage().equals(imp))
+						clazzes.add(clazz);
+				}
+			}
+			
+			return clazzes;
+		}
+		catch (NullPointerException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * This return a list of all files that are in the
+	 * supplied package name.
+	 * @param pkg
+	 * @return
+	 */
+	public List<File> getFilesInPackage(String pkg) {
+		List<File> files = new ArrayList<File>();
+		
+		for(File file: getAllFiles()) {
+			if(file.getFilePackage().equals(pkg))
+				files.add(file);
+		}
+		
+		return files;
+	}
+	
+	public Clazz lookupUnqualifiedClassName(Clazz clazz, String className) {
+		if(className.contains("<") && className.contains(">"))
+			className = stripGenericParameters(className);
+		// Look through the package for the class name
+		for (Clazz packageClazz : getClazzesInPackage(clazz.getFile().getFilePackage())) {
+			if(packageClazz.hasUnqualifiedName(className))
+				return packageClazz;
+		}
+		
+		// Look through the imports for the class name
+		List<Clazz> imports = getClazzesInImports(clazz.getFile().getFileImports());
+		for (Clazz s : imports) {
+			if(s.hasUnqualifiedName(className))
+				return s;
+		}
+		
+		// Check the current class for the name
+		if(clazz.hasUnqualifiedName(className))
+			return clazz;
+		
+		return null;
+	}
+	
+	private String stripGenericParameters(String className) {
+		return className.substring(0, className.indexOf("<"));
 	}
 
 	public Map<String, Clazz> getClazzes() {
