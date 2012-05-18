@@ -27,12 +27,12 @@ public class TestComparator {
 		
 		String newCommit = "719e209640b77f685e6ea38ca78e1addebdcecd7";
 		String oldCommit = "2969fc3a59fbac659524685a5198673c561aac0c";
-		Comparator compare = new Comparator(db, newCommit, oldCommit, new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, newCommit, oldCommit);
 		
 		assertEquals(compare.newCommit.getCommit_id(), newCommit);
 		assertEquals(compare.oldCommit.getCommit_id(), oldCommit);
 		
-		Comparator compare1 = new Comparator(db, oldCommit, newCommit , new CallGraphAnalyzer());
+		Comparator compare1 = new Comparator(db, oldCommit, newCommit);
 		
 		assertEquals(compare1.newCommit.getCommit_id(), newCommit);
 		assertEquals(compare1.oldCommit.getCommit_id(), oldCommit);
@@ -45,7 +45,7 @@ public class TestComparator {
 		
 		String newCommit = "719e209640b77f685e6ea38ca78e1addebdcecd7";
 		String oldCommit = "93851ad94b877dbe13ea85a3ed420bc0810ac835";
-		Comparator compare = new Comparator(db, newCommit, oldCommit, new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, newCommit, oldCommit);
 		
 		// CommitsInBetween also included the newer Commit, so eventhough no commits in between, the size is 1 
 		assertEquals(compare.commitsInBetween.size(), 1);
@@ -76,7 +76,7 @@ public class TestComparator {
 		
 		String newCommit = "f788f2183525e2e0fe2ab7137c90a37e45ab214e";
 		String oldCommit = "76f22a97e1a29ef6a18f9a3553e01b26298f597b";
-		Comparator compare = new Comparator(db, newCommit, oldCommit, new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, newCommit, oldCommit);
 		
 		// 12 commits
 		assertEquals(compare.commitsInBetween.size(), 12);
@@ -113,7 +113,7 @@ public class TestComparator {
 		
 		String newCommit = "f788f2183525e2e0fe2ab7137c90a37e45ab214e";
 		String oldCommit = "76f22a97e1a29ef6a18f9a3553e01b26298f597b";
-		Comparator compare = new Comparator(db, newCommit, oldCommit, new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, newCommit, oldCommit);
 		compare.CompareCommits();
 		
 		// 19 files added
@@ -131,7 +131,7 @@ public class TestComparator {
 		
 		String newCommit = "753bd7d12df07cd285956b67c33bacb7fa4fbf2a";
 		String oldCommit = "f4672afd22f79dde79a4248b66616591db40befc";
-		Comparator compare = new Comparator(db, newCommit, oldCommit, new CallGraphAnalyzer());
+		Comparator compare = new Comparator(db, newCommit, oldCommit);
 		compare.CompareCommits();
 		
 		// 2 files added, 2 modified
