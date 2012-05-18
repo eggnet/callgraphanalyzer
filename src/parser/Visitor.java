@@ -95,12 +95,9 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		currentClazz = callGraph.containsClazz(file.getFilePackage() + "." + node.getName().getIdentifier());
-		if(currentClazz == null) {
-			Clazz clazz = new Clazz();
-			clazzStack.push(clazz);
-			currentClazz = clazz;
-		}
+		Clazz clazz = new Clazz();
+		currentClazz = clazz;
+		clazzStack.push(clazz);
 		
 		currentClazz.setName(file.getFilePackage() + "." + node.getName().getIdentifier());
 		currentClazz.setInterface(node.isInterface());

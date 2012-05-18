@@ -284,6 +284,11 @@ public class RVisitor extends ASTVisitor {
 		String type = mappings.lookupType(name.toString());
 		if(type == null)
 			type = clazz.lookupField(callGraph, name.toString());
+		if(type == null) {
+			Clazz typeClazz = callGraph.lookupUnqualifiedClassName(clazz, name.toString());
+			if(typeClazz != null)
+				type = typeClazz.getName();
+		}
 		else {
 			Clazz typeClazz = null;
 			if(!Resources.isLiteral(type)) {
@@ -603,7 +608,8 @@ public class RVisitor extends ASTVisitor {
 		
 		// The resolving has failed
 		if(resolved.isEmpty()) {
-			method.addUnresolvedCall(node.toString());
+			if(parameters.size() != 0)
+				method.addUnresolvedCall(node.toString());
 			return super.visit(node);
 		}
 		// We resolved
