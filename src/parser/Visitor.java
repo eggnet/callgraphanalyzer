@@ -171,6 +171,8 @@ public class Visitor extends ASTVisitor {
 		currentMethod.setEndLine(node.getLength() + currentMethod.getStartLine());
 		if(node.getReturnType2() != null)
 			currentMethod.setReturnType(node.getReturnType2().toString());
+		if(node.isConstructor())
+			currentMethod.setReturnType(node.getName().getIdentifier());
 		
 		currentMethod.setNode(node);
 

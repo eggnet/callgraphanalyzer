@@ -58,7 +58,7 @@ public class Parser {
 		visitor.commitFile();
 	}
 	
-	private String readFileToString(String filePath) throws IOException {
+	public static String readFileToString(String filePath) throws IOException {
 		StringBuilder fileData = new StringBuilder(1000);
 		BufferedReader reader = new BufferedReader(new FileReader(filePath));
 
