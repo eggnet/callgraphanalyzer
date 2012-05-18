@@ -95,7 +95,7 @@ public class RVisitor extends ASTVisitor {
 		// This means we were unable to resolve expression of
 		// the method invocation
 		if(type == null) {
-			method.addUnresolvedCall(node.toString());
+			//method.addUnresolvedCall(node.toString());
 			return super.visit(node);
 		}
 		
@@ -252,7 +252,7 @@ public class RVisitor extends ASTVisitor {
 		// This means we were unable to resolve expression of
 		// the method invocation
 		if(type == null) {
-			method.addUnresolvedCall(methodInvocation.toString());
+			//method.addUnresolvedCall(methodInvocation.toString());
 			return null;
 		}
 
@@ -295,6 +295,8 @@ public class RVisitor extends ASTVisitor {
 				typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
 				if(typeClazz != null)
 					type = typeClazz.getName();
+				else
+					type = null;
 			}
 		}
 		return type;
@@ -661,8 +663,12 @@ public class RVisitor extends ASTVisitor {
 		List<Method> returnMethods = new ArrayList<Method>();
 		Clazz callingClazz = callGraph.getClazzes().get(type);
 		
-		if(callingClazz != null)
-			returnMethods.addAll(callingClazz.hasMethod(methodToResolve));
+		if(callingClazz != null) {
+			if(!callingClazz.isInterface())
+				returnMethods.addAll(callingClazz.hasMethod(methodToResolve));
+			else
+				returnMethods.addAll(callingClazz.hasImplementedMethod(methodToResolve));
+		}
 		
 		return returnMethods;
 	}

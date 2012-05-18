@@ -176,7 +176,6 @@ public class Comparator
 		}
 		
 		// Get Java util
-		/*
 		CallGraphDb libraryDB = new CallGraphDb();
 		libraryDB.connect("JavaLibraries");
 		libraryDB.setBranchName("master");
@@ -190,7 +189,7 @@ public class Comparator
 				continue;
 			parser.parseFileFromString(key, db.getRawFile(key, libraryFileTree
 					.get(key)));
-		} */
+		}
 
 		System.out.println();
 		System.out.println();

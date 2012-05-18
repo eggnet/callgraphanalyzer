@@ -16,6 +16,7 @@ public class Clazz {
 	private List<Clazz> 			subClazzes;
 	
 	private List<Clazz> 			interfaces;
+	private List<Clazz>				implementedBy;
 	private List<String> 			unresolvedInterfaces;
 	
 	private Clazz 					superClazz;
@@ -30,6 +31,7 @@ public class Clazz {
 	public Clazz() {
 		methods = new ArrayList<Method>();
 		interfaces = new ArrayList<Clazz>();
+		implementedBy = new ArrayList<Clazz>();
 		unresolvedInterfaces = new ArrayList<String>();
 		subClazzes = new ArrayList<Clazz>();
 		unresolvedSuperClazz = "";
@@ -53,6 +55,8 @@ public class Clazz {
 		
 		unresolvedInterfaces = new ArrayList<String>();
 		unresolvedSuperClazz = "";
+		
+		implementedBy = new ArrayList<Clazz>();
 		
 		genericTypes = new ArrayList<String>();
 		variables = new ArrayList<Mapping>();
@@ -144,6 +148,17 @@ public class Clazz {
 			// Move the type to the super class
 			unType = clazz.getUnresolvedSuperClazz();
 		}
+		return returnMethods;
+	}
+	
+	public List<Method> hasImplementedMethod(String methodToResolve) {
+		List<Method> returnMethods = new ArrayList<Method>();
+		
+		for(Clazz clazz: implementedBy) {
+			String methodName = clazz.getName() + methodToResolve.substring(findTypeDivider(methodToResolve));
+			returnMethods.addAll(clazz.hasMethod(methodToResolve));
+		}
+		
 		return returnMethods;
 	}
 	
@@ -243,6 +258,14 @@ public class Clazz {
 			System.out.println("      " + map.getType() + ": " + map.getVarName());
 		for(Method m: methods)
 			m.print();
+	}
+	
+	public Method getMethod(String methodName) {
+		for(Method method: methods) {
+			if (method.getName().equals(methodName))
+				return method;
+		}
+		return null;
 	}
 	
 	public void addMethod(Method m) {
@@ -371,6 +394,14 @@ public class Clazz {
 
 	public void setGenericTypes(List<String> genericTypes) {
 		this.genericTypes = genericTypes;
+	}
+
+	public List<Clazz> getImplementedBy() {
+		return implementedBy;
+	}
+
+	public void setImplementedBy(List<Clazz> implementedBy) {
+		this.implementedBy = implementedBy;
 	}
 }
 
