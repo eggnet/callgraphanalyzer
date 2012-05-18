@@ -9,13 +9,15 @@ public class User {
 	public String getUserEmail() {
 		return UserEmail;
 	}
-	public void setUserEmail(String userEmail) {
+	public User setUserEmail(String userEmail) {
 		UserEmail = userEmail;
+		return this;
 	}
 	public String getUserName() {
 		return UserName;
 	}
-	public void setUserName(String userName) {
+	public User setUserName(String userName) {
 		UserName = userName;
+		return this;
 	}
 }

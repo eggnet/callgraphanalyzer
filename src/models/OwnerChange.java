@@ -1,51 +1,95 @@
 package models;
 
 import db.Resources;
+import db.Resources.ChangeType;
 
-public class OwnerChange {
-	private String CommitId;
-	private String OwnerId;
-	private String FileId;
-	private int CharStart;
-	private int CharEnd;
-	private Resources.ChangeType ChangeType;
-	
-	public OwnerChange() { }
-	
-	public String getCommitId() {
+public class OwnerChange
+{
+	private String					CommitId;
+	private String					OwnerId;
+	private String					FileId;
+	private int						CharStart;
+	private int						CharEnd;
+	private Resources.ChangeType	ChangeType;
+
+	public OwnerChange()
+	{
+	}
+
+	public OwnerChange(String ownerId, String commitId, ChangeType changeType, String fileId, int charStart, int charEnd)
+	{
+		super();
+		CommitId = commitId;
+		OwnerId = ownerId;
+		FileId = fileId;
+		CharStart = charStart;
+		CharEnd = charEnd;
+		ChangeType = changeType;
+	}
+
+	public String getCommitId()
+	{
 		return CommitId;
 	}
-	public void setCommitId(String commitId) {
+
+	public OwnerChange setCommitId(String commitId)
+	{
 		CommitId = commitId;
+		return this;
 	}
-	public String getOwnerId() {
+
+	public String getOwnerId()
+	{
 		return OwnerId;
 	}
-	public void setOwnerId(String ownerId) {
+
+	public OwnerChange setOwnerId(String ownerId)
+	{
 		OwnerId = ownerId;
+		return this;
 	}
-	public String getFileId() {
+
+	public String getFileId()
+	{
 		return FileId;
 	}
-	public void setFileId(String fileId) {
+
+	public OwnerChange setFileId(String fileId)
+	{
 		FileId = fileId;
+		return this;
 	}
-	public int getCharStart() {
+
+	public int getCharStart()
+	{
 		return CharStart;
 	}
-	public void setCharStart(int charStart) {
+
+	public OwnerChange setCharStart(int charStart)
+	{
 		CharStart = charStart;
+		return this;
 	}
-	public int getCharEnd() {
+
+	public int getCharEnd()
+	{
 		return CharEnd;
 	}
-	public void setCharEnd(int charEnd) {
+
+	public OwnerChange setCharEnd(int charEnd)
+	{
 		CharEnd = charEnd;
+		return this;
 	}
-	public Resources.ChangeType getChangeType() {
+
+	public Resources.ChangeType getChangeType()
+	{
 		return ChangeType;
 	}
-	public void setChangeType(Resources.ChangeType changeType) {
+
+	public OwnerChange setChangeType(Resources.ChangeType changeType)
+	{
 		ChangeType = changeType;
+		return this;
 	}
 }
