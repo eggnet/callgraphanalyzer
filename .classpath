@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="libs"/>
-	<classpathentry kind="src" path="test"/>
+	<classpathentry excluding="testFiles/TestVisitorFileMethods.java|testFiles/TestVisitorFile.java" kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.core.contenttype_3.4.100.v20100505-1235.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.core.jobs_3.5.1.R36x_v20100824.jar"/>

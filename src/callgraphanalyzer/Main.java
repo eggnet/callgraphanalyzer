@@ -3,9 +3,6 @@ package callgraphanalyzer;
 import db.CallGraphDb;
 import ownership.OwnerManager;;
 public class Main {
-
-	private static CallGraphAnalyzer callGraphAnalyzer = new CallGraphAnalyzer();
-	
 	/**
 	 * @param [dbname] [commit_before] [commit_after] 
 	 */
@@ -26,11 +23,13 @@ public class Main {
 				{
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
-					Comparator compare = new Comparator(db, args[2], args[3], cga);					
+					Comparator compare = new Comparator(db, args[2], args[3]);					
 					// Setup the owner table.
 					ownerMgr.init(args[0], args[1]);
+					ownerMgr.update();
 					compare.CompareCommits();
-					cga.generateRelationships(compare.getCompareResult());
+					cga.init(compare);
+					cga.generateRelationships();
 				} 
 				catch (Exception e) 
 				{

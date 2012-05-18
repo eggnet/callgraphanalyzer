@@ -10,6 +10,7 @@ import java.util.Set;
 import models.CallGraph;
 import models.Commit;
 import models.Method;
+import models.User;
 import parser.Parser;
 import parser.Resolver;
 import db.CallGraphDb;
@@ -18,7 +19,19 @@ import differ.filediffer.diffObjectResult;
 
 public class Comparator
 {
-
+	public class OwnedMethod 
+	{
+		public Method ownedMethod;
+		public User owner;
+		public int ownedStart;
+		public int ownedEnd;
+		
+		public OwnedMethod(User owner, Method method)
+		{
+			this.ownedMethod = method;
+			this.owner = owner;
+		}
+	}
 	public class ModifiedMethod
 	{
 		public ModifiedMethod(Set<Method> oldM, Set<Method> newM)
@@ -78,11 +91,10 @@ public class Comparator
 		public Map<String, String>			modifiedBinaryFiles		= new HashMap<String, String>();
 	}
 
-	private CallGraphDb				db;
+	public CallGraphDb				db;
 	private filediffer				differ;
-	private CallGraphAnalyzer		cga;
-	private CallGraph				newCallGraph;
-	private CallGraph				oldCallGraph;
+	public CallGraph				newCallGraph;
+	public CallGraph				oldCallGraph;
 	public Map<String, String>		FileMap;
 	public Map<String, String>		newCommitFileTree;
 	public Map<String, String>		oldCommitFileTree;
@@ -98,7 +110,7 @@ public class Comparator
 
 	/**
 	 * Constructs a new Comparator class. This class connects the FileDiffer
-	 * {@link #differ} and the CallGraphAnalyzer {@link #cga}
+	 * {@link #differ} and CallGraph {@link #newCallGraph}
 	 * 
 	 * @param db
 	 *            Name of the Database.
@@ -107,8 +119,7 @@ public class Comparator
 	 * @param CommitIDTwo
 	 *            SHA-1 Hash of the second commit.
 	 */
-	public Comparator(CallGraphDb db, String CommitIDOne, String CommitIDTwo,
-			CallGraphAnalyzer cga)
+	public Comparator(CallGraphDb db, String CommitIDOne, String CommitIDTwo)
 	{
 		this.db = db;
 
@@ -131,7 +142,6 @@ public class Comparator
 		}
 
 		// check and create our owners.
-		this.cga = cga;
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 
@@ -274,10 +284,11 @@ public class Comparator
 			List<diffObjectResult> deleteDiffs,
 			List<diffObjectResult> insertDiffs)
 	{
+		// TODO @braden write a wrapper around method here and include the diffs
 		Set<Method> newMethods = new HashSet<Method>();
 		Set<Method> oldMethods = new HashSet<Method>();
 
-		// methods from old file version
+		// methods from old file version+
 		for (diffObjectResult diff : deleteDiffs)
 		{
 			List<Method> changedMethod = this.oldCallGraph
