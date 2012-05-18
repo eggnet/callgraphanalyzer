@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
+import callgraphanalyzer.Resources;
+
 public class Clazz {
 	
 	private File					file;
@@ -58,14 +60,27 @@ public class Clazz {
 		invocations = new ArrayList<MethodInvocation>();
 	}
 	
-	public String lookupField(String variable) {
+	/**
+	 * This function returns the fully qualified type of
+	 * the given field.
+	 * @param callGraph
+	 * @param variable
+	 * @return
+	 */
+	public String lookupField(CallGraph callGraph, String variable) {
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
 			for(Mapping map: clazz.variables) {
-				if(map.getVarName().equals(variable))
-					return map.getType();
+				if(map.getVarName().equals(variable)) {
+					String type = map.getType();
+					if(!Resources.isLiteral(type)) {
+						Clazz typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
+						if(typeClazz != null)
+							type = typeClazz.getName();
+					}
+					return type;
+				}
 			}
 		}
-		
 		return null;
 	}
 	
@@ -82,12 +97,14 @@ public class Clazz {
 			return false;
 	}
 	
-	public Method hasUnqualifiedMethod(String unqualifiedMethod) {
-		String unType = unqualifiedMethod.substring(0, findTypeDivider(unqualifiedMethod));
-		String unMethodName = unqualifiedMethod.substring(
-				findTypeDivider(unqualifiedMethod)+1, unqualifiedMethod.lastIndexOf("("));
-		String[] unArguments = unqualifiedMethod.substring(
-				unqualifiedMethod.lastIndexOf("(")+1, unqualifiedMethod.lastIndexOf(")")).split(",");
+	public List<Method> hasMethod(String methodToResolve) {
+		List<Method> returnMethods = new ArrayList<Method>();
+		
+		String unType = methodToResolve.substring(0, findTypeDivider(methodToResolve));
+		String unMethodName = methodToResolve.substring(
+				findTypeDivider(methodToResolve)+1, methodToResolve.lastIndexOf("("));
+		String[] unArguments = methodToResolve.substring(
+				methodToResolve.lastIndexOf("(")+1, methodToResolve.lastIndexOf(")")).split(",(?![^<>]*>)");
 		
 		for(Clazz clazz = this; clazz != null; clazz = clazz.getSuperClazz()) {
 			for(Method method: clazz.getMethods()) {
@@ -95,7 +112,12 @@ public class Clazz {
 				String methodName = method.getName().substring(
 						findTypeDivider(method.getName())+1, method.getName().lastIndexOf("("));
 				String[] arguments = method.getName().substring(
-						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",");
+						method.getName().lastIndexOf("(")+1, method.getName().lastIndexOf(")")).split(",(?![^<>]*>)");
+				
+				// Strip any generics in method name
+				if(unMethodName.contains("<") && unMethodName.contains(">")) {
+					unMethodName = unMethodName.substring(0, unMethodName.indexOf("<"));
+				}
 				
 				// Check if method names match
 				if(!unMethodName.equals(methodName))
@@ -105,22 +127,24 @@ public class Clazz {
 				if(unArguments.length != arguments.length)
 					continue;
 				
-				// Strip any generics
+				// Strip any generics parameters
 				unArguments = stripGenericParameters(unArguments);
 				arguments = stripGenericParameters(arguments);
 				
 				// Compare parameters
-				if(compareArguments(unArguments, arguments))
-					return method;
+				if(compareArguments(unArguments, arguments)) {
+					returnMethods.add(method);
+					continue;
+				}
 				// Check for generic method
 				if(unType.contains("<") && unType.contains(">"))
 					if(hasGenericMethod(unType, unArguments, arguments))
-						return method;
+						returnMethods.add(method);
 			}
 			// Move the type to the super class
 			unType = clazz.getUnresolvedSuperClazz();
 		}
-		return null;
+		return returnMethods;
 	}
 	
 	private int findTypeDivider(String methodName) {
@@ -163,7 +187,6 @@ public class Clazz {
 			if(!unArguments[i].trim().equals(arguments[i].trim()) && !unArguments[i].trim().equals("null"))
 				return false;
 		}
-		
 		return true;
 	}
 	

@@ -2,6 +2,7 @@ package callgraphanalyzer;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import models.Clazz;
 import models.Mapping;
 
 public class Mappings {
