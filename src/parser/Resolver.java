@@ -23,6 +23,10 @@ public class Resolver {
 		resolveMethods();
 	}
 	
+	/*********************************************************
+	 * This section is for resolving return types of methods
+	 * and for resolving fully qualified names of parameters.
+	 ********************************************************/
 	private boolean resolveReturnTypesAndParameters() {
 		for(File file: callGraph.getAllFiles())
 			resolveFileReturnTypesAndParameters(file);
@@ -77,6 +81,10 @@ public class Resolver {
 		return true;
 	}
 	
+	/*********************************************************
+	 * This section is for resolving method invocations
+	 ********************************************************/
+	
 	public boolean resolveMethods() {
 		for(File file: callGraph.getAllFiles()) {
 			resolveFileMethodCalls(file);
@@ -105,6 +113,11 @@ public class Resolver {
 		return true;
 	}
 	
+	/*********************************************************
+	 * This section is for resolving class super classes and
+	 * interfaces with fully qualified names.
+	 ********************************************************/
+	
 	public boolean resolveClazzes() {
 		for(Clazz clazz: callGraph.getAllClazzes()) {
 			resolveClazz(clazz);
@@ -118,8 +131,10 @@ public class Resolver {
 		// Resolve all interfaces
 		for(String i: clazz.getUnresolvedInterfaces()) {
 			Clazz inter = callGraph.lookupUnqualifiedClassName(clazz, i);
-			if(inter != null && inter.isInterface())
+			if(inter != null && inter.isInterface()) {
 				clazz.getInterfaces().add(inter);
+				inter.getImplementedBy().add(clazz);
+			}
 		}
 		
 		// Resolve super clazz

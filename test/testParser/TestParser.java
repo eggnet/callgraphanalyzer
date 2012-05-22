@@ -8,10 +8,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import models.CallGraph;
-import models.Clazz;
-import models.File;
-import models.Mapping;
 import models.*;
 
 import org.junit.Test;
@@ -243,16 +239,29 @@ public class TestParser {
 		
 		boolean m1 = false;
 		boolean m2 = false;
+		boolean m3 = false;
+		boolean m4 = false;
 		for(models.Method m : methods)
 		{
-			if(m.getName().equals("testFiles.TestVisitorFileMethods.setHourEntryDAO(HourEntryDAO)"))
+			// name, class, startline, endline, return type
+			if(m.getName().equals("testFiles.TestVisitorFileMethods.setHourEntryDAO(HourEntryDAO)") &&
+				m.getClazz() == c && m.getReturnType().equals("void"))
 				m1 = true;
-			if(m.getName().equals("testFiles.TestVisitorFileMethods.logTaskEffort(int, HourEntry, Set<Integer>)"))
+			if(m.getName().equals("testFiles.TestVisitorFileMethods.logTaskEffort(int, HourEntry, Set<Integer>)") &&
+					m.getClazz() == c && m.getReturnType().equals("void"))
 				m2 = true;
+			if(m.getName().equals("testFiles.TestVisitorFileMethods.getDailySpentEffortByInterval(DateTime, DateTime, int, int, int)") &&
+					m.getClazz() == c && m.getReturnType().equals("List<DailySpentEffort>"))
+				m3 = true;
+			if(m.getName().equals("testFiles.TestVisitorFileMethods.HourEntryBusinessImpl()") &&
+					m.getClazz() == c && m.getReturnType().equals("HourEntryBusinessImpl"))
+				m4 = true;
 		}
 		
 		assertTrue(m1);
 		assertTrue(m2);
+		assertTrue(m3);
+		assertTrue(m4);
 		
 		// 6 variables
 		List<Mapping> variables = c.getVariables();

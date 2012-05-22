@@ -3,17 +3,18 @@ package models;
 import java.util.ArrayList;
 import java.util.List;
 
-public class File {
-	
+public class File
+{
+
 	private String			fileName;
 
-	private List<String> 	fileImports;
-	private String 			filePackage;
-	private List<Clazz> 	fileClazzes;
-	private List<Clazz> 	fileInterfaces;
-	
-	
-	public File() {
+	private List<String>	fileImports;
+	private String			filePackage;
+	private List<Clazz>		fileClazzes;
+	private List<Clazz>		fileInterfaces;
+
+	public File()
+	{
 		fileImports = new ArrayList<String>();
 		fileClazzes = new ArrayList<Clazz>();
 		fileInterfaces = new ArrayList<Clazz>();
@@ -21,102 +22,129 @@ public class File {
 	}
 
 	public File(List<String> fileImports, String filePackage,
-			List<Clazz> fileClazzes, List<Clazz> fileInterfaces) {
+			List<Clazz> fileClazzes, List<Clazz> fileInterfaces)
+	{
 		super();
 		this.fileImports = fileImports;
 		this.filePackage = filePackage;
 		this.fileClazzes = fileClazzes;
 		this.fileInterfaces = fileInterfaces;
 	}
-	
-	public void print() {
-		System.out.println("FILE: " + fileName);
-        System.out.println("  Package: " + filePackage);
-        System.out.println("  Imports: ");
-        for(String imp: fileImports)
-        	System.out.println("    " + imp);
-        for(Clazz clazz: fileClazzes)
-        	clazz.print();
+
+	public void print()
+	{
+		if (!this.filePackage.equals("java.util"))
+		{
+			System.out.println("FILE: " + fileName);
+			System.out.println("  Package: " + filePackage);
+			System.out.println("  Imports: ");
+			for (String imp : fileImports)
+				System.out.println("    " + imp);
+			for (Clazz clazz : fileClazzes)
+				clazz.print();
+		}
 	}
-	
-	public void addFileImport(String fileImport) {
+
+	public void addFileImport(String fileImport)
+	{
 		this.fileImports.add(fileImport);
 	}
-	
-	public void addClazz(Clazz clazz) {
+
+	public void addClazz(Clazz clazz)
+	{
 		this.fileClazzes.add(clazz);
 	}
-	
-	public void addInterface(Clazz clazz) {
+
+	public void addInterface(Clazz clazz)
+	{
 		this.fileInterfaces.add(clazz);
 	}
-	
-	public Clazz hasUnresolvedClazz(String c) {
-		for(Clazz clazz: fileClazzes) {
+
+	public Clazz hasUnresolvedClazz(String c)
+	{
+		for (Clazz clazz : fileClazzes)
+		{
 			String unresolved = clazz.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
-			
-			if(c.equals(unresolved)) {
-				System.out.println("Found " + c + " in class " + this.getFileName());
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".") + 1,
+					unresolved.length());
+
+			if (c.equals(unresolved))
+			{
+				System.out.println("Found " + c + " in class "
+						+ this.getFileName());
 				return clazz;
 			}
 		}
-		
-		return null;
-	}
-	
-	public Clazz hasUnresolvedInterface(String c) {
-		for(Clazz clazz: fileInterfaces) {
-			String unresolved = clazz.getName();
-			unresolved = unresolved.substring(unresolved.lastIndexOf(".")+1, unresolved.length());
-			
-			if(c.equals(unresolved)) {
-				System.out.println("Found " + c + " in class " + this.getFileName());
-				return clazz;
-			}
-		}
-		
+
 		return null;
 	}
 
-	public String getFileName() {
+	public Clazz hasUnresolvedInterface(String c)
+	{
+		for (Clazz clazz : fileInterfaces)
+		{
+			String unresolved = clazz.getName();
+			unresolved = unresolved.substring(unresolved.lastIndexOf(".") + 1,
+					unresolved.length());
+
+			if (c.equals(unresolved))
+			{
+				System.out.println("Found " + c + " in class "
+						+ this.getFileName());
+				return clazz;
+			}
+		}
+
+		return null;
+	}
+
+	public String getFileName()
+	{
 		return fileName;
 	}
 
-	public void setFileName(String fileName) {
+	public void setFileName(String fileName)
+	{
 		this.fileName = fileName;
 	}
 
-	public List<String> getFileImports() {
+	public List<String> getFileImports()
+	{
 		return fileImports;
 	}
-	
-	public void setFileImports(List<String> fileImports) {
+
+	public void setFileImports(List<String> fileImports)
+	{
 		this.fileImports = fileImports;
 	}
-	
-	public String getFilePackage() {
+
+	public String getFilePackage()
+	{
 		return filePackage;
 	}
-	
-	public void setFilePackage(String filePackage) {
+
+	public void setFilePackage(String filePackage)
+	{
 		this.filePackage = filePackage;
 	}
-	
-	public List<Clazz> getFileClazzes() {
+
+	public List<Clazz> getFileClazzes()
+	{
 		return fileClazzes;
 	}
-	
-	public void setFileClazzes(List<Clazz> fileClazzes) {
+
+	public void setFileClazzes(List<Clazz> fileClazzes)
+	{
 		this.fileClazzes = fileClazzes;
 	}
-	
-	public List<Clazz> getFileInterfaces() {
+
+	public List<Clazz> getFileInterfaces()
+	{
 		return fileInterfaces;
 	}
-	
-	public void setFileInterfaces(List<Clazz> fileInterfaces) {
+
+	public void setFileInterfaces(List<Clazz> fileInterfaces)
+	{
 		this.fileInterfaces = fileInterfaces;
 	}
 }
-

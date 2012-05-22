@@ -98,6 +98,7 @@ public class Comparator
 	public Map<String, String>		FileMap;
 	public Map<String, String>		newCommitFileTree;
 	public Map<String, String>		oldCommitFileTree;
+	public Map<String, String>		libraryFileTree;
 	public Map<String, Set<String>>	commitsInBetween;
 
 	private CompareResult			compareResult	= new CompareResult();
@@ -161,7 +162,7 @@ public class Comparator
 	 * @return CallGraph a resolved CallGraph
 	 */
 	public CallGraph generateCallGraph(Map<String, String> commitFileTree)
-	{
+	{	
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
 
@@ -171,6 +172,22 @@ public class Comparator
 										// files in our callgraph
 				continue;
 			parser.parseFileFromString(key, db.getRawFile(key, commitFileTree
+					.get(key)));
+		}
+		
+		// Get Java util
+		CallGraphDb libraryDB = new CallGraphDb();
+		libraryDB.connect("JavaLibraries");
+		libraryDB.setBranchName("master");
+		this.db = libraryDB;
+		this.libraryFileTree = this.getFilesTreeForCommit("e436a78a73f967d47aebd02ac58677255bbec125");
+		
+		for (String key : libraryFileTree.keySet())
+		{
+			if (!key.endsWith(".java")) // Currently don't care about non-java
+										// files in our callgraph
+				continue;
+			parser.parseFileFromString(key, db.getRawFile(key, libraryFileTree
 					.get(key)));
 		}
 
