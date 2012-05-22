@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import models.CallGraph;
+import models.CallGraph.MethodPercentage;
 import models.Commit;
 import models.Method;
 import models.User;
@@ -34,14 +35,14 @@ public class Comparator
 	}
 	public class ModifiedMethod
 	{
-		public ModifiedMethod(Set<Method> oldM, Set<Method> newM)
+		public ModifiedMethod(Set<MethodPercentage> oldM, Set<MethodPercentage> newM)
 		{
 			this.oldMethods = oldM;
 			this.newMethods = newM;
 		}
 
-		public Set<Method>	oldMethods	= new HashSet<Method>();
-		public Set<Method>	newMethods	= new HashSet<Method>();
+		public Set<MethodPercentage>	oldMethods	= new HashSet<MethodPercentage>();
+		public Set<MethodPercentage>	newMethods	= new HashSet<MethodPercentage>();
 	}
 
 	public class CompareResult
@@ -76,12 +77,12 @@ public class Comparator
 			{
 				ModifiedMethod methods = modifiedFileMethodMap.get(file);
 				System.out.println("+-\t" + file);
-				for (Method mo : methods.oldMethods)
+				for (MethodPercentage mo : methods.oldMethods)
 					System.out
-							.println("\tModified old method: " + mo.getName());
-				for (Method mn : methods.newMethods)
+							.println("\tModified old method: " + mo.method.getName() +" "+ mo.percentage+ "%");
+				for (MethodPercentage mn : methods.newMethods)
 					System.out
-							.println("\tModified new method: " + mn.getName());
+							.println("\tModified new method: " + mn.method.getName()+" "+ mn.percentage+ "%");
 			}
 		}
 
@@ -282,27 +283,57 @@ public class Comparator
 			List<diffObjectResult> insertDiffs)
 	{
 		// TODO @braden write a wrapper around method here and include the diffs
-		Set<Method> newMethods = new HashSet<Method>();
-		Set<Method> oldMethods = new HashSet<Method>();
+		Set<MethodPercentage> newMethods = new HashSet<MethodPercentage>();
+		Set<MethodPercentage> oldMethods = new HashSet<MethodPercentage>();
 
 		// methods from old file version+
 		for (diffObjectResult diff : deleteDiffs)
 		{
-			List<Method> changedMethod = this.oldCallGraph
-					.getMethodsUsingCharacters(fileName, diff.start, diff.end);
-			for (Method m : changedMethod)
-				if (!oldMethods.contains(m))
+			List<MethodPercentage> changedMethod = this.oldCallGraph
+					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
+			for (MethodPercentage m : changedMethod)
+			{
+				// find if the method exist
+				boolean methodExist = false;
+				for(MethodPercentage oldm : oldMethods)
+				{
+					if(oldm.method.equals(m))
+					{
+						methodExist = true;
+						oldm.percentage += m.percentage;
+						break;
+					}
+				}
+				
+				// add to oldMethodList
+				if(!methodExist)
 					oldMethods.add(m);
+			}
 		}
 
 		// methods from new file version
 		for (diffObjectResult diff : insertDiffs)
 		{
-			List<Method> changedMethod = this.newCallGraph
-					.getMethodsUsingCharacters(fileName, diff.start, diff.end);
-			for (Method m : changedMethod)
-				if (!newMethods.contains(m))
+			List<MethodPercentage> changedMethod = this.newCallGraph
+					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
+			for (MethodPercentage m : changedMethod)
+			{
+				// find if the method exist
+				boolean methodExist = false;
+				for(MethodPercentage oldm : newMethods)
+				{
+					if(oldm.method.equals(m))
+					{
+						methodExist = true;
+						oldm.percentage += m.percentage;
+						break;
+					}
+				}
+				
+				// add to oldMethodList
+				if(!methodExist)
 					newMethods.add(m);
+			}
 		}
 
 		// Insert to modifiedMethod map

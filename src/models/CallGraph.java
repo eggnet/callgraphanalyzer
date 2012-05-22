@@ -7,6 +7,15 @@ import java.util.List;
 import java.util.Map;
 
 public class CallGraph {
+	public class MethodPercentage{
+		public MethodPercentage(Method mt, float p)
+		{
+			this.method = mt;
+			this.percentage = p;
+		}
+		public Method method;
+		public float percentage;
+	}
 	
 	private Map<String, File> 	files;
 	private Map<String, Clazz> 	clazzes;
@@ -92,6 +101,67 @@ public class CallGraph {
 					   (method.getstartChar() >= start && method.getendChar() <= end) ||
 					   (method.getstartChar() <= end   && method.getendChar() >= end)) {
 						m.add(method);
+					}
+				}
+			}
+		}
+		
+		return m;
+	}
+	
+	/**
+	 * getChangedPercentageOfMethodUsingCharacters(String fileName, int start, int end)
+	 * @param fileName
+	 * @param start
+	 * @param end
+	 * @return List of Method and percentage
+	 */
+	public List<MethodPercentage> getPercentageOfMethodUsingCharacters(String fileName, int start, int end) {
+		List<MethodPercentage> m = new ArrayList<MethodPercentage>();
+		
+		File file = containsFile(fileName);
+		if(file == null)
+		{
+			return m;
+		}
+		else
+		{
+			for(Clazz clazz: file.getFileClazzes()) {
+				for(Method method: clazz.getMethods())
+				{
+					int methodStart = method.getstartChar();
+					int methodEnd 	= method.getendChar();
+					int changedPartStart = 0;
+					int changedPartEnd = 0;
+							
+					// method in lower half
+					if(method.getstartChar() <= start && method.getendChar() >= end) 
+					{
+						changedPartStart = methodStart;
+						changedPartEnd = end;
+					}// method in between
+					else if(method.getstartChar() <= start && method.getendChar() >= start)
+					{
+						changedPartStart = methodStart;
+						changedPartEnd = methodEnd;
+					}// method in upperhalf
+					else if(method.getstartChar() >= start && method.getendChar() <= end)
+					{
+						changedPartStart = start;
+						changedPartEnd = methodEnd;
+					}// method contains change
+					else if(method.getstartChar() <= start   && method.getendChar() >= end) 
+					{
+						changedPartStart = start;
+						changedPartEnd = end;
+					}
+					
+					// percentage
+					if(changedPartEnd > changedPartStart && methodEnd>methodStart)
+					{
+						float percent = (changedPartEnd - changedPartStart)*1.000f/(methodEnd-methodStart)*1.000f;
+						MethodPercentage mp = new MethodPercentage(method, percent);
+						m.add(mp);
 					}
 				}
 			}

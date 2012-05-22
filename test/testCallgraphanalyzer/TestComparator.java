@@ -143,8 +143,8 @@ public class TestComparator {
 		
 		// Function changed
 		ModifiedMethod methods = result.modifiedFileMethodMap.get("src/pak/B.java");
-		assertEquals(methods.oldMethods.size(), 4);
-		assertEquals(methods.newMethods.size(), 7);
+		assertEquals(methods.oldMethods.size(), 3);
+		assertEquals(methods.newMethods.size(), 6);
 		
 		methods = result.modifiedFileMethodMap.get("src/test/Child.java");
 		assertEquals(methods.oldMethods.size(),0);
