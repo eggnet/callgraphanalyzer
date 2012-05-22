@@ -46,6 +46,8 @@ public class CallGraphAnalyzer
 			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
 				updatingOld = false;
 		}
+		
+		this.comparator.newCallGraph.print();
 	}
 
 	/**
