@@ -189,6 +189,22 @@ public class File
 			}
 		}
 	}
+	
+	public int getMethodWeight(String owner, Method method) {
+		// Get all ranges of ownerhsip
+		Set<Change> ranges = this.Owners.get(owner);
+		if(ranges.isEmpty())
+			return -1;
+		
+		for(Change range: ranges) {
+			if(intersectionOfCode(method.getstartChar(), method.getendChar(),
+					range.getCharStart(), range.getCharEnd())) {
+				// Get the weight here
+			}
+		}
+		
+		return -1;
+	}
 
 	public String getFileName()
 	{
