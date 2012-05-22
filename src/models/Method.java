@@ -13,8 +13,8 @@ public class Method {
 	private String		 		name;
 	private Clazz 				clazz;
 	
-	private int					startLine;
-	private int					endLine;
+	private int					startChar;
+	private int					endChar;
 	
 	private String				returnType;
 	
@@ -56,8 +56,8 @@ public class Method {
 	{
 		this.name 			= name;
 		this.clazz 			= clazz;
-		this.startLine 		= start;
-		this.endLine 		= end;
+		this.startChar 		= start;
+		this.endChar 		= end;
 		this.methodCalls 	= new ArrayList<Method>();
 		this.calledBy 		= new ArrayList<Method>();
 		fuzzyCalls 		= new ArrayList<Method>();
@@ -138,20 +138,20 @@ public class Method {
 		this.calledBy = calledBy;
 	}
 
-	public int getStartLine() {
-		return startLine;
+	public int getstartChar() {
+		return startChar;
 	}
 
-	public void setStartLine(int startLine) {
-		this.startLine = startLine;
+	public void setstartChar(int startChar) {
+		this.startChar = startChar;
 	}
 
-	public int getEndLine() {
-		return endLine;
+	public int getendChar() {
+		return endChar;
 	}
 
 	public void setEndLine(int endLine) {
-		this.endLine = endLine;
+		this.endChar = endLine;
 	}
 
 	public String getReturnType() {
