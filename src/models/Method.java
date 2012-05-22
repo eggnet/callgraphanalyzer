@@ -143,7 +143,7 @@ public class Method {
 		return endChar;
 	}
 
-	public void setEndLine(int endLine) {
+	public void setendChar(int endLine) {
 		this.endChar = endLine;
 	}
 

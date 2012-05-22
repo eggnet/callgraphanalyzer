@@ -65,8 +65,8 @@ public class CallGraphAnalyzer
 			for (Method newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getStartLine(), newMethod
-						.getEndLine(), comparator.newCommit.getCommit_date());
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getstartChar(), newMethod
+						.getendChar(), comparator.newCommit.getCommit_date());
 				recurseMethods(new User().setUserEmail(newMethodChange.getOwnerId()), newMethod,
 						CallGraphResources.METHOD_RECURSE_DEPTH, 0);
 			}
@@ -75,8 +75,8 @@ public class CallGraphAnalyzer
 				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
 					continue;
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getStartLine(), oldMethod
-						.getEndLine(), comparator.oldCommit.getCommit_date());
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getstartChar(), oldMethod
+						.getendChar(), comparator.oldCommit.getCommit_date());
 				recurseMethods(new User().setUserEmail(newMethodChange.getOwnerId()), oldMethod,
 						CallGraphResources.METHOD_RECURSE_DEPTH, 0);
 			}
@@ -93,7 +93,7 @@ public class CallGraphAnalyzer
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
 			Change calledMethodChange = db.getLatestOwnerChange(calledMethod.getClazz().getFile().getFileName(),
-					calledMethod.getStartLine(), calledMethod.getEndLine(), comparator.newCommit.getCommit_date());
+					calledMethod.getstartChar(), calledMethod.getendChar(), comparator.newCommit.getCommit_date());
 			boolean isSelf = false;
 			if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
 				isSelf = true;

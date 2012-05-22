@@ -109,8 +109,8 @@ public class TestCallGraph {
 					m.setName(fullName);
 					
 					// Startline = k, end = k+1;
-					m.setStartLine(j*100 + k*10);
-					m.setEndLine  (j*100 +(k+1)*10 );
+					m.setstartChar(j*100 + k*10);
+					m.setendChar  (j*100 +(k+1)*10 );
 					c.addMethod(m);
 				}
 				
