@@ -1,7 +1,10 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class File
 {
@@ -15,13 +18,14 @@ public class File
 	private String			filePackage;
 	private List<Clazz>		fileClazzes;
 	private List<Clazz>		fileInterfaces;
-
+	public Map<String, Set<Change>> Owners;
 	public File()
 	{
 		fileImports = new ArrayList<String>();
 		fileClazzes = new ArrayList<Clazz>();
 		fileInterfaces = new ArrayList<Clazz>();
 		filePackage = "";
+		Owners = new HashMap<String, Set<Change>>();
 	}
 
 	public File(List<String> fileImports, String filePackage,
