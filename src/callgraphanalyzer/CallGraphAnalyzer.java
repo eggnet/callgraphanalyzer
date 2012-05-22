@@ -38,7 +38,12 @@ public class CallGraphAnalyzer
 
 	public void generateLogicalOwnership()
 	{
-		
+		// Go through all of the changes and in parallel update each callgraph.
+		List<Change> changes = db.getAllOwnerChangesBefore(this.comparator.newCommit.getCommit_id());
+		for (Change c : changes)
+		{
+			// todo update callgraphs
+		}
 	}
 
 	/**
