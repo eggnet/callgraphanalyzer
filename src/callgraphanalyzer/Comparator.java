@@ -130,15 +130,15 @@ public class Comparator
 		{
 			this.newCommit = first;
 			this.oldCommit = second;
-			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
-			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo);
+			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDOne, db);
+			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo, db);
 		}
 		else
 		{
 			this.newCommit = second;
 			this.oldCommit = first;
-			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo);
-			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
+			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo, db);
+			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne, db);
 		}
 
 		// check and create our owners.
@@ -179,7 +179,7 @@ public class Comparator
 		CallGraphDb libraryDB = new CallGraphDb();
 		libraryDB.connect("JavaLibraries");
 		libraryDB.setBranchName("master");
-		this.libraryFileTree = this.getFilesTreeForCommit("e436a78a73f967d47aebd02ac58677255bbec125");
+		this.libraryFileTree = this.getFilesTreeForCommit("e436a78a73f967d47aebd02ac58677255bbec125", libraryDB);
 		
 		for (String key : libraryFileTree.keySet())
 		{
@@ -320,7 +320,7 @@ public class Comparator
 	 * @param commitID
 	 * @return true when successful
 	 */
-	public Map<String, String> getFilesTreeForCommit(String commitID)
+	public Map<String, String> getFilesTreeForCommit(String commitID, CallGraphDb db)
 	{
 		Map<String, String> CommitFileTree = new HashMap<String, String>();
 		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(
