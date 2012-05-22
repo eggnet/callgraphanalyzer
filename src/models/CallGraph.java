@@ -232,6 +232,10 @@ public class CallGraph {
 		
 		file.updateOwnership(change);
 	}
+	
+	public int getMethodWeight(String owner, Method method) {
+		return -1;
+	}
 
 	public Map<String, Clazz> getClazzes() {
 		return clazzes;
