@@ -6,18 +6,29 @@ public class User {
 	
 	public User() { }
 	
+	public User(String userEmail)
+	{
+		super();
+		UserEmail = userEmail;
+	}
+	
+	public User(String userEmail, String userName)
+	{
+		super();
+		UserEmail = userEmail;
+		UserName = userName;
+	}
+
 	public String getUserEmail() {
 		return UserEmail;
 	}
-	public User setUserEmail(String userEmail) {
+	public void setUserEmail(String userEmail) {
 		UserEmail = userEmail;
-		return this;
 	}
 	public String getUserName() {
 		return UserName;
 	}
-	public User setUserName(String userName) {
+	public void setUserName(String userName) {
 		UserName = userName;
-		return this;
 	}
 }
