@@ -33,7 +33,6 @@ public class Clazz
 	private List<Mapping>			variables;
 
 	private List<MethodInvocation>	invocations;
-	private Map<String, Set<Change>> Owners;
 	public Clazz()
 	{
 		methods = new ArrayList<Method>();
@@ -42,7 +41,6 @@ public class Clazz
 		unresolvedInterfaces = new ArrayList<String>();
 		subClazzes = new ArrayList<Clazz>();
 		unresolvedSuperClazz = "";
-		Owners = new HashMap<String, Set<Change>>();
 		genericTypes = new ArrayList<String>();
 		variables = new ArrayList<Mapping>();
 

@@ -55,12 +55,14 @@ public class Visitor extends ASTVisitor {
 	private Clazz currentClazz;
 	private Method currentMethod;
 	
-	public Visitor(CallGraph callGraph, String fileName) {
+	public Visitor(CallGraph callGraph, String fileName, int fileLength) {
 		this.callGraph = callGraph;
 		clazzStack = new Stack<Clazz>();
 		
 		file = new File();
 		file.setFileName(fileName);
+		file.setStartChar(0);
+		file.setEndChar(fileLength);
 	}
 	
 	/**
@@ -114,6 +116,10 @@ public class Visitor extends ASTVisitor {
 		List<TypeParameter> types = node.typeParameters();
 		for(TypeParameter type: types)
 			currentClazz.addGenericType(type.toString());
+		
+		// Add start and end
+		currentClazz.setStartChar(node.getStartPosition());
+		currentClazz.setEndChar(node.getStartPosition() + node.getLength());
 	
 		return super.visit(node);
 	}

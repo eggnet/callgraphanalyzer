@@ -50,8 +50,9 @@ public class Parser {
 		CompilationUnit unit = (CompilationUnit) parser.createAST(null);
 		
 		
+		
 		// Visit the syntax tree
-		Visitor visitor= new Visitor(callGraph, fileName);
+		Visitor visitor= new Visitor(callGraph, fileName, file.length());
 		unit.accept(visitor);
 		
 		// Commit that visitor

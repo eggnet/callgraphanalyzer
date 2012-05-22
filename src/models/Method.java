@@ -27,7 +27,6 @@ public class Method {
 	private List<String>		unresolvedCalls;
 	
 	private MethodDeclaration	node;
-	public Map<String, Set<Change>> Owners;
 	
 	public Method() {
 		methodCalls 	= new ArrayList<Method>();
@@ -35,7 +34,6 @@ public class Method {
 		fuzzyCalls 		= new ArrayList<Method>();
 		fuzzyCalledBy 	= new ArrayList<Method>();
 		unresolvedCalls = new ArrayList<String>();
-		Owners = new HashMap<String, Set<Change>>();
 	}
 	
 	public Method(String name, Clazz clazz, ArrayList<Method> methodCalls) {
@@ -48,7 +46,6 @@ public class Method {
 		fuzzyCalledBy 	= new ArrayList<Method>();
 		
 		this.unresolvedCalls = new ArrayList<String>();
-		Owners = new HashMap<String, Set<Change>>();
 
 	}
 	
@@ -63,7 +60,6 @@ public class Method {
 		fuzzyCalls 		= new ArrayList<Method>();
 		fuzzyCalledBy 	= new ArrayList<Method>();
 		this.unresolvedCalls = new ArrayList<String>();
-		Owners = new HashMap<String, Set<Change>>();
 	}
 	
 	public void addFuzzyCalledBy(Method m) {
