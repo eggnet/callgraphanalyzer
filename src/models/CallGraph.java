@@ -223,6 +223,15 @@ public class CallGraph {
 	private String stripGenericParameters(String className) {
 		return className.substring(0, className.indexOf("<"));
 	}
+	
+	public void updateOwnership(Change change) {
+		// Find the file that it affects
+		File file = this.files.get(change.getFileId());
+		if(file == null)
+			return;
+		
+		file.updateOwnership(change);
+	}
 
 	public Map<String, Clazz> getClazzes() {
 		return clazzes;

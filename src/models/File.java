@@ -2,6 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +104,88 @@ public class File
 		}
 
 		return null;
+	}
+	
+	public void insertOwner(Change change) {
+		Set<Change> changes = Owners.get(change.getOwnerId());
+		// The owner is new
+		if(changes == null) {
+			Set<Change> newOwner = new HashSet<Change>();
+			newOwner.add(change);
+			this.Owners.put(change.getOwnerId(), newOwner);
+		}
+		// The owner already existed
+		else {
+			changes.add(change);
+		}
+	}
+	
+	public void updateOwnership(Change change) {
+		// Get the intersection
+		Set<Change> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
+		
+		// Clean up and insert
+		if(!intersection.isEmpty()) {
+			ownershipCleanUp(change.getCharStart(), change.getCharEnd(), intersection);
+		}
+		insertOwner(change);
+	}
+	
+	public Set<Change> getOwnershipIntersection(int start, int end) {
+		Set<Change> intersection = new HashSet<Change>();
+		
+		// Find out what owners intersect with the new owner change
+		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+			for(Change change: entry.getValue()) {
+				if(intersectionOfCode(start, end, change.getCharStart(), change.getCharEnd()))
+					intersection.add(change);
+			}
+		}
+		
+		return intersection;
+	}
+	
+	public boolean intersectionOfCode(int start1, int end1, int start2, int end2) {
+		return (start2 < start1 && end2 >= start1 ||
+		   (start2 >= start1 && end2 <= end1)  ||
+		   (start2 <= end1 && end2 > end1)  ||
+		   (start2 <= start1 && end2 >= end1));
+	}
+	
+	public void ownershipCleanUp(int start, int end, Set<Change> intersections) {
+		for(Change intersect: intersections) {
+			// Case 1
+			if(intersect.getCharStart() < start 
+					&& (intersect.getCharEnd() >= start && intersect.getCharEnd() < end)) {
+				intersect.setCharEnd(start-1);
+			}
+			// Case 2
+			else if((intersect.getCharStart() >= start && intersect.getCharStart() < end) 
+					&& (intersect.getCharEnd() > start && intersect.getCharEnd() <= end)) {
+				intersections.remove(intersect);
+			}
+			// Case 3
+			else if((intersect.getCharStart() > start && intersect.getCharEnd() <= end)
+					&& intersect.getCharEnd() > end) {
+				intersect.setCharStart(end+1);
+			}
+			// Case 4
+			else if(intersect.getCharStart() < start && intersect.getCharEnd() > end) {
+				// We need to split this intersect owner
+				Change split1 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
+										   intersect.getChangeType(), intersect.getFileId(), 
+										   intersect.getCharStart(), intersect.getCharEnd());
+				Change split2 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
+						   				   intersect.getChangeType(), intersect.getFileId(), 
+						   				   intersect.getCharStart(), intersect.getCharEnd());
+				
+				split1.setCharEnd(start-1);
+				split2.setCharStart(end+1);
+				intersections.remove(intersect);
+				intersections.add(split1);
+				intersections.add(split2);
+			}
+		}
 	}
 
 	public String getFileName()
