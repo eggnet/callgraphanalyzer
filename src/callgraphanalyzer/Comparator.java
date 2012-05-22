@@ -179,15 +179,13 @@ public class Comparator
 		CallGraphDb libraryDB = new CallGraphDb();
 		libraryDB.connect("JavaLibraries");
 		libraryDB.setBranchName("master");
-		this.db = libraryDB;
 		this.libraryFileTree = this.getFilesTreeForCommit("e436a78a73f967d47aebd02ac58677255bbec125");
 		
 		for (String key : libraryFileTree.keySet())
 		{
 			if (!key.endsWith(".java")) // Currently don't care about non-java
-										// files in our callgraph
 				continue;
-			parser.parseFileFromString(key, db.getRawFile(key, libraryFileTree
+			parser.parseFileFromString(key, libraryDB.getRawFile(key, libraryFileTree
 					.get(key)));
 		}
 
