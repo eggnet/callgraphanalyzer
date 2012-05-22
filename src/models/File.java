@@ -3,6 +3,7 @@ package models;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -153,7 +154,8 @@ public class File
 	}
 	
 	public void ownershipCleanUp(int start, int end, Set<Change> intersections) {
-		for(Change intersect: intersections) {
+		for(Iterator<Change> intersectIter = intersections.iterator(); intersectIter.hasNext();) {
+			Change intersect = intersectIter.next();
 			// Case 1
 			if(intersect.getCharStart() < start 
 					&& (intersect.getCharEnd() >= start && intersect.getCharEnd() < end)) {
@@ -162,7 +164,7 @@ public class File
 			// Case 2
 			else if((intersect.getCharStart() >= start && intersect.getCharStart() < end) 
 					&& (intersect.getCharEnd() > start && intersect.getCharEnd() <= end)) {
-				intersections.remove(intersect);
+				intersectIter.remove();
 			}
 			// Case 3
 			else if((intersect.getCharStart() > start && intersect.getCharEnd() <= end)
@@ -181,7 +183,7 @@ public class File
 				
 				split1.setCharEnd(start-1);
 				split2.setCharStart(end+1);
-				intersections.remove(intersect);
+				intersectIter.remove();
 				intersections.add(split1);
 				intersections.add(split2);
 			}
