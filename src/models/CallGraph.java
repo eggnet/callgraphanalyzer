@@ -234,7 +234,7 @@ public class CallGraph {
 	}
 	
 	public int getMethodWeight(String owner, Method method) {
-		return -1;
+		return method.getClazz().getFile().getMethodWeight(owner, method);
 	}
 
 	public Map<String, Clazz> getClazzes() {

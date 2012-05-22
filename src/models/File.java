@@ -196,14 +196,37 @@ public class File
 		if(ranges.isEmpty())
 			return -1;
 		
+		float sum = 0;
+		
 		for(Change range: ranges) {
 			if(intersectionOfCode(method.getstartChar(), method.getendChar(),
 					range.getCharStart(), range.getCharEnd())) {
-				// Get the weight here
+				// Case 1
+				if(range.getCharStart() < method.getstartChar() 
+						&& (range.getCharEnd() >= method.getstartChar() && range.getCharEnd() < method.getendChar())) {
+					sum += range.getCharEnd() - method.getstartChar();
+				}
+				// Case 2
+				else if((range.getCharStart() >= method.getstartChar() && range.getCharStart() < method.getendChar()) 
+						&& range.getCharEnd() > method.getstartChar() && range.getCharEnd() <= method.getendChar()) {
+					sum += range.getCharEnd() - range.getCharStart();
+				}
+				// Case 3
+				else if((range.getCharStart() > method.getstartChar() && range.getCharStart() <= method.getendChar())
+						&& range.getCharEnd() > method.getendChar()) {
+					sum += method.getendChar() - range.getCharStart();
+				}
+				// Case 4
+				else if(range.getCharStart() < method.getstartChar() && range.getCharEnd() > method.getendChar()) {
+					sum += method.getendChar() - method.getstartChar();
+				}
 			}
 		}
 		
-		return -1;
+		// Get the percentage
+		float weight = (sum / (method.getendChar() - method.getstartChar()))*100;
+		
+		return (int) weight;
 	}
 
 	public String getFileName()
