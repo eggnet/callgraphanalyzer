@@ -40,9 +40,15 @@ public class CallGraphAnalyzer
 	{
 		// Go through all of the changes and in parallel update each callgraph.
 		List<Change> changes = db.getAllOwnerChangesBefore(this.comparator.newCommit.getCommit_id());
+		boolean updatingOld = true;
 		for (Change c : changes)
 		{
 			// todo update callgraphs
+			this.comparator.newCallGraph.updateOwnership(c);
+			if (updatingOld)
+				this.comparator.oldCallGraph.updateOwnership(c);
+			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
+				updatingOld = false;
 		}
 	}
 

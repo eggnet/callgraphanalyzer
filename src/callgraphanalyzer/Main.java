@@ -29,7 +29,8 @@ public class Main {
 					ownerMgr.update();
 					compare.CompareCommits();
 					cga.init(compare);
-					cga.generateRelationships();
+//					cga.generateRelationships();
+					cga.generateLogicalOwnership();
 				} 
 				catch (Exception e) 
 				{
