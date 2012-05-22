@@ -15,6 +15,9 @@ public class Clazz
 	private boolean					isInterface;
 	private List<Method>			methods;
 	private List<Clazz>				subClazzes;
+	
+	private int						startChar;
+	private int						endChar;
 
 	private List<Clazz>				interfaces;
 	private List<Clazz>				implementedBy;
@@ -506,5 +509,25 @@ public class Clazz
 	public void setImplementedBy(List<Clazz> implementedBy)
 	{
 		this.implementedBy = implementedBy;
+	}
+
+	public int getStartChar()
+	{
+		return startChar;
+	}
+
+	public void setStartChar(int startChar)
+	{
+		this.startChar = startChar;
+	}
+
+	public int getEndChar()
+	{
+		return endChar;
+	}
+
+	public void setEndChar(int endChar)
+	{
+		this.endChar = endChar;
 	}
 }

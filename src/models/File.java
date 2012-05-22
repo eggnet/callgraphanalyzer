@@ -7,6 +7,9 @@ public class File
 {
 
 	private String			fileName;
+	
+	private int				startChar;
+	private int				endChar;
 
 	private List<String>	fileImports;
 	private String			filePackage;
@@ -146,5 +149,25 @@ public class File
 	public void setFileInterfaces(List<Clazz> fileInterfaces)
 	{
 		this.fileInterfaces = fileInterfaces;
+	}
+
+	public int getStartChar()
+	{
+		return startChar;
+	}
+
+	public void setStartChar(int startChar)
+	{
+		this.startChar = startChar;
+	}
+
+	public int getEndChar()
+	{
+		return endChar;
+	}
+
+	public void setEndChar(int endChar)
+	{
+		this.endChar = endChar;
 	}
 }

@@ -87,10 +87,10 @@ public class CallGraph {
 		else {
 			for(Clazz clazz: file.getFileClazzes()) {
 				for(Method method: clazz.getMethods()) {
-					if((method.getStartLine() <= start && method.getEndLine() >= end) ||
-					   (method.getStartLine() <= start && method.getEndLine() >= start) ||
-					   (method.getStartLine() >= start && method.getEndLine() <= end) ||
-					   (method.getStartLine() <= end   && method.getEndLine() >= end)) {
+					if((method.getstartChar() <= start && method.getendChar() >= end) ||
+					   (method.getstartChar() <= start && method.getendChar() >= start) ||
+					   (method.getstartChar() >= start && method.getendChar() <= end) ||
+					   (method.getstartChar() <= end   && method.getendChar() >= end)) {
 						m.add(method);
 					}
 				}
