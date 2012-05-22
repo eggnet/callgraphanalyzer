@@ -17,13 +17,8 @@ public class CallGraphAnalyzer
 {
 
 	private CallGraphDb		db;
-	private CallGraph		callGraphBefore;
-	private CallGraph		callGraphAfte;
 	private Comparator		comparator;
 
-	private String			commitBeforeId;
-	private String			commitAfterId;
-	private String			dbName;
 	private Set<Relation>	Relations;
 
 	public CallGraphAnalyzer()
@@ -66,6 +61,10 @@ public class CallGraphAnalyzer
 		return m.getCalledBy();
 	}
 
+	/**
+	 * Generates the network.
+	 * @return The Set<Relations> that make up the network. 
+	 */
 	public void generateRelationships()
 	{
 		// For each modifiedFile, for each generate an owner for the method and
@@ -79,8 +78,7 @@ public class CallGraphAnalyzer
 				// get all methods this one is called by
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.method.getstartChar(), newMethod.method
 						.getendChar(), comparator.newCommit.getCommit_date());
-				recurseMethods(new User().setUserEmail(newMethodChange.getOwnerId()), newMethod.method,
-						CallGraphResources.METHOD_RECURSE_DEPTH, 0);
+				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.method, 0);
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
@@ -89,8 +87,7 @@ public class CallGraphAnalyzer
 				// get all methods this one is called by
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.method.getstartChar(), oldMethod
 						.method.getendChar(), comparator.oldCommit.getCommit_date());
-				recurseMethods(new User().setUserEmail(newMethodChange.getOwnerId()), oldMethod.method,
-						CallGraphResources.METHOD_RECURSE_DEPTH, 0);
+				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.method, 0);
 			}
 		}
 		compareResult.print();
@@ -98,10 +95,8 @@ public class CallGraphAnalyzer
 			r.print();
 	}
 
-	public void recurseMethods(User changingUser, Method currentMethod, int maxDepth, int currentDepth)
+	public void recurseMethods(User changingUser, Method currentMethod, int currentDepth)
 	{
-		// if (currentDepth == maxDepth)
-		// return;
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
 			Change calledMethodChange = db.getLatestOwnerChange(calledMethod.getClazz().getFile().getFileName(),
@@ -109,13 +104,15 @@ public class CallGraphAnalyzer
 			boolean isSelf = false;
 			if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
 				isSelf = true;
-			Relation r = new Relation().setPersonOne(new User().setUserEmail(changingUser.getUserEmail()))
-					.setPersonTwo(new User().setUserEmail(calledMethodChange.getOwnerId())).setWeight(1)
-					// TEMP WEIGHT SETTING
-					.setFileId(calledMethod.getClazz().getFile().getFileName()).setCaller(calledMethod.getName())
-					.setCallee(currentMethod.getName()).setIsSelf(isSelf);
+			Relation r = new Relation(new User(changingUser.getUserEmail()), 
+					new User(calledMethodChange.getOwnerId()),
+					isSelf,
+					calledMethod.getClazz().getFile().getFileName(),
+					currentMethod.getName(),
+					calledMethod.getName(),
+					1);
 			this.Relations.add(r);
-			recurseMethods(changingUser, calledMethod, maxDepth, currentDepth + 1);
+			recurseMethods(changingUser, calledMethod, currentDepth + 1);
 		}
 	}
 }
