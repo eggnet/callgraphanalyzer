@@ -14,15 +14,27 @@ public class Relation
 	{
 	}
 
+	public Relation(User personOne, User personTwo, boolean isSelf, String fileId, String callee, String caller,
+			int weight)
+	{
+		super();
+		PersonOne = personOne;
+		PersonTwo = personTwo;
+		IsSelf = isSelf;
+		FileId = fileId;
+		Callee = callee;
+		Caller = caller;
+		Weight = weight;
+	}
+
 	public int getWeight()
 	{
 		return Weight;
 	}
 
-	public Relation setWeight(int weight)
+	public void setWeight(int weight)
 	{
 		Weight = weight;
-		return this;
 	}
 
 	public User getPersonOne()
@@ -30,10 +42,9 @@ public class Relation
 		return PersonOne;
 	}
 
-	public Relation setPersonOne(User personOne)
+	public void setPersonOne(User personOne)
 	{
 		PersonOne = personOne;
-		return this;
 	}
 
 	public User getPersonTwo()
@@ -41,10 +52,9 @@ public class Relation
 		return PersonTwo;
 	}
 
-	public Relation setPersonTwo(User personTwo)
+	public void setPersonTwo(User personTwo)
 	{
 		PersonTwo = personTwo;
-		return this;
 	}
 	
 	public void print() {
@@ -56,10 +66,9 @@ public class Relation
 		return IsSelf;
 	}
 
-	public Relation setIsSelf(boolean isSelf)
+	public void setIsSelf(boolean isSelf)
 	{
 		IsSelf = isSelf;
-		return this;
 	}
 
 	public String getFileId()
@@ -67,10 +76,9 @@ public class Relation
 		return FileId;
 	}
 
-	public Relation setFileId(String fileId)
+	public void setFileId(String fileId)
 	{
 		FileId = fileId;
-		return this;
 	}
 
 	public String getCallee()
@@ -78,10 +86,9 @@ public class Relation
 		return Callee;
 	}
 
-	public Relation setCallee(String method)
+	public void setCallee(String method)
 	{
 		Callee = method;
-		return this;
 	}
 	
 	public String getCaller() 
@@ -89,9 +96,8 @@ public class Relation
 		return Caller;
 	}
 	
-	public Relation setCaller(String method)
+	public void setCaller(String method)
 	{
 		Caller = method;
-		return this;
 	}
 }
