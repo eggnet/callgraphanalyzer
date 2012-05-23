@@ -135,17 +135,17 @@ public class CallGraph {
 					int changedPartEnd = 0;
 							
 					// method in lower half
-					if(method.getstartChar() <= start && method.getendChar() >= end) 
+					if(method.getstartChar() >= start && method.getstartChar() <= end && method.getendChar() >= end) 
 					{
 						changedPartStart = methodStart;
 						changedPartEnd = end;
 					}// method in between
-					else if(method.getstartChar() <= start && method.getendChar() >= start)
+					else if(method.getstartChar() >= start && method.getendChar() <= end)
 					{
 						changedPartStart = methodStart;
 						changedPartEnd = methodEnd;
 					}// method in upperhalf
-					else if(method.getstartChar() >= start && method.getendChar() <= end)
+					else if(method.getstartChar() <= start && method.getendChar() <= end && method.getendChar() >= start)
 					{
 						changedPartStart = start;
 						changedPartEnd = methodEnd;
@@ -160,6 +160,7 @@ public class CallGraph {
 					if(changedPartEnd > changedPartStart && methodEnd>methodStart)
 					{
 						float percent = (changedPartEnd - changedPartStart)*1.000f/(methodEnd-methodStart)*1.000f;
+						percent *=100;
 						MethodPercentage mp = new MethodPercentage(method, percent);
 						m.add(mp);
 					}
