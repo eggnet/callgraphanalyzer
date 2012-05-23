@@ -89,6 +89,8 @@ public class Method {
 	public void print() {
 		System.out.println("    METHOD: " + name);
 		System.out.println("      Return Type: " + returnType);
+		System.out.println("      Start Character: " + this.startChar);
+		System.out.println("      End Character: " + this.endChar);
 		System.out.println("      Calls: ");
 		for(Method m: methodCalls)
 			System.out.println("        " + m.getName());
