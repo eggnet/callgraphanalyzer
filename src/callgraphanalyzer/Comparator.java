@@ -8,10 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import models.CallGraph;
-import models.CallGraph.MethodPercentage;
 import models.Commit;
-import models.Method;
-import models.User;
+import models.CallGraph.MethodPercentage;
 import parser.Parser;
 import parser.Resolver;
 import db.CallGraphDb;
