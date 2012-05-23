@@ -293,7 +293,7 @@ public class CallGraph {
 		file.updateOwnership(change);
 	}
 	
-	public int getMethodWeight(String owner, Method method) {
+	public float getMethodWeight(String owner, Method method) {
 		return method.getClazz().getFile().getMethodWeight(owner, method);
 	}
 

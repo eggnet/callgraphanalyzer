@@ -230,7 +230,7 @@ public class File
 		}
 	}
 	
-	public int getMethodWeight(String owner, Method method) {
+	public float getMethodWeight(String owner, Method method) {
 		// Get all ranges of ownership
 		Set<Change> ranges = this.Owners.get(owner);
 		if(ranges.isEmpty())
@@ -264,9 +264,9 @@ public class File
 		}
 		
 		// Get the percentage
-		float weight = (sum / (method.getendChar() - method.getstartChar()))*100;
+		float weight = (sum / (method.getendChar() - method.getstartChar()));
 		
-		return (int) weight;
+		return weight;
 	}
 
 	public String getFileName()
