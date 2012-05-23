@@ -20,19 +20,6 @@ import differ.filediffer.diffObjectResult;
 
 public class Comparator
 {
-	public class OwnedMethod 
-	{
-		public Method ownedMethod;
-		public User owner;
-		public int ownedStart;
-		public int ownedEnd;
-		
-		public OwnedMethod(User owner, Method method)
-		{
-			this.ownedMethod = method;
-			this.owner = owner;
-		}
-	}
 	public class ModifiedMethod
 	{
 		public ModifiedMethod(Set<MethodPercentage> oldM, Set<MethodPercentage> newM)
