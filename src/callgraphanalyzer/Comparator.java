@@ -66,10 +66,10 @@ public class Comparator
 				System.out.println("+-\t" + file);
 				for (MethodPercentage mo : methods.oldMethods)
 					System.out
-							.println("\tModified old method: " + mo.method.getName() +" "+ mo.percentage+ "%");
+							.println("\tModified old method: " + mo.getMethod().getName() +" "+ mo.getPercentage()+ "%");
 				for (MethodPercentage mn : methods.newMethods)
 					System.out
-							.println("\tModified new method: " + mn.method.getName()+" "+ mn.percentage+ "%");
+							.println("\tModified new method: " + mn.getMethod().getName()+" "+ mn.getPercentage()+ "%");
 			}
 		}
 
@@ -279,14 +279,14 @@ public class Comparator
 					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
 			for (MethodPercentage m : changedMethod)
 			{
-				// find if the method exist
+				// find if the method exists
 				boolean methodExist = false;
 				for(MethodPercentage oldm : oldMethods)
 				{
-					if(oldm.method.equals(m))
+					if(oldm.getMethod().equals(m))
 					{
 						methodExist = true;
-						oldm.percentage += m.percentage;
+						oldm.addPercentage(m.getPercentage());
 						break;
 					}
 				}
@@ -304,14 +304,14 @@ public class Comparator
 					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
 			for (MethodPercentage m : changedMethod)
 			{
-				// find if the method exist
+				// find if the method exists
 				boolean methodExist = false;
-				for(MethodPercentage oldm : newMethods)
+				for(MethodPercentage newm : newMethods)
 				{
-					if(oldm.method.equals(m))
+					if(newm.getMethod().equals(m))
 					{
 						methodExist = true;
-						oldm.percentage += m.percentage;
+						newm.addPercentage(m.getPercentage());
 						break;
 					}
 				}
