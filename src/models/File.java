@@ -191,23 +191,16 @@ public class File
 			for(Iterator<Change> intersectIter = intersectList.iterator(); intersectIter.hasNext();) {
 				Change intersect = intersectIter.next();
 				// Case 1
-				if(intersect.getCharStart() < start 
-						&& (intersect.getCharEnd() >= start && intersect.getCharEnd() <= end)) {
-					intersect.setCharEnd(start-1);
+				if(start < intersect.getCharStart()
+						&& (end >= intersect.getCharStart() && end <= intersect.getCharEnd())) {
+					intersect.setCharStart(end+1);
+					if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
+						intersectIter.remove();
 				}
 				// Case 2
-				else if((intersect.getCharStart() >= start && intersect.getCharStart() < end) 
-						&& (intersect.getCharEnd() > start && intersect.getCharEnd() <= end)) {
-					intersectIter.remove();
-				}
-				// Case 3
-				else if((intersect.getCharStart() >= start && intersect.getCharEnd() <= end)
-						&& intersect.getCharEnd() > end) {
-					intersect.setCharStart(end+1);
-				}
-				// Case 4
-				else if(intersect.getCharStart() < start && intersect.getCharEnd() > end) {
-					// We need to split this intersect owner
+				else if((start >= intersect.getCharStart() && end > intersect.getCharStart()) 
+						&& (start < intersect.getCharEnd() && end <= intersect.getCharEnd())) {
+					// Split here
 					Change split1 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
 							intersect.getChangeType(), intersect.getFileId(), 
 							intersect.getCharStart(), intersect.getCharEnd());
@@ -218,11 +211,24 @@ public class File
 					split1.setCharEnd(start-1);
 					split2.setCharStart(end+1);
 					intersectIter.remove();
-					addedChanges.add(split1);
-					addedChanges.add(split2);
+					if(split1.getCharEnd() - split1.getCharStart() > 0)
+						addedChanges.add(split1);
+					if(split2.getCharEnd() - split2.getCharStart() > 0)
+						addedChanges.add(split2);
 					// Split can cause other problems so we need to start from
 					// the top of the list again.
 					intersectIter = intersectList.iterator();
+				}
+				// Case 3
+				else if((start >= intersect.getCharStart() && start <= intersect.getCharEnd())
+						&& end > intersect.getCharEnd()) {
+					intersect.setCharEnd(start-1);
+					if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
+						intersectIter.remove();
+				}
+				// Case 4
+				else if(start < intersect.getCharStart() && end > intersect.getCharEnd()) {
+					intersectIter.remove();
 				}
 			}
 			if(!addedChanges.isEmpty())
