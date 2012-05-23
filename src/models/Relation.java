@@ -8,14 +8,14 @@ public class Relation
 	private String  FileId;
 	private String  Callee;
 	private String  Caller;
-	private int		Weight;
+	private float	Weight;
 
 	public Relation()
 	{
 	}
 
 	public Relation(User personOne, User personTwo, boolean isSelf, String fileId, String callee, String caller,
-			int weight)
+			float weight)
 	{
 		super();
 		PersonOne = personOne;
@@ -27,12 +27,12 @@ public class Relation
 		Weight = weight;
 	}
 
-	public int getWeight()
+	public float getWeight()
 	{
 		return Weight;
 	}
 
-	public void setWeight(int weight)
+	public void setWeight(float weight)
 	{
 		Weight = weight;
 	}

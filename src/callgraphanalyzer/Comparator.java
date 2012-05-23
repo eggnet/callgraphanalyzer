@@ -282,7 +282,6 @@ public class Comparator
 			List<diffObjectResult> deleteDiffs,
 			List<diffObjectResult> insertDiffs)
 	{
-		// TODO @braden write a wrapper around method here and include the diffs
 		Set<MethodPercentage> newMethods = new HashSet<MethodPercentage>();
 		Set<MethodPercentage> oldMethods = new HashSet<MethodPercentage>();
 
