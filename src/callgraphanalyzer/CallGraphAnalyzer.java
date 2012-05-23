@@ -45,11 +45,10 @@ public class CallGraphAnalyzer
 			// todo update callgraphs
 			this.comparator.newCallGraph.updateOwnership(c);
 			if (updatingOld)
-				this.comparator.oldCallGraph.updateOwnership(c);
+				this.comparator.oldCallGraph.updateOwnership(new Change(c));
 			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
 				updatingOld = false;
 		}
-		
 		this.comparator.newCallGraph.print();
 	}
 
