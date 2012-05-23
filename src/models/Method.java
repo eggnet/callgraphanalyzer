@@ -9,7 +9,6 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 public class Method {
-	
 	private String		 		name;
 	private Clazz 				clazz;
 	

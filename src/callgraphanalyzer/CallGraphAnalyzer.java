@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import models.CallGraph;
+import models.CallGraph.MethodPercentage;
 import models.Change;
 import models.Method;
 import models.Relation;
@@ -74,21 +75,21 @@ public class CallGraphAnalyzer
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
 			// For each method in the new methods.
-			for (Method newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
+			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getstartChar(), newMethod
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.method.getstartChar(), newMethod.method
 						.getendChar(), comparator.newCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod, 0);
+				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.method, 0);
 			}
-			for (Method oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
+			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
 				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
 					continue;
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getstartChar(), oldMethod
-						.getendChar(), comparator.oldCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod, 0);
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.method.getstartChar(), oldMethod
+						.method.getendChar(), comparator.oldCommit.getCommit_date());
+				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.method, 0);
 			}
 		}
 		compareResult.print();
