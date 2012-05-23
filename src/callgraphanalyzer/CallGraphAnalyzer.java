@@ -32,6 +32,9 @@ public class CallGraphAnalyzer
 		this.db = comp.db;
 	}
 
+	/** 
+	 * This ads ownership to the callGraph.
+	 */
 	public void generateLogicalOwnership()
 	{
 		// Go through all of the changes and in parallel update each callgraph.
@@ -78,18 +81,18 @@ public class CallGraphAnalyzer
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.method.getstartChar(), newMethod.method
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
 						.getendChar(), comparator.newCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.method, 0);
+				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0);
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
 				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
 					continue;
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.method.getstartChar(), oldMethod
-						.method.getendChar(), comparator.oldCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.method, 0);
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
+						.getMethod().getendChar(), comparator.oldCommit.getCommit_date());
+				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0);
 			}
 		}
 		compareResult.print();
@@ -97,7 +100,7 @@ public class CallGraphAnalyzer
 			r.print();
 	}
 
-	public void recurseMethods(User changingUser, Method currentMethod, int currentDepth)
+	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth)
 	{
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
@@ -112,9 +115,9 @@ public class CallGraphAnalyzer
 					calledMethod.getClazz().getFile().getFileName(),
 					currentMethod.getName(),
 					calledMethod.getName(),
-					1);
+					percentage*(calledMethod.getClazz().getFile().getMethodWeight(calledMethodChange.getOwnerId(), calledMethod) /(currentDepth+1)));
 			this.Relations.add(r);
-			recurseMethods(changingUser, calledMethod, currentDepth + 1);
+			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1);
 		}
 	}
 }

@@ -13,8 +13,26 @@ public class CallGraph {
 			this.method = mt;
 			this.percentage = p;
 		}
-		public Method method;
-		public float percentage;
+		
+		public Method getMethod() {
+			return method;
+		}
+		public void setMethod(Method method) {
+			this.method = method;
+		}
+		public float getPercentage() {
+			return percentage;
+		}
+		public void setPercentage(float percentage) {
+			this.percentage = percentage;
+		}
+
+		public void addPercentage(float percentage){
+			this.percentage += percentage;
+		}
+		
+		private Method method;
+		private float percentage;
 	}
 	
 	private Map<String, File> 	files;
@@ -80,37 +98,9 @@ public class CallGraph {
 	}
 	
 	/**
-	 * This function will return a list of methods that are inside the given
-	 * file name and that are involved in the start and end character locations.
-	 * @param fileName
-	 * @param start
-	 * @param end
-	 * @return
-	 */
-	public List<Method> getMethodsUsingCharacters(String fileName, int start, int end) {
-		List<Method> m = new ArrayList<Method>();
-		
-		File file = containsFile(fileName);
-		if(file == null)
-			return m;
-		else {
-			for(Clazz clazz: file.getFileClazzes()) {
-				for(Method method: clazz.getMethods()) {
-					if((method.getstartChar() <= start && method.getendChar() >= end) ||
-					   (method.getstartChar() <= start && method.getendChar() >= start) ||
-					   (method.getstartChar() >= start && method.getendChar() <= end) ||
-					   (method.getstartChar() <= end   && method.getendChar() >= end)) {
-						m.add(method);
-					}
-				}
-			}
-		}
-		
-		return m;
-	}
-	
-	/**
 	 * getChangedPercentageOfMethodUsingCharacters(String fileName, int start, int end)
+	 * This function will return a list of methods and the percentage of the change that are inside the given
+	 * file name and that are involved in the start and end character locations.
 	 * @param fileName
 	 * @param start
 	 * @param end
@@ -131,8 +121,8 @@ public class CallGraph {
 				{
 					int methodStart = method.getstartChar();
 					int methodEnd 	= method.getendChar();
-					int changedPartStart = 0;
-					int changedPartEnd = 0;
+					int changedPartStart = -1;
+					int changedPartEnd = -1;
 							
 					// method in lower half
 					if(method.getstartChar() >= start && method.getstartChar() <= end && method.getendChar() >= end) 
@@ -157,10 +147,9 @@ public class CallGraph {
 					}
 					
 					// percentage
-					if(changedPartEnd > changedPartStart && methodEnd>methodStart)
+					if(changedPartEnd >= changedPartStart && methodEnd > methodStart && changedPartEnd != -1 && changedPartStart != -1)
 					{
-						float percent = (changedPartEnd - changedPartStart)*1.000f/(methodEnd-methodStart)*1.000f;
-						percent *=100;
+						float percent = (changedPartEnd - changedPartStart + 1)*1.000f/(methodEnd - methodStart + 1)*1.000f;
 						MethodPercentage mp = new MethodPercentage(method, percent);
 						m.add(mp);
 					}
@@ -304,7 +293,7 @@ public class CallGraph {
 		file.updateOwnership(change);
 	}
 	
-	public int getMethodWeight(String owner, Method method) {
+	public float getMethodWeight(String owner, Method method) {
 		return method.getClazz().getFile().getMethodWeight(owner, method);
 	}
 
