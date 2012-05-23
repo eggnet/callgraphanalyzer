@@ -129,15 +129,18 @@ public class File
 	}
 	
 	public void updateOwnership(Change change) {
-		System.out.println("Owners: ");
-		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
-			System.out.println("  " + entry.getKey() + ": ");
-			for(Change pchange: entry.getValue()) {
-				System.out.println("      " + pchange.getCharStart() + " - " + pchange.getCharEnd());
+		if(change.getFileId().equals("src/pak/B.java")) {
+			System.out.println("BEFORE!!!!");
+			System.out.println("  Owners: ");
+			for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+				System.out.println("    " + entry.getKey() + ": ");
+				for(Change pchange: entry.getValue()) {
+					System.out.println("      " + pchange.getCharStart() + " - " + pchange.getCharEnd());
+				}
 			}
+			
+			System.out.println(change.getOwnerId() + " is trying to insert: " + change.getCharStart() + " - " + change.getCharEnd());
 		}
-		System.out.println(change.getOwnerId() + " Trying to insert: ");
-		System.out.println("      " + change.getCharStart() + " - " + change.getCharEnd());
 		// Get the intersection
 		List<Set<Change>> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
 		
@@ -146,6 +149,17 @@ public class File
 			ownershipCleanUp(change.getCharStart(), change.getCharEnd(), intersection);
 		}
 		insertOwner(change);
+		
+		if(change.getFileId().equals("src/pak/B.java")) {
+			System.out.println("AFTER!!!!");
+			System.out.println("  Owners: ");
+			for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+				System.out.println("    " + entry.getKey() + ": ");
+				for(Change pchange: entry.getValue()) {
+					System.out.println("      " + pchange.getCharStart() + " - " + pchange.getCharEnd());
+				}
+			}
+		}
 	}
 	
 	public List<Set<Change>> getOwnershipIntersection(int start, int end) {
@@ -154,7 +168,7 @@ public class File
 		// Find out what owners intersect with the new owner change
 		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
 			for(Change change: entry.getValue()) {
-				if(intersectionOfCode(start, end, change.getCharStart(), change.getCharEnd()))
+				if(intersectionOfCode(change.getCharStart(), change.getCharEnd(), start, end))
 					if(!intersection.contains(entry.getValue()))
 						intersection.add(entry.getValue());
 			}
@@ -178,7 +192,7 @@ public class File
 				Change intersect = intersectIter.next();
 				// Case 1
 				if(intersect.getCharStart() < start 
-						&& (intersect.getCharEnd() >= start && intersect.getCharEnd() < end)) {
+						&& (intersect.getCharEnd() >= start && intersect.getCharEnd() <= end)) {
 					intersect.setCharEnd(start-1);
 				}
 				// Case 2
@@ -187,7 +201,7 @@ public class File
 					intersectIter.remove();
 				}
 				// Case 3
-				else if((intersect.getCharStart() > start && intersect.getCharEnd() <= end)
+				else if((intersect.getCharStart() >= start && intersect.getCharEnd() <= end)
 						&& intersect.getCharEnd() > end) {
 					intersect.setCharStart(end+1);
 				}
@@ -206,6 +220,9 @@ public class File
 					intersectIter.remove();
 					addedChanges.add(split1);
 					addedChanges.add(split2);
+					// Split can cause other problems so we need to start from
+					// the top of the list again.
+					intersectIter = intersectList.iterator();
 				}
 			}
 			if(!addedChanges.isEmpty())
@@ -222,8 +239,8 @@ public class File
 		float sum = 0;
 		
 		for(Change range: ranges) {
-			if(intersectionOfCode(method.getstartChar(), method.getendChar(),
-					range.getCharStart(), range.getCharEnd())) {
+			if(intersectionOfCode(range.getCharStart(), range.getCharEnd(), 
+					method.getstartChar(), method.getendChar())) {
 				// Case 1
 				if(range.getCharStart() < method.getstartChar() 
 						&& (range.getCharEnd() >= method.getstartChar() && range.getCharEnd() < method.getendChar())) {
