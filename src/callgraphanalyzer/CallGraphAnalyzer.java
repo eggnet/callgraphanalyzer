@@ -78,18 +78,18 @@ public class CallGraphAnalyzer
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.method.getstartChar(), newMethod.method
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
 						.getendChar(), comparator.newCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.method, 0);
+				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), 0);
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
 				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
 					continue;
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.method.getstartChar(), oldMethod
-						.method.getendChar(), comparator.oldCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.method, 0);
+				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
+						.getMethod().getendChar(), comparator.oldCommit.getCommit_date());
+				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), 0);
 			}
 		}
 		compareResult.print();
