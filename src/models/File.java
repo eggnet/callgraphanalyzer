@@ -22,7 +22,7 @@ public class File
 	private String			filePackage;
 	private List<Clazz>		fileClazzes;
 	private List<Clazz>		fileInterfaces;
-	public Map<String, Set<Change>> Owners;
+	public Map<String, List<Change>> Owners;
 	
 	private int				shift;
 	private Change			oldCommit;
@@ -33,7 +33,7 @@ public class File
 		fileClazzes = new ArrayList<Clazz>();
 		fileInterfaces = new ArrayList<Clazz>();
 		filePackage = "";
-		Owners = new HashMap<String, Set<Change>>();
+		Owners = new HashMap<String, List<Change>>();
 	}
 
 	public File(List<String> fileImports, String filePackage,
@@ -56,7 +56,7 @@ public class File
 			for (String imp : fileImports)
 				System.out.println("    " + imp);
 			System.out.println("  Owners: ");
-			for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+			for(Map.Entry<String, List<Change>> entry: this.Owners.entrySet()) {
 				System.out.println("    " + entry.getKey() + ": ");
 				for(Change change: entry.getValue()) {
 					System.out.println("      " + change.getCharStart() + " - " + change.getCharEnd());
@@ -124,36 +124,32 @@ public class File
 		this.shift = 0;
 	}
 	
+	private void addOwnershipChange(Change change, List<Change> list) {
+		int i = 0;
+		for(Change lChange: list) {
+			if(change.getCharStart() > lChange.getCharStart())
+				i++;
+		}
+		
+		list.add(i, change);
+	}
+	
 	public void insertOwner(Change change) {
-		Set<Change> changes = Owners.get(change.getOwnerId());
+		List<Change> changes = Owners.get(change.getOwnerId());
 		// The owner is new
 		if(changes == null) {
-			Set<Change> newOwner = new HashSet<Change>();
+			List<Change> newOwner = new ArrayList<Change>();
 			newOwner.add(change);
+			
 			this.Owners.put(change.getOwnerId(), newOwner);
 		}
 		// The owner already existed
 		else {
-			changes.add(change);
+			addOwnershipChange(change, changes);
 		}
 	}
 	
-	public void updateOwnership(Change change) {
-		if(change.getFileId().equals("src/pak/B.java")) {
-			System.out.println("BEFORE!!!!");
-			System.out.println("  Owners: ");
-			for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
-				System.out.println("    " + entry.getKey() + ": ");
-				for(Change pchange: entry.getValue()) {
-					System.out.println("      " + pchange.getCharStart() + " - " + pchange.getCharEnd());
-				}
-			}
-			
-			System.out.println(change.getOwnerId() + " is trying to " + change.getChangeType().toString() + ": "
-					+ change.getCharStart() + " - " + change.getCharEnd() +
-					" on commit ID: " + change.getCommitId());
-		}
-		
+	public void updateOwnership(Change change) {		
 		// Set up old commit tracker.
 		if(oldCommit == null)
 			oldCommit = change;
@@ -167,14 +163,17 @@ public class File
 		change.setCharStart(change.getCharStart()+shift);
 		change.setCharEnd(change.getCharEnd()+shift);
 		
+		System.out.println("With shift: " + change.getCharStart() + " - " + change.getCharEnd());
+		
 		// Get the intersection
-		List<Set<Change>> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
+		List<List<Change>> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
 		
 		// Clean up and insert
 		if(!intersection.isEmpty()) {
 			ownershipCleanUp(change, intersection);
 		}
-		insertOwner(change);
+		if(change.getChangeType() != Resources.ChangeType.MODIFYDELETE)
+			insertOwner(change);
 		
 		// Update the shift
 		if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT)
@@ -182,23 +181,15 @@ public class File
 		else if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE)
 			this.shift -= (change.getCharEnd() - change.getCharStart())+1;
 		
-		if(change.getFileId().equals("src/pak/B.java")) {
-			System.out.println("AFTER!!!!");
-			System.out.println("  Owners: ");
-			for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
-				System.out.println("    " + entry.getKey() + ": ");
-				for(Change pchange: entry.getValue()) {
-					System.out.println("      " + pchange.getCharStart() + " - " + pchange.getCharEnd());
-				}
-			}
-		}
+		if(shift < 0)
+			shift = 0;
 	}
 	
-	public List<Set<Change>> getOwnershipIntersection(int start, int end) {
-		List<Set<Change>> intersection = new ArrayList<Set<Change>>();
+	public List<List<Change>> getOwnershipIntersection(int start, int end) {
+		List<List<Change>> intersection = new ArrayList<List<Change>>();
 		
 		// Find out what owners intersect with the new owner change
-		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+		for(Map.Entry<String, List<Change>> entry: this.Owners.entrySet()) {
 			for(Change change: entry.getValue()) {
 				if(intersectionOfCode(change.getCharStart(), change.getCharEnd(), start, end))
 					if(!intersection.contains(entry.getValue()))
@@ -216,10 +207,10 @@ public class File
 		   (start2 <= start1 && end2 >= end1));
 	}
 	
-	public void ownershipCleanUp(Change change, List<Set<Change>> intersections) {
-		for(Iterator<Set<Change>> intersectListIter = intersections.iterator(); intersectListIter.hasNext();) {
-			Set<Change> intersectList = intersectListIter.next();
-			Set<Change> addedChanges = new HashSet<Change>();
+	public void ownershipCleanUp(Change change, List<List<Change>> intersections) {
+		for(Iterator<List<Change>> intersectListIter = intersections.iterator(); intersectListIter.hasNext();) {
+			List<Change> intersectList = intersectListIter.next();
+			List<Change> addedChanges = new ArrayList<Change>();
 			for(Iterator<Change> intersectIter = intersectList.iterator(); intersectIter.hasNext();) {
 				Change intersect = intersectIter.next();
 				// Case 1
@@ -251,21 +242,21 @@ public class File
 
 					split1.setCharEnd(change.getCharStart()-1);
 					split2.setCharStart(change.getCharEnd()+1);
-					split2Insert.setCharStart(change.getCharStart());
+					split2Insert.setCharStart(change.getCharStart()+1);
 					
 					if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
 						intersectIter.remove();
 						if(split1.getCharEnd() - split1.getCharStart() > 0)
-							addedChanges.add(split1);
+							addOwnershipChange(split1, addedChanges);
 						if(split2.getCharEnd() - split2.getCharStart() > 0)
-							addedChanges.add(split2);
+							addOwnershipChange(split2, addedChanges);
 					}
 					else if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT) {
 						intersectIter.remove();
 						if(split1.getCharEnd() - split1.getCharStart() > 0)
-							addedChanges.add(split1);
+							addOwnershipChange(split1, addedChanges);
 						if(split2Insert.getCharEnd() - split2Insert.getCharStart() > 0)
-							addedChanges.add(split2Insert);
+							addOwnershipChange(split2Insert, addedChanges);
 						shiftOwnershipBelowChange((change.getCharEnd() - change.getCharStart()), 
 								split2Insert.getCharStart(), addedChanges);
 					}
@@ -290,15 +281,15 @@ public class File
 								intersect.getChangeType(), intersect.getFileId(), 
 								intersect.getCharStart(), intersect.getCharEnd());
 						
-						split1.setCharEnd(change.getCharStart());
-						split2.setCharStart(change.getCharEnd());
+						split1.setCharEnd(change.getCharStart()-1);
+						split2.setCharStart(change.getCharStart());
 						
 						intersectIter.remove();
 						if(split1.getCharEnd() - split1.getCharStart() > 0)
-							addedChanges.add(split1);
+							addOwnershipChange(split1, addedChanges);
 						if(split2.getCharEnd() - split2.getCharStart() > 0)
-							addedChanges.add(split2);
-						shiftOwnershipBelowChange((intersect.getCharEnd() - change.getCharStart()), 
+							addOwnershipChange(split2, addedChanges);
+						shiftOwnershipBelowChange((change.getCharEnd() - change.getCharStart())+1, 
 								split2.getCharStart(), addedChanges);
 						
 					}
@@ -314,40 +305,20 @@ public class File
 					}
 				}
 			}
-			if(!addedChanges.isEmpty())
-				intersectList.addAll(addedChanges);
+			if(!addedChanges.isEmpty()) {
+				for(Change achange: addedChanges)
+					addOwnershipChange(achange, intersectList);
+			}
 		}
 		// Shift everything after a delete
 		if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
-			shiftOwnershipBelowChange((change.getCharStart() - change.getCharEnd()), 
+			shiftOwnershipBelowChange((change.getCharStart() - change.getCharEnd())-1, 
 					change.getCharStart(), null);
 		}
 	}
 	
-	private void shiftOwnershipAboveChange(int shift, int endingPoint, Set<Change> additionalList) {
-		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
-			for(Change change: entry.getValue()) {
-				if(change.getCharStart() >= endingPoint) {
-					change.setCharStart(change.getCharStart()+shift);
-					change.setCharEnd(change.getCharEnd()+shift);
-				}
-			}
-		}
-		if(additionalList != null)
-			shiftListAboveChange(shift, endingPoint, additionalList);
-	}
-	
-	private void shiftListAboveChange(int shift, int endingPoint, Set<Change> list) {
-		for(Change change: list) {
-			if(change.getCharStart() >= endingPoint) {
-				change.setCharStart(change.getCharStart()+shift);
-				change.setCharEnd(change.getCharEnd()+shift);
-			}
-		}
-	}
-	
-	private void shiftOwnershipBelowChange(int shift, int startingPoint, Set<Change> additionalList) {
-		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+	private void shiftOwnershipBelowChange(int shift, int startingPoint, List<Change> additionalList) {
+		for(Map.Entry<String, List<Change>> entry: this.Owners.entrySet()) {
 			for(Change change: entry.getValue()) {
 				if(change.getCharStart() >= startingPoint) {
 					change.setCharStart(change.getCharStart()+shift);
@@ -374,7 +345,7 @@ public class File
 		return weights;
 	}
 	
-	private void shiftListBelowChange(int shift, int startingPoint, Set<Change> list) {
+	private void shiftListBelowChange(int shift, int startingPoint, List<Change> list) {
 		for(Change change: list) {
 			if(change.getCharStart() >= startingPoint) {
 				change.setCharStart(change.getCharStart()+shift);
@@ -385,7 +356,7 @@ public class File
 	
 	public float getMethodWeight(String owner, Method method) {
 		// Get all ranges of ownership
-		Set<Change> ranges = this.Owners.get(owner);
+		List<Change> ranges = this.Owners.get(owner);
 		if(ranges == null)
 			return -1;
 		
