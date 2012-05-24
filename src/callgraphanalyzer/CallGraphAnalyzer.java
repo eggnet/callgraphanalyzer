@@ -6,6 +6,7 @@ import java.util.Set;
 
 import models.CallGraph;
 import models.CallGraph.MethodPercentage;
+import models.WeightedChange;
 import models.Change;
 import models.Method;
 import models.Relation;
@@ -74,6 +75,7 @@ public class CallGraphAnalyzer
 		// For each modifiedFile, for each generate an owner for the method and
 		// the % they own.
 		CompareResult compareResult = comparator.getCompareResult();
+		Set<Method> methodCalls;
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
 			// For each method in the new methods.
@@ -82,7 +84,8 @@ public class CallGraphAnalyzer
 				// get all methods this one is called by
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
 						.getendChar(), comparator.newCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0);
+				methodCalls = new HashSet<Method>();
+				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0, methodCalls);
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
@@ -91,7 +94,8 @@ public class CallGraphAnalyzer
 				// get all methods this one is called by
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
 						.getMethod().getendChar(), comparator.oldCommit.getCommit_date());
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0);
+				methodCalls = new HashSet<Method>();
+				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0, methodCalls);
 			}
 		}
 		compareResult.print();
@@ -99,24 +103,39 @@ public class CallGraphAnalyzer
 			r.print();
 	}
 
-	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth)
+	/**
+	 * Recursively checks what methods call each one.  Only going into each method once to avoid 
+	 * stack overflow.
+	 * @param changingUser
+	 * @param currentMethod
+	 * @param percentage
+	 * @param currentDepth
+	 * @param methodCalls
+	 */
+	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth, Set<Method> methodCalls)
 	{
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
-			Change calledMethodChange = db.getLatestOwnerChange(calledMethod.getClazz().getFile().getFileName(),
-					calledMethod.getstartChar(), calledMethod.getendChar(), comparator.newCommit.getCommit_date());
-			boolean isSelf = false;
-			if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
-				isSelf = true;
-			Relation r = new Relation(new User(changingUser.getUserEmail()), 
-					new User(calledMethodChange.getOwnerId()),
-					isSelf,
-					calledMethod.getClazz().getFile().getFileName(),
-					currentMethod.getName(),
-					calledMethod.getName(),
-					percentage*(calledMethod.getClazz().getFile().getMethodWeight(calledMethodChange.getOwnerId(), calledMethod) /(currentDepth+1)));
-			this.Relations.add(r);
-			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1);
+			if (methodCalls.contains(calledMethod))
+				continue;
+			else
+				methodCalls.add(calledMethod);
+			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(calledMethod);
+			for (WeightedChange calledMethodChange : calledChanges)
+			{
+				boolean isSelf = false;
+				if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
+					isSelf = true;
+				Relation r = new Relation(new User(changingUser.getUserEmail()), 
+						new User(calledMethodChange.getOwnerId()),
+						isSelf,
+						calledMethod.getClazz().getFile().getFileName(),
+						currentMethod.getName(),
+						calledMethod.getName(),
+						percentage*(calledMethodChange.getWeight()/(currentDepth+1)));
+				this.Relations.add(r);
+			}
+			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls);
 		}
 	}
 }

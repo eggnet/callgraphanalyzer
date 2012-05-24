@@ -359,6 +359,21 @@ public class File
 			shiftListBelowChange(shift, startingPoint, additionalList);
 	}
 	
+	public Set<WeightedChange> getMethodWeights(Method method )
+	{
+		Set<WeightedChange> weights = new HashSet<WeightedChange>();
+		for (String owner : this.Owners.keySet())
+		{
+			for (Change change : this.Owners.get(owner))
+			{
+				float weight = getMethodWeight(owner, method);
+				if (weight > 0)
+					weights.add(new WeightedChange(change, weight));
+			}
+		}
+		return weights;
+	}
+	
 	private void shiftListBelowChange(int shift, int startingPoint, Set<Change> list) {
 		for(Change change: list) {
 			if(change.getCharStart() >= startingPoint) {
@@ -371,7 +386,7 @@ public class File
 	public float getMethodWeight(String owner, Method method) {
 		// Get all ranges of ownership
 		Set<Change> ranges = this.Owners.get(owner);
-		if(ranges.isEmpty())
+		if(ranges == null)
 			return -1;
 		
 		float sum = 0;
