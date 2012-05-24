@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import db.Resources;
+
 public class File
 {
 
@@ -21,6 +23,10 @@ public class File
 	private List<Clazz>		fileClazzes;
 	private List<Clazz>		fileInterfaces;
 	public Map<String, Set<Change>> Owners;
+	
+	private int				shift;
+	private Change			oldCommit;
+	
 	public File()
 	{
 		fileImports = new ArrayList<String>();
@@ -114,6 +120,10 @@ public class File
 		return null;
 	}
 	
+	public void newCommit() {
+		this.shift = 0;
+	}
+	
 	public void insertOwner(Change change) {
 		Set<Change> changes = Owners.get(change.getOwnerId());
 		// The owner is new
@@ -139,16 +149,38 @@ public class File
 				}
 			}
 			
-			System.out.println(change.getOwnerId() + " is trying to insert: " + change.getCharStart() + " - " + change.getCharEnd());
+			System.out.println(change.getOwnerId() + " is trying to " + change.getChangeType().toString() + ": "
+					+ change.getCharStart() + " - " + change.getCharEnd() +
+					" on commit ID: " + change.getCommitId());
 		}
+		
+		// Set up old commit tracker.
+		if(oldCommit == null)
+			oldCommit = change;
+		// Reset the shift on new commit.
+		if(!oldCommit.getCommitId().equals(change.getCommitId())) {
+			newCommit();
+			oldCommit = change;
+		}
+		
+		// Apply the shift
+		change.setCharStart(change.getCharStart()+shift);
+		change.setCharEnd(change.getCharEnd()+shift);
+		
 		// Get the intersection
 		List<Set<Change>> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
 		
 		// Clean up and insert
 		if(!intersection.isEmpty()) {
-			ownershipCleanUp(change.getCharStart(), change.getCharEnd(), intersection);
+			ownershipCleanUp(change, intersection);
 		}
 		insertOwner(change);
+		
+		// Update the shift
+		if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT)
+			this.shift += (change.getCharEnd() - change.getCharStart())+1;
+		else if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE)
+			this.shift -= (change.getCharEnd() - change.getCharStart())+1;
 		
 		if(change.getFileId().equals("src/pak/B.java")) {
 			System.out.println("AFTER!!!!");
@@ -184,22 +216,28 @@ public class File
 		   (start2 <= start1 && end2 >= end1));
 	}
 	
-	public void ownershipCleanUp(int start, int end, List<Set<Change>> intersections) {
+	public void ownershipCleanUp(Change change, List<Set<Change>> intersections) {
 		for(Iterator<Set<Change>> intersectListIter = intersections.iterator(); intersectListIter.hasNext();) {
 			Set<Change> intersectList = intersectListIter.next();
 			Set<Change> addedChanges = new HashSet<Change>();
 			for(Iterator<Change> intersectIter = intersectList.iterator(); intersectIter.hasNext();) {
 				Change intersect = intersectIter.next();
 				// Case 1
-				if(start < intersect.getCharStart()
-						&& (end >= intersect.getCharStart() && end <= intersect.getCharEnd())) {
-					intersect.setCharStart(end+1);
-					if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
-						intersectIter.remove();
+				if(change.getCharStart() < intersect.getCharStart()
+						&& (change.getCharEnd() >= intersect.getCharStart() && change.getCharEnd() < intersect.getCharEnd())) {
+					if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
+						intersect.setCharStart(change.getCharEnd()+1);
+						if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
+							intersectIter.remove();
+					}
+					else if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT) {
+						shiftOwnershipBelowChange((change.getCharEnd() - intersect.getCharStart()), 
+								intersect.getCharStart(), addedChanges);
+					}
 				}
 				// Case 2
-				else if((start >= intersect.getCharStart() && end > intersect.getCharStart()) 
-						&& (start < intersect.getCharEnd() && end <= intersect.getCharEnd())) {
+				else if((change.getCharStart() >= intersect.getCharStart() && change.getCharEnd() > intersect.getCharStart()) 
+						&& (change.getCharStart() < intersect.getCharEnd() && change.getCharEnd() <= intersect.getCharEnd())) {
 					// Split here
 					Change split1 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
 							intersect.getChangeType(), intersect.getFileId(), 
@@ -207,42 +245,125 @@ public class File
 					Change split2 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
 							intersect.getChangeType(), intersect.getFileId(), 
 							intersect.getCharStart(), intersect.getCharEnd());
+					Change split2Insert = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
+							intersect.getChangeType(), intersect.getFileId(), 
+							intersect.getCharStart(), intersect.getCharEnd());
 
-					split1.setCharEnd(start-1);
-					split2.setCharStart(end+1);
-					intersectIter.remove();
-					if(split1.getCharEnd() - split1.getCharStart() > 0)
-						addedChanges.add(split1);
-					if(split2.getCharEnd() - split2.getCharStart() > 0)
-						addedChanges.add(split2);
+					split1.setCharEnd(change.getCharStart()-1);
+					split2.setCharStart(change.getCharEnd()+1);
+					split2Insert.setCharStart(change.getCharStart());
+					
+					if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
+						intersectIter.remove();
+						if(split1.getCharEnd() - split1.getCharStart() > 0)
+							addedChanges.add(split1);
+						if(split2.getCharEnd() - split2.getCharStart() > 0)
+							addedChanges.add(split2);
+					}
+					else if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT) {
+						intersectIter.remove();
+						if(split1.getCharEnd() - split1.getCharStart() > 0)
+							addedChanges.add(split1);
+						if(split2Insert.getCharEnd() - split2Insert.getCharStart() > 0)
+							addedChanges.add(split2Insert);
+						shiftOwnershipBelowChange((change.getCharEnd() - change.getCharStart()), 
+								split2Insert.getCharStart(), addedChanges);
+					}
 					// Split can cause other problems so we need to start from
 					// the top of the list again.
 					intersectIter = intersectList.iterator();
 				}
 				// Case 3
-				else if((start >= intersect.getCharStart() && start <= intersect.getCharEnd())
-						&& end > intersect.getCharEnd()) {
-					intersect.setCharEnd(start-1);
-					if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
+				else if((change.getCharStart() > intersect.getCharStart() && change.getCharStart() <= intersect.getCharEnd())
+						&& change.getCharEnd() > intersect.getCharEnd()) {
+					if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
+						intersect.setCharEnd(change.getCharStart()-1);
+						if(intersect.getCharEnd() - intersect.getCharStart() <= 0)
+							intersectIter.remove();
+					}
+					else if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT) {
+						// Split here
+						Change split1 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
+								intersect.getChangeType(), intersect.getFileId(), 
+								intersect.getCharStart(), intersect.getCharEnd());
+						Change split2 = new Change(intersect.getOwnerId(), intersect.getCommitId(), 
+								intersect.getChangeType(), intersect.getFileId(), 
+								intersect.getCharStart(), intersect.getCharEnd());
+						
+						split1.setCharEnd(change.getCharStart());
+						split2.setCharStart(change.getCharEnd());
+						
 						intersectIter.remove();
+						if(split1.getCharEnd() - split1.getCharStart() > 0)
+							addedChanges.add(split1);
+						if(split2.getCharEnd() - split2.getCharStart() > 0)
+							addedChanges.add(split2);
+						shiftOwnershipBelowChange((intersect.getCharEnd() - change.getCharStart()), 
+								split2.getCharStart(), addedChanges);
+						
+					}
 				}
 				// Case 4
-				else if(start < intersect.getCharStart() && end > intersect.getCharEnd()) {
-					intersectIter.remove();
+				else if(change.getCharStart() <= intersect.getCharStart() && change.getCharEnd() >= intersect.getCharEnd()) {
+					if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
+						intersectIter.remove();
+					}
+					else if(change.getChangeType() == Resources.ChangeType.MODIFYINSERT) {
+						shiftOwnershipBelowChange((change.getCharEnd() - intersect.getCharStart()), 
+								intersect.getCharStart(), addedChanges);
+					}
 				}
 			}
 			if(!addedChanges.isEmpty())
 				intersectList.addAll(addedChanges);
 		}
+		// Shift everything after a delete
+		if(change.getChangeType() == Resources.ChangeType.MODIFYDELETE) {
+			shiftOwnershipBelowChange((change.getCharStart() - change.getCharEnd()), 
+					change.getCharStart(), null);
+		}
 	}
 	
-	private void shiftOwnership(int shift, int startingPoint) {
+	private void shiftOwnershipAboveChange(int shift, int endingPoint, Set<Change> additionalList) {
+		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+			for(Change change: entry.getValue()) {
+				if(change.getCharStart() >= endingPoint) {
+					change.setCharStart(change.getCharStart()+shift);
+					change.setCharEnd(change.getCharEnd()+shift);
+				}
+			}
+		}
+		if(additionalList != null)
+			shiftListAboveChange(shift, endingPoint, additionalList);
+	}
+	
+	private void shiftListAboveChange(int shift, int endingPoint, Set<Change> list) {
+		for(Change change: list) {
+			if(change.getCharStart() >= endingPoint) {
+				change.setCharStart(change.getCharStart()+shift);
+				change.setCharEnd(change.getCharEnd()+shift);
+			}
+		}
+	}
+	
+	private void shiftOwnershipBelowChange(int shift, int startingPoint, Set<Change> additionalList) {
 		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
 			for(Change change: entry.getValue()) {
 				if(change.getCharStart() >= startingPoint) {
 					change.setCharStart(change.getCharStart()+shift);
 					change.setCharEnd(change.getCharEnd()+shift);
 				}
+			}
+		}
+		if(additionalList != null)
+			shiftListBelowChange(shift, startingPoint, additionalList);
+	}
+	
+	private void shiftListBelowChange(int shift, int startingPoint, Set<Change> list) {
+		for(Change change: list) {
+			if(change.getCharStart() >= startingPoint) {
+				change.setCharStart(change.getCharStart()+shift);
+				change.setCharEnd(change.getCharEnd()+shift);
 			}
 		}
 	}
