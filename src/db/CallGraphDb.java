@@ -26,12 +26,12 @@ public class CallGraphDb extends DbConnection
 		{
 			LinkedList<Change> changes = new LinkedList<Change>();
 			String sql = "SELECT commit_id, file_id, owner_id, char_start, char_end, change_type FROM owners natural join commits where commit_date <= (select commit_date from commits where commit_id=?)" +
-					"and (branch_id is NULL OR branch_id=?) order by commit_date desc, commit_id, char_start;"; 
+					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id, char_start;"; 
 			String[] parms = {CommitId, branchID};
 			ResultSet rs = execPreparedQuery(sql, parms);
 			while(rs.next())
 			{
-				changes.addFirst(new Change(rs.getString("owner_id"), rs.getString("commit_id"), Resources.ChangeType.valueOf(rs.getString("change_type")), rs.getString("file_id"), rs.getInt("char_start"), 
+				changes.add(new Change(rs.getString("owner_id"), rs.getString("commit_id"), Resources.ChangeType.valueOf(rs.getString("change_type")), rs.getString("file_id"), rs.getInt("char_start"), 
 						rs.getInt("char_end")));
 			}
 			return changes;
