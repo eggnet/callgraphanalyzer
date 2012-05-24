@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
 public class File
 {
 
@@ -236,10 +237,25 @@ public class File
 		}
 	}
 	
+	public Set<WeightedChange> getMethodWeights(Method method )
+	{
+		Set<WeightedChange> weights = new HashSet<WeightedChange>();
+		for (String owner : this.Owners.keySet())
+		{
+			for (Change change : this.Owners.get(owner))
+			{
+				float weight = getMethodWeight(owner, method);
+				if (weight > 0)
+					weights.add(new WeightedChange(change, weight));
+			}
+		}
+		return weights;
+	}
+	
 	public float getMethodWeight(String owner, Method method) {
 		// Get all ranges of ownership
 		Set<Change> ranges = this.Owners.get(owner);
-		if(ranges.isEmpty())
+		if(ranges == null)
 			return -1;
 		
 		float sum = 0;

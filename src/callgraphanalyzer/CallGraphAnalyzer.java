@@ -6,6 +6,7 @@ import java.util.Set;
 
 import models.CallGraph;
 import models.CallGraph.MethodPercentage;
+import models.WeightedChange;
 import models.Change;
 import models.Method;
 import models.Relation;
@@ -101,21 +102,25 @@ public class CallGraphAnalyzer
 
 	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth)
 	{
+		if (currentDepth > Resources.ANALYZER_MAX_DEPTH)
+			return;
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
-			Change calledMethodChange = db.getLatestOwnerChange(calledMethod.getClazz().getFile().getFileName(),
-					calledMethod.getstartChar(), calledMethod.getendChar(), comparator.newCommit.getCommit_date());
-			boolean isSelf = false;
-			if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
-				isSelf = true;
-			Relation r = new Relation(new User(changingUser.getUserEmail()), 
-					new User(calledMethodChange.getOwnerId()),
-					isSelf,
-					calledMethod.getClazz().getFile().getFileName(),
-					currentMethod.getName(),
-					calledMethod.getName(),
-					percentage*(calledMethod.getClazz().getFile().getMethodWeight(calledMethodChange.getOwnerId(), calledMethod) /(currentDepth+1)));
-			this.Relations.add(r);
+			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(calledMethod);
+			for (WeightedChange calledMethodChange : calledChanges)
+			{
+				boolean isSelf = false;
+				if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
+					isSelf = true;
+				Relation r = new Relation(new User(changingUser.getUserEmail()), 
+						new User(calledMethodChange.getOwnerId()),
+						isSelf,
+						calledMethod.getClazz().getFile().getFileName(),
+						currentMethod.getName(),
+						calledMethod.getName(),
+						percentage*(calledMethodChange.getWeight()/(currentDepth+1)));
+				this.Relations.add(r);
+			}
 			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1);
 		}
 	}
