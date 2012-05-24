@@ -251,6 +251,17 @@ public class File
 		}
 		return weights;
 	}
+
+	private void shiftOwnership(int shift, int startingPoint) {
+		for(Map.Entry<String, Set<Change>> entry: this.Owners.entrySet()) {
+			for(Change change: entry.getValue()) {
+				if(change.getCharStart() >= startingPoint) {
+					change.setCharStart(change.getCharStart()+shift);
+					change.setCharEnd(change.getCharEnd()+shift);
+				}
+			}
+		}
+	}
 	
 	public float getMethodWeight(String owner, Method method) {
 		// Get all ranges of ownership
