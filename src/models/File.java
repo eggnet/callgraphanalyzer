@@ -163,8 +163,6 @@ public class File
 		change.setCharStart(change.getCharStart()+shift);
 		change.setCharEnd(change.getCharEnd()+shift);
 		
-		System.out.println("With shift: " + change.getCharStart() + " - " + change.getCharEnd());
-		
 		// Get the intersection
 		List<List<Change>> intersection = getOwnershipIntersection(change.getCharStart(), change.getCharEnd());
 		
