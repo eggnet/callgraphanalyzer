@@ -16,7 +16,6 @@ public class Clazz
 	private String					name;
 	private boolean					isInterface;
 	private List<Method>			methods;
-	private List<Clazz>				subClazzes;
 	
 	private int						startChar;
 	private int						endChar;
@@ -39,7 +38,6 @@ public class Clazz
 		interfaces = new ArrayList<Clazz>();
 		implementedBy = new ArrayList<Clazz>();
 		unresolvedInterfaces = new ArrayList<String>();
-		subClazzes = new ArrayList<Clazz>();
 		unresolvedSuperClazz = "";
 		genericTypes = new ArrayList<String>();
 		variables = new ArrayList<Mapping>();
@@ -57,7 +55,6 @@ public class Clazz
 		this.methods = methods;
 		this.interfaces = interfaces;
 		this.superClazz = superClazz;
-		this.subClazzes = subClazzes;
 
 		unresolvedInterfaces = new ArrayList<String>();
 		unresolvedSuperClazz = "";
@@ -318,8 +315,8 @@ public class Clazz
 		System.out.println("    Unresolved Super Class: "
 				+ unresolvedSuperClazz);
 		System.out.println("    Sub Classes: ");
-		for (Clazz clazz : subClazzes)
-			System.out.println("      " + clazz.getName());
+		//for (Clazz clazz : subClazzes)
+			//System.out.println("      " + clazz.getName());
 		System.out.println("    Generic Parameters: ");
 		for (String s : genericTypes)
 			System.out.println("      " + s);
@@ -376,11 +373,6 @@ public class Clazz
 		this.interfaces.add(clazz);
 	}
 
-	public void addSubClazz(Clazz clazz)
-	{
-		this.subClazzes.add(clazz);
-	}
-
 	public String getName()
 	{
 		return name;
@@ -429,16 +421,6 @@ public class Clazz
 	public void setSuperClazz(Clazz superClazz)
 	{
 		this.superClazz = superClazz;
-	}
-
-	public List<Clazz> getSubClazzes()
-	{
-		return subClazzes;
-	}
-
-	public void setSubClazzes(List<Clazz> subClazzes)
-	{
-		this.subClazzes = subClazzes;
 	}
 
 	public File getFile()

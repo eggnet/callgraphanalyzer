@@ -347,7 +347,7 @@ public class CallGraph {
 					if(!conflictMethods.contains(calledBy))
 						conflictMethods.add(calledBy);
 					// Remove the link
-					calledBy.getCalledBy().remove(method);
+					calledBy.getMethodCalls().clear();
 				}
 				// Do this for fuzzy called by
 				for(Method calledBy: method.getFuzzyCalledBy()) {
@@ -355,7 +355,15 @@ public class CallGraph {
 					if(!conflictMethods.contains(calledBy))
 						conflictMethods.add(calledBy);
 					// Remove the link
-					calledBy.getCalledBy().remove(method);
+					calledBy.getFuzzyCalls().clear();
+				}
+				// Remove calls links
+				for(Method calls: method.getMethodCalls()) {
+					calls.getCalledBy().remove(method);
+				}
+				// Remove fuzzy calls links
+				for(Method calls: method.getFuzzyCalls()) {
+					calls.getFuzzyCalledBy().remove(method);
 				}
 			}
 		}
@@ -366,21 +374,16 @@ public class CallGraph {
 	private List<Clazz> getConflictingClazzes(File file) {
 		List<Clazz> conflictingClazzes = new ArrayList<Clazz>();
 		for(Clazz clazz: file.getFileClazzes()) {
-			// Get conflicts from interface
-			if(clazz.isInterface()) {
-				for(Clazz conflict: this.getAllClazzes()) {
-					for(Clazz interfaces: conflict.getInterfaces()) {
-						if(interfaces.equals(clazz)) {
-							if(!conflictingClazzes.contains(conflict))
-								conflictingClazzes.add(conflict);
-							interfaces.getInterfaces().remove(clazz);
-						}
-					}
-					if(conflict.getSuperClazz() != null && conflict.getSuperClazz().equals(clazz)) {
-						if(!conflictingClazzes.contains(conflict))
-							conflictingClazzes.add(conflict);
-						conflict.setSuperClazz(null);
-					}
+			for(Clazz fileClazz: file.getFileClazzes()) {
+				if(clazz.getSuperClazz().equals(fileClazz)) {
+					if(!conflictingClazzes.contains(clazz))
+						conflictingClazzes.add(clazz);
+					clazz.setSuperClazz(null);
+				}
+				if(clazz.getInterfaces().contains(fileClazz)) {
+					if(!conflictingClazzes.contains(clazz))
+						conflictingClazzes.add(clazz);
+					clazz.getInterfaces().clear();
 				}
 			}
 		}

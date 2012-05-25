@@ -148,8 +148,10 @@ public class Resolver {
 		for(String i: clazz.getUnresolvedInterfaces()) {
 			Clazz inter = callGraph.lookupUnqualifiedClassName(clazz, i);
 			if(inter != null && inter.isInterface()) {
-				clazz.getInterfaces().add(inter);
-				inter.getImplementedBy().add(clazz);
+				if(!clazz.getInterfaces().contains(inter))
+					clazz.getInterfaces().add(inter);
+				if(!clazz.getImplementedBy().contains(clazz))
+					inter.getImplementedBy().add(clazz);
 			}
 		}
 		
