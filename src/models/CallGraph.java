@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import parser.Parser;
+import parser.Resolver;
+
 public class CallGraph {
 	public class MethodPercentage{
 		public MethodPercentage(Method mt, float p)
@@ -291,6 +294,98 @@ public class CallGraph {
 			return;
 		
 		file.updateOwnership(change);
+	}
+	
+	/**
+	 * Given a file, this function will update the entire call graph
+	 * with the new file whether it is a completely new file or a 
+	 * replacement for an old file.
+	 * @param file
+	 */
+	public void updateCallGraphByFile(String fileName, String file) {
+		File existing = files.get(fileName);
+		if(existing == null) {
+			Parser parser = new Parser(this);
+			parser.parseFileFromString(fileName, file);
+			Resolver resolver = new Resolver(this);
+			resolver.resolveFileFull(existing);
+		}
+		else {
+			// Get a list of the conflict methods
+			List<Method> conflictMethods = getConflictingMethods(existing);
+			
+			// Get a list of the conflict classes
+			List<Clazz> conflictClazzes = getConflictingClazzes(existing);
+			
+			// Remove the old file, insert new and resolve new and conflicting
+			this.files.remove(fileName);
+			Parser parser = new Parser(this);
+			parser.parseFileFromString(fileName, file);
+			Resolver resolver = new Resolver(this);
+			
+			File newFile = files.get(fileName);
+			resolver.resolveFileFull(newFile);
+			
+			for(Method method: conflictMethods) {
+				resolver.resolveMethod(method);
+			}
+			
+			for(Clazz clazz: conflictClazzes) {
+				resolver.resolveClazz(clazz);
+			}
+		}
+	}
+	
+	private List<Method> getConflictingMethods(File file) {
+		// Get a list of the conflict methods
+		List<Method> conflictMethods = new ArrayList<Method>();
+		for(Clazz clazz: file.getFileClazzes()) {
+			for(Method method: clazz.getMethods()) {
+				// Do this for called by
+				for(Method calledBy: method.getCalledBy()) {
+					// Add to conflicting methods list
+					if(!conflictMethods.contains(calledBy))
+						conflictMethods.add(calledBy);
+					// Remove the link
+					calledBy.getCalledBy().remove(method);
+				}
+				// Do this for fuzzy called by
+				for(Method calledBy: method.getFuzzyCalledBy()) {
+					// Add to conflicting methods list
+					if(!conflictMethods.contains(calledBy))
+						conflictMethods.add(calledBy);
+					// Remove the link
+					calledBy.getCalledBy().remove(method);
+				}
+			}
+		}
+		
+		return conflictMethods;
+	}
+	
+	private List<Clazz> getConflictingClazzes(File file) {
+		List<Clazz> conflictingClazzes = new ArrayList<Clazz>();
+		for(Clazz clazz: file.getFileClazzes()) {
+			// Get conflicts from interface
+			if(clazz.isInterface()) {
+				for(Clazz conflict: this.getAllClazzes()) {
+					for(Clazz interfaces: conflict.getInterfaces()) {
+						if(interfaces.equals(clazz)) {
+							if(!conflictingClazzes.contains(conflict))
+								conflictingClazzes.add(conflict);
+							interfaces.getInterfaces().remove(clazz);
+						}
+					}
+					if(conflict.getSuperClazz() != null && conflict.getSuperClazz().equals(clazz)) {
+						if(!conflictingClazzes.contains(conflict))
+							conflictingClazzes.add(conflict);
+						conflict.setSuperClazz(null);
+					}
+				}
+			}
+		}
+		
+		return conflictingClazzes;
 	}
 	
 	public float getMethodWeight(String owner, Method method) {

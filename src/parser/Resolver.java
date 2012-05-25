@@ -24,6 +24,22 @@ public class Resolver {
 	}
 	
 	/*********************************************************
+	 * This section is for update resolving on the call graph
+	 ********************************************************/
+	
+	public void resolveFileFull(File file) {
+		for(Clazz clazz: file.getFileClazzes()) {
+			resolveClazz(clazz);
+		}
+		resolveFileMethodCalls(file);
+	}
+	
+	public void resolveMethod(Method method) {
+		resolveMethodCalls(method.getClazz().getFile(), 
+				method.getClazz(), method);
+	}
+	
+	/*********************************************************
 	 * This section is for resolving return types of methods
 	 * and for resolving fully qualified names of parameters.
 	 ********************************************************/
@@ -125,7 +141,7 @@ public class Resolver {
 		return true;
 	}
 	
-	private boolean resolveClazz(Clazz clazz) {
+	public boolean resolveClazz(Clazz clazz) {
 		File file = clazz.getFile();
 		
 		// Resolve all interfaces
