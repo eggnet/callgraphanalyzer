@@ -22,6 +22,22 @@ public class CallGraphAnalyzer
 
 	private Set<Relation>	Relations;
 
+	public Comparator getComparator() {
+		return comparator;
+	}
+
+	public void setComparator(Comparator comparator) {
+		this.comparator = comparator;
+	}
+
+	public Set<Relation> getRelations() {
+		return Relations;
+	}
+
+	public void setRelations(Set<Relation> relations) {
+		Relations = relations;
+	}
+
 	public CallGraphAnalyzer()
 	{
 		this.Relations = new HashSet<Relation>();
