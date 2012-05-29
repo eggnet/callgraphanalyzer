@@ -59,7 +59,6 @@ public class CallGraphAnalyzer
 		boolean updatingOld = true;
 		for (Change c : changes)
 		{
-			// todo update callgraphs
 			this.comparator.newCallGraph.updateOwnership(c);
 			if (updatingOld)
 				this.comparator.oldCallGraph.updateOwnership(new Change(c));
@@ -67,6 +66,21 @@ public class CallGraphAnalyzer
 				updatingOld = false;
 		}
 		this.comparator.newCallGraph.print();
+	}
+	
+	public void updateOwnerShipForFile(String FileId)
+	{
+		List<Change> changes = db.getAllFileOwnerChangesBefore(FileId, this.comparator.newCommit.getCommit_id());
+		boolean updatingOld = true;
+		for (Change c : changes)
+		{
+			System.out.println("Change commit ID : " + c.getCommitId());
+			this.comparator.newCallGraph.updateOwnership(c);
+			if (updatingOld)
+				this.comparator.oldCallGraph.updateOwnership(new Change(c));
+			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
+				updatingOld = false;
+		}
 	}
 
 	/**
@@ -94,6 +108,8 @@ public class CallGraphAnalyzer
 		Set<Method> methodCalls;
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
+			System.out.println("FILE NAME :  " + modifiedFile);
+			updateOwnerShipForFile(modifiedFile);
 			// For each method in the new methods.
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
@@ -114,11 +130,27 @@ public class CallGraphAnalyzer
 				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0, methodCalls);
 			}
 		}
-		compareResult.print();
 		for (Relation r : this.Relations)
 			r.print();
 	}
 
+	/**
+	 * Exports our relations for the current comparison to the nodes, edges, and networks tables.
+	 */
+	public void exportRelations() 
+	{
+		// add a record in the networks table
+		int networkId = db.addNetworkRecord(this.comparator.newCommit.getCommit_id(), this.comparator.oldCommit.getCommit_id());
+		for (Relation r : this.Relations)
+		{
+			// Add the two users to our nodes.
+			db.addNode(r.getPersonOne().getUserEmail(), networkId);
+			db.addNode(r.getPersonTwo().getUserEmail(), networkId);
+			// Add the edge.
+			db.addEdge(r.getPersonOne().getUserEmail(), r.getPersonTwo().getUserEmail(), r.getWeight(), networkId);
+		}
+	}
+	
 	/**
 	 * Recursively checks what methods call each one.  Only going into each method once to avoid 
 	 * stack overflow.
@@ -130,8 +162,11 @@ public class CallGraphAnalyzer
 	 */
 	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth, Set<Method> methodCalls)
 	{
+		if (currentDepth == Resources.ANALYZER_MAX_DEPTH)
+			return;
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
+			updateOwnerShipForFile(calledMethod.getClazz().getFile().getFileName());
 			if (methodCalls.contains(calledMethod))
 				continue;
 			else

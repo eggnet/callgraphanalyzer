@@ -159,6 +159,10 @@ public class File
 			oldCommit = change;
 		}
 		
+		// hack the add changetype to a modify insert.  Better way? TODO @braden
+		if (change.getChangeType() == Resources.ChangeType.ADD)
+			change.setChangeType(Resources.ChangeType.MODIFYINSERT);
+		
 		// Apply the shift
 		change.setCharStart(change.getCharStart()+shift);
 		change.setCharEnd(change.getCharEnd()+shift);
