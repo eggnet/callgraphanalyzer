@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import models.Change;
+import models.Commit;
 
 
 public class CallGraphDb extends DbConnection
@@ -84,6 +85,52 @@ public class CallGraphDb extends DbConnection
 						rs.getInt("char_start"), rs.getInt("char_end")));
 			}
 			return changes;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<Commit> getCommitChildren(String CommitID) {
+		try 
+		{
+			LinkedList<Commit> commits = new LinkedList<Commit>();
+			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family natural " +
+					"JOIN Commits ON (commit_family.child = Commits.commit_id) where parent=?" +
+					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id, char_start;"; 
+			String[] parms = {CommitID, branchID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				commits.add(new Commit(rs.getString(1), rs.getString(2),
+						rs.getString(3), rs.getString(4), rs.getTimestamp(5), rs.getString(6)));
+			}
+			return commits;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<Commit> getCommitParents(String CommitID) {
+		try 
+		{
+			LinkedList<Commit> commits = new LinkedList<Commit>();
+			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family natural " +
+					"JOIN Commits ON (commit_family.parent = Commits.commit_id) where child=?" +
+					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id, char_start;"; 
+			String[] parms = {CommitID, branchID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				commits.add(new Commit(rs.getString(1), rs.getString(2),
+						rs.getString(3), rs.getString(4), rs.getTimestamp(5), rs.getString(6)));
+			}
+			return commits;
 		}
 		catch(SQLException e) 
 		{
