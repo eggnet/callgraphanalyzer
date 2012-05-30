@@ -39,7 +39,6 @@ public class testCallgraphanalyzer {
 		ownerMgr.update();
 		compare.CompareCommits();
 		cga.init(compare);
-		cga.generateLogicalOwnership();
 		
 		// Check the ownership table
 		//9 files

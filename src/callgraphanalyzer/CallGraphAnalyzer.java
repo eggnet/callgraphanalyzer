@@ -16,7 +16,6 @@ import db.CallGraphDb;
 
 public class CallGraphAnalyzer
 {
-
 	private CallGraphDb		db;
 	private Comparator		comparator;
 
@@ -49,40 +48,6 @@ public class CallGraphAnalyzer
 		this.db = comp.db;
 	}
 
-	/** 
-	 * This ads ownership to the callGraph.
-	 */
-	public void generateLogicalOwnership()
-	{
-		// Go through all of the changes and in parallel update each callgraph.
-		List<Change> changes = db.getAllOwnerChangesBefore(this.comparator.newCommit.getCommit_id());
-		boolean updatingOld = true;
-		for (Change c : changes)
-		{
-			this.comparator.newCallGraph.updateOwnership(c);
-			if (updatingOld)
-				this.comparator.oldCallGraph.updateOwnership(new Change(c));
-			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
-				updatingOld = false;
-		}
-		this.comparator.newCallGraph.print();
-	}
-	
-	public void updateOwnerShipForFile(String FileId)
-	{
-		List<Change> changes = db.getAllFileOwnerChangesBefore(FileId, this.comparator.newCommit.getCommit_id());
-		boolean updatingOld = true;
-		for (Change c : changes)
-		{
-			System.out.println("Change commit ID : " + c.getCommitId());
-			this.comparator.newCallGraph.updateOwnership(c);
-			if (updatingOld)
-				this.comparator.oldCallGraph.updateOwnership(new Change(c));
-			if (c.getCommitId().equals(this.comparator.oldCommit.getCommit_id()))
-				updatingOld = false;
-		}
-	}
-
 	/**
 	 * This function will return all the methods that call the given method.
 	 * 
@@ -109,7 +74,6 @@ public class CallGraphAnalyzer
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
 			System.out.println("FILE NAME :  " + modifiedFile);
-			updateOwnerShipForFile(modifiedFile);
 			// For each method in the new methods.
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
@@ -166,7 +130,6 @@ public class CallGraphAnalyzer
 			return;
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
-			updateOwnerShipForFile(calledMethod.getClazz().getFile().getFileName());
 			if (methodCalls.contains(calledMethod))
 				continue;
 			else
