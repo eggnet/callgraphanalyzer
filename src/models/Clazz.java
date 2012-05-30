@@ -1,14 +1,11 @@
 package models;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import callgraphanalyzer.Resources;
+import callgraphanalyzer.CallGraphResources;
 
 public class Clazz
 {
@@ -83,7 +80,7 @@ public class Clazz
 				if (map.getVarName().equals(variable))
 				{
 					String type = map.getType();
-					if (!Resources.isLiteral(type))
+					if (!CallGraphResources.isLiteral(type))
 					{
 						Clazz typeClazz = callGraph.lookupUnqualifiedClassName(
 								clazz, type);
