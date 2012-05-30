@@ -16,7 +16,6 @@ import db.CallGraphDb;
 
 public class CallGraphAnalyzer
 {
-
 	private CallGraphDb		db;
 	private Comparator		comparator;
 
