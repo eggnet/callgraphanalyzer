@@ -287,15 +287,6 @@ public class CallGraph {
 		return className.substring(0, className.indexOf("<"));
 	}
 	
-	public void updateOwnership(Change change) {
-		// Find the file that it affects
-		File file = this.files.get(change.getFileId());
-		if(file == null)
-			return;
-		
-		file.updateOwnership(change);
-	}
-	
 	/**
 	 * Given a file, this function will update the entire call graph
 	 * with the new file whether it is a completely new file or a 
@@ -389,10 +380,6 @@ public class CallGraph {
 		}
 		
 		return conflictingClazzes;
-	}
-	
-	public float getMethodWeight(String owner, Method method) {
-		return method.getClazz().getFile().getMethodWeight(owner, method);
 	}
 
 	public Map<String, Clazz> getClazzes() {
