@@ -1,20 +1,18 @@
 package callgraphanalyzer;
 
 import db.CallGraphDb;
-import ownership.OwnerManager;;
 public class Main {
 	/**
-	 * @param [dbname] [commit_before] [commit_after] 
+	 * @param [dbname] [commit_range_start] [commit_range_end] 
 	 */
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		CallGraphDb db = new CallGraphDb();
 		CallGraphAnalyzer cga = new CallGraphAnalyzer();
-		OwnerManager ownerMgr = new OwnerManager();
 		try {
 			if (args.length < 4 )
 			{
-				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_before] [commit_after]");
+				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_range_start] [commit_range_end]");
 				throw new ArrayIndexOutOfBoundsException();
 			}
 			else
@@ -24,13 +22,15 @@ public class Main {
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
 					Comparator compare = new Comparator(db, args[2], args[3]);					
-					// Setup the owner table.
-					ownerMgr.init(args[0], args[1]);
-					ownerMgr.update();
+					
+					System.out.println("Comparing Commits...");
 					compare.CompareCommits();
 					cga.init(compare);
-					cga.generateLogicalOwnership();
+					
+					System.out.println("Updating callgraphs with the ownerships...");
+					System.out.println("Generating the relationships...");
 					cga.generateRelationships();
+					cga.exportRelations();
 				} 
 				catch (Exception e) 
 				{

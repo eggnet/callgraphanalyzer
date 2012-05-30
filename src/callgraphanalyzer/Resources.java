@@ -2,7 +2,7 @@ package callgraphanalyzer;
 
 
 public class Resources {
-	public static final int ANALYZER_MAX_DEPTH = 50;
+	public static final int ANALYZER_MAX_DEPTH = 1;
 	public static boolean isLiteral(String literal) {
 		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
 				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
