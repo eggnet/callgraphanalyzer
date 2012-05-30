@@ -40,9 +40,9 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.sun.xml.internal.ws.org.objectweb.asm.Type;
+import callgraphanalyzer.CallGraphResources;
 
 import callgraphanalyzer.Mappings;
-import callgraphanalyzer.Resources;
 
 public class RVisitor extends ASTVisitor
 {
@@ -353,7 +353,7 @@ public class RVisitor extends ASTVisitor
 		}
 		if (resolved.size() == 1)
 		{
-			if (!Resources.isLiteral(resolved.get(0).getReturnType())
+			if (!CallGraphResources.isLiteral(resolved.get(0).getReturnType())
 					&& callGraph.getAllClazzes().contains(
 							resolved.get(0).getReturnType()))
 				return resolved.get(0).getReturnType();
@@ -385,7 +385,7 @@ public class RVisitor extends ASTVisitor
 		else
 		{
 			Clazz typeClazz = null;
-			if (!Resources.isLiteral(type))
+			if (!CallGraphResources.isLiteral(type))
 			{
 				typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
 				if (typeClazz != null)
@@ -437,7 +437,7 @@ public class RVisitor extends ASTVisitor
 	private String resolveCastExpression(CastExpression node)
 	{
 		String type = node.getType().toString();
-		if (!Resources.isLiteral(type))
+		if (!CallGraphResources.isLiteral(type))
 		{
 			Clazz typeClazz = callGraph.lookupUnqualifiedClassName(clazz, type);
 			if (typeClazz != null)
@@ -592,7 +592,7 @@ public class RVisitor extends ASTVisitor
 			// Turn null into the string null
 			if (types.get(i) == null)
 				types.set(i, "null");
-			else if (Resources.isLiteral(types.get(i)))
+			else if (CallGraphResources.isLiteral(types.get(i)))
 				continue;
 			else if (!callGraph.getClazzes().containsKey(types.get(i)))
 				types.set(i, "null");
@@ -754,7 +754,7 @@ public class RVisitor extends ASTVisitor
 		List<String> result = new ArrayList<String>();
 
 		// Check for literal
-		if (Resources.isLiteral(className))
+		if (CallGraphResources.isLiteral(className))
 		{
 			result.add(className);
 			return result;

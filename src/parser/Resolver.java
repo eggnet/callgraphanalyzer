@@ -3,7 +3,8 @@ package parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import callgraphanalyzer.Resources;
+import callgraphanalyzer.CallGraphResources;
+
 import models.CallGraph;
 import models.Clazz;
 import models.File;
@@ -63,7 +64,7 @@ public class Resolver {
 	
 	public boolean resolveMethodReturnTypeAndParameters(File file, Clazz clazz, Method method) {
 		// Resolve the return type
-		if(method.getReturnType() != null && !Resources.isLiteral(method.getReturnType())) {
+		if(method.getReturnType() != null && !CallGraphResources.isLiteral(method.getReturnType())) {
 			Clazz returnType = callGraph.lookupUnqualifiedClassName(clazz, method.getReturnType());
 			if(returnType != null)
 				method.setReturnType(returnType.getName());
@@ -74,7 +75,7 @@ public class Resolver {
 				method.getName().lastIndexOf(")")).split(",");
 		List<String> resolvedParameters = new ArrayList<String>();
 		for(String param: parameters) {
-			if(!Resources.isLiteral(param.trim())) {
+			if(!CallGraphResources.isLiteral(param.trim())) {
 				if(callGraph.lookupUnqualifiedClassName(clazz, param.trim()) != null)
 					resolvedParameters.add(
 							callGraph.lookupUnqualifiedClassName(clazz, param.trim()).getName());

@@ -12,6 +12,7 @@ import models.Method;
 import models.Relation;
 import models.User;
 import callgraphanalyzer.Comparator.CompareResult;
+import callgraphanalyzer.CallGraphResources;
 import db.CallGraphDb;
 
 public class CallGraphAnalyzer
@@ -126,7 +127,7 @@ public class CallGraphAnalyzer
 	 */
 	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth, Set<Method> methodCalls, String commitID)
 	{
-		if (currentDepth == Resources.ANALYZER_MAX_DEPTH)
+		if (currentDepth == CallGraphResources.ANALYZER_MAX_DEPTH)
 			return;
 		List<Change> changes = db.getAllOwnersForFileAtCommit(currentMethod.getClazz().getFile().getFileName(), commitID);
 		for (Method calledMethod : currentMethod.getCalledBy())
