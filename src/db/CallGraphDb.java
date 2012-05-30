@@ -68,6 +68,30 @@ public class CallGraphDb extends DbConnection
 		}
 	}
 	
+	public List<Change> getAllOwnersForFileAtCommit(String FileId, String CommitId)
+	{
+		try 
+		{
+			LinkedList<Change> changes = new LinkedList<Change>();
+			String sql = "SELECT source_commit_id file_id, owner_id, char_start, char_end, change_type FROM owners natural join commits where commit_id=?" +
+					"and (branch_id is NULL OR branch_id=?) and file_id=? order by commit_date, commit_id, line_start;"; 
+			String[] parms = {CommitId, branchID, FileId};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				changes.add(new Change(rs.getString("owner_id"), rs.getString("source_commit_id"), 
+						Resources.ChangeType.valueOf(rs.getString("change_type")), rs.getString("file_id"),
+						rs.getInt("line_start"), rs.getInt("line_end")));
+			}
+			return changes;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	/**
 	 * Adds a new network record into the networks table for a pair of commits.
 	 * @param NewCommitId
