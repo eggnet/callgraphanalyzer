@@ -123,7 +123,6 @@ public class File
 	public Set<WeightedChange> getMethodWeights(List<Change> changes, Method method )
 	{
 		Set<WeightedChange> weights = new HashSet<WeightedChange>();
-		// Connect to DB and get all changes for file
 		for (Change change : changes)
 		{
 			float weight = getMethodWeight(change, method);

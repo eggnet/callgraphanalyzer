@@ -129,7 +129,7 @@ public class CallGraphAnalyzer
 	{
 		if (currentDepth == CallGraphResources.ANALYZER_MAX_DEPTH)
 			return;
-		List<Change> changes = db.getAllFileOwnerChangesBefore(currentMethod.getClazz().getFile().getFileName(), commitID);
+		List<Change> changes = db.getAllOwnersForFileAtCommit(currentMethod.getClazz().getFile().getFileName(), commitID);
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
 			if (methodCalls.contains(calledMethod))
