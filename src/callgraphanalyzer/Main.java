@@ -11,6 +11,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
+		System.out.println();
 		CallGraphDb db = new CallGraphDb();
 		try {
 			if (args.length < 4 )
