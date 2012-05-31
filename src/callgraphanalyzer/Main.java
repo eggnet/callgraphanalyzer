@@ -1,5 +1,9 @@
 package callgraphanalyzer;
 
+import java.util.List;
+
+import models.Change;
+
 import db.CallGraphDb;
 public class Main {
 	/**
@@ -8,7 +12,6 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("CallGraphAnalyzer tool developed by eggnet.");
 		CallGraphDb db = new CallGraphDb();
-		CallGraphAnalyzer cga = new CallGraphAnalyzer();
 		try {
 			if (args.length < 4 )
 			{
@@ -21,16 +24,8 @@ public class Main {
 				{
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
-					Comparator compare = new Comparator(db, args[2], args[3]);					
-					
-					System.out.println("Comparing Commits...");
-					compare.CompareCommits();
-					cga.init(compare);
-					
-					System.out.println("Updating callgraphs with the ownerships...");
-					System.out.println("Generating the relationships...");
-					cga.generateRelationships();
-					cga.exportRelations();
+					NetworkBuilder networkBuilder = new NetworkBuilder(db, args[2], args[3]);
+					networkBuilder.buildAllNetworks();
 				} 
 				catch (Exception e) 
 				{
@@ -42,8 +37,6 @@ public class Main {
 		{
 			System.out.println("Usage callGraphAnalyzer <input postgres sql>");
 		}	
-
 	}
-
 }
 
