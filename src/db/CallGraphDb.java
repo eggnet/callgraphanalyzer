@@ -78,11 +78,19 @@ public class CallGraphDb extends DbConnection
 					"and (branch_id is NULL OR branch_id=?) and file_id=? order by commit_date, commit_id, char_start;"; 
 			String[] parms = {CommitId, branchID, FileId};
 			ResultSet rs = execPreparedQuery(sql, parms);
-			while(rs.next())
-			{
-				changes.add(new Change(rs.getString("owner_id"), rs.getString("source_commit_id"), 
-						Resources.ChangeType.valueOf(rs.getString("change_type")), rs.getString("file_id"),
-						rs.getInt("char_start"), rs.getInt("char_end")));
+			if(!rs.next()) {
+				List<Commit> parents = getCommitParents(CommitId);
+				if(!parents.isEmpty()) {
+					return getAllOwnersForFileAtCommit(FileId, parents.get(0).getCommit_id());
+				}
+			}
+			else {
+				do
+				{
+					changes.add(new Change(rs.getString("owner_id"), rs.getString("source_commit_id"), 
+							Resources.ChangeType.valueOf(rs.getString("change_type")), rs.getString("file_id"),
+							rs.getInt("char_start"), rs.getInt("char_end")));
+				} while(rs.next());
 			}
 			return changes;
 		}
@@ -97,9 +105,9 @@ public class CallGraphDb extends DbConnection
 		try 
 		{
 			LinkedList<Commit> commits = new LinkedList<Commit>();
-			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family natural " +
+			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family " +
 					"JOIN Commits ON (commit_family.child = Commits.commit_id) where parent=?" +
-					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id, char_start;"; 
+					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id;"; 
 			String[] parms = {CommitID, branchID};
 			ResultSet rs = execPreparedQuery(sql, parms);
 			while(rs.next())
@@ -120,9 +128,9 @@ public class CallGraphDb extends DbConnection
 		try 
 		{
 			LinkedList<Commit> commits = new LinkedList<Commit>();
-			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family natural " +
+			String sql = "SELECT commit_id, author, author_email, comments, commit_date, branch_id FROM commit_family " +
 					"JOIN Commits ON (commit_family.parent = Commits.commit_id) where child=?" +
-					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id, char_start;"; 
+					"and (branch_id is NULL OR branch_id=?) order by commit_date, commit_id;"; 
 			String[] parms = {CommitID, branchID};
 			ResultSet rs = execPreparedQuery(sql, parms);
 			while(rs.next())

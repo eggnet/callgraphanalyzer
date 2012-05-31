@@ -65,6 +65,7 @@ public class NetworkBuilder
 	}
 	
 	private void buildNetwork(String initial, String change) {
+		System.out.println("Generating network for: " + initial + " - " + change);
 		compare = new Comparator(db, initial, change);
 		cga = new CallGraphAnalyzer();
 		
@@ -72,7 +73,6 @@ public class NetworkBuilder
 		compare.CompareCommits();
 		cga.init(compare);
 		
-		System.out.println("Updating callgraphs with the ownerships...");
 		System.out.println("Generating the relationships...");
 		cga.generateRelationships();
 		cga.exportRelations();

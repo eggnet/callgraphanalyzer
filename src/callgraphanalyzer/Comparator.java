@@ -175,14 +175,12 @@ public class Comparator
 					.get(key)));
 		}
 
-		System.out.println();
-		System.out.println();
-		System.out.println("Resolving the fuck out of this CallGraph");
+		System.out.println("Resolving the CallGraph");
 
 		Resolver resolver = new Resolver(callGraph);
 		resolver.resolveAll();
 
-		callGraph.print();
+		//callGraph.print();
 		return callGraph;
 	}
 
@@ -249,7 +247,7 @@ public class Comparator
 			}
 		}
 
-		print();
+		//print();
 		return true;
 	}
 
@@ -361,8 +359,8 @@ public class Comparator
 		while (i.hasNext())
 		{
 			currentChangedFile = i.next();
-			System.out.println("Commit :" + commit + " changed file "
-					+ currentChangedFile);
+			//System.out.println("Commit :" + commit + " changed file "
+					//+ currentChangedFile);
 			if (requiredFiles.contains(currentChangedFile)
 					&& !CommitFileTree.containsKey(currentChangedFile))
 			{
@@ -387,7 +385,7 @@ public class Comparator
 
 	public void print()
 	{
-		this.compareResult.print();
+		//this.compareResult.print();
 	}
 
 	public CompareResult getCompareResult()
