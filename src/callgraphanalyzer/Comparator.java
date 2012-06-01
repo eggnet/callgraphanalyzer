@@ -157,7 +157,7 @@ public class Comparator
 			if (!key.endsWith(".java")) // Currently don't care about non-java
 										// files in our callgraph
 				continue;
-			parser.parseFileFromString(key, db.getRawFile(key, commitFileTree
+			parser.parseFileFromString(key, db.getRawFileFromDiffTree(key, commitFileTree
 					.get(key)));
 		}
 		
@@ -171,7 +171,7 @@ public class Comparator
 		{
 			if (!key.endsWith(".java")) // Currently don't care about non-java
 				continue;
-			parser.parseFileFromString(key, libraryDB.getRawFile(key, libraryFileTree
+			parser.parseFileFromString(key, libraryDB.getRawFileFromDiffTree(key, libraryFileTree
 					.get(key)));
 		}
 
@@ -209,11 +209,11 @@ public class Comparator
 				else
 				{
 					// Non-binary files, use differ to compare them.
-					String oldRaw = db.getRawFile(newKey, oldCommitFileTree
+					String oldRaw = db.getRawFileFromDiffTree(newKey, oldCommitFileTree
 							.get(newKey));
-					String newRaw = db.getRawFile(newKey, newCommitFileTree
+					String newRaw = db.getRawFileFromDiffTree(newKey, newCommitFileTree
 							.get(newKey));
-
+					
 					differ = new filediffer(oldRaw, newRaw);
 					differ.diffFilesLineMode();
 
