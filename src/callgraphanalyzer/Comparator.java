@@ -1,5 +1,6 @@
 package callgraphanalyzer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,11 +11,15 @@ import java.util.Set;
 import models.CallGraph;
 import models.Commit;
 import models.CallGraph.MethodPercentage;
+import models.DiffEntry;
+import models.DiffEntry.diff_types;
 import parser.Parser;
 import parser.Resolver;
 import db.CallGraphDb;
+import differ.diff_match_patch;
+import differ.diff_match_patch.Diff;
 import differ.filediffer;
-import differ.filediffer.diffObjectResult;
+import differ.diffObjectResult;
 
 public class Comparator
 {
@@ -206,29 +211,65 @@ public class Comparator
 								commitID);
 					continue;
 				}
-				else
+				else // Non-binary files, use differ to compare them.
 				{
-					// Non-binary files, use differ to compare them.
-					String oldRaw = db.getRawFileFromDiffTree(newKey, oldCommitFileTree
-							.get(newKey));
-					String newRaw = db.getRawFileFromDiffTree(newKey, newCommitFileTree
-							.get(newKey));
+					String oldCommitID = oldCommitFileTree.get(newKey);
+					String newCommitID = newCommitFileTree.get(newKey);
+					if(oldCommitID.equals(newCommitID))
+						continue;
 					
-					differ = new filediffer(oldRaw, newRaw);
-					differ.diffFilesLineMode();
-
-					// The file was modified (+-) since the old commit.
-					if (differ.isModified())
+					List<DiffEntry> diffEntries = db.getDiffsFromTwoConsecutiveCommits(newKey, oldCommitID, newCommitID);
+					if(diffEntries.isEmpty())
+					{
+						// Can't find diffs, they could be non consecutive commits, or there is no changes. Compare raw files instead.
+						String oldRaw = db.getRawFileFromDiffTree(newKey, oldCommitID);
+						String newRaw = db.getRawFileFromDiffTree(newKey, newCommitID);
+						
+						differ = new filediffer(oldRaw, newRaw);
+						differ.diffFilesLineMode();
+	
+						// The file was modified (+-) since the old commit.
+						if (differ.isModified())
+						{
+							// return the change sets from the two files
+							List<diffObjectResult> deleteObjects = differ
+									.getDeleteObjects();
+							List<diffObjectResult> insertObjects = differ
+									.getInsertObjects();
+	
+							// figure out which function has changed
+							getModifiedMethodsForFile(newKey, deleteObjects,
+									insertObjects);
+						}
+					}
+					else //Consecutive commits, create delete, insert objects
 					{
 						// return the change sets from the two files
-						List<diffObjectResult> deleteObjects = differ
-								.getDeleteObjects();
-						List<diffObjectResult> insertObjects = differ
-								.getInsertObjects();
-
+						List<diffObjectResult> deleteObjects = new ArrayList<diffObjectResult>();
+						List<diffObjectResult> insertObjects = new ArrayList<diffObjectResult>();
+						
+						for(DiffEntry entry : diffEntries)
+						{
+							if(entry.getDiff_type() == diff_types.DIFF_MODIFYDELETE)
+							{
+								diffObjectResult result = new diffObjectResult();
+								result.start 			= entry.getChar_start();
+								result.end 				= entry.getChar_end();
+								result.diffObject  		= new Diff(diff_match_patch.Operation.DELETE, entry.getDiff_text());
+								deleteObjects.add(result);
+							}
+							else if(entry.getDiff_type() == diff_types.DIFF_MODIFYINSERT)
+							{
+								diffObjectResult result = new diffObjectResult();
+								result.start 			= entry.getChar_start();
+								result.end 				= entry.getChar_end();
+								result.diffObject  		= new Diff(diff_match_patch.Operation.INSERT, entry.getDiff_text());
+								insertObjects.add(result);
+							}
+						}
+						
 						// figure out which function has changed
-						getModifiedMethodsForFile(newKey, deleteObjects,
-								insertObjects);
+						getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
 					}
 				}
 			}
