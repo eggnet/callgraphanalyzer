@@ -15,8 +15,6 @@ public class NetworkBuilder
 	
 	private String				startCommit;
 	private String				endCommit;
-	
-	private List<String>		mergeStack;
 
 	public NetworkBuilder(CallGraphDb db, String startCommit, String endCommit)
 	{
@@ -24,39 +22,77 @@ public class NetworkBuilder
 		this.db = db;
 		this.startCommit = startCommit;
 		this.endCommit = endCommit;
-		
-		mergeStack = new LinkedList<String>();
 	}
 	
 	public void buildAllNetworks() {
-		traverseRepositoryCommits(startCommit);
+		traverseMasterCommitStream(startCommit);
 	}
 	
-	private void traverseRepositoryCommits(String parent) {
-		if(parent.equals(endCommit))
-			return;
-		
-		// Get commit family here
-		List<Commit> parents = db.getCommitParents(parent);
-		List<Commit> children = db.getCommitChildren(parent);
-		if(parents.size() > 1) {
-			// We have found a merge
-			if(mergeStack.isEmpty() || !mergeStack.get(0).equals(parent)) {
-				mergeStack.add(parent);
+	private void traverseMasterCommitStream(String parent) {
+		while(parent != null) {
+			if(parent.equals(endCommit))
 				return;
+			
+			// Get commit family here
+			List<Commit> children = db.getCommitChildren(parent);
+			
+			if(children.size() == 1) {
+				if(!isMergeCommit(children.get(0).getCommit_id())) {
+					buildNetwork(parent, children.get(0).getCommit_id());
+				}
+				parent = children.get(0).getCommit_id();
 			}
-			else if(!mergeStack.isEmpty() && mergeStack.get(0).equals(parent)) {
-				mergeStack.remove(0);
+			else if(children.size() > 1) {
+				String newParent = null;
+				for(Commit child: children) {
+					if(!isMergeCommit(child.getCommit_id())) {
+						buildNetwork(parent, child.getCommit_id());
+						newParent = recurseCommitSubStream(child.getCommit_id());
+					}
+					else {
+						newParent = child.getCommit_id();
+					}
+				}
+				parent = newParent;
+			}
+		}
+	}
+	
+	private String recurseCommitSubStream(String parent) {
+		while(parent != null) {
+			if(parent.equals(endCommit))
+				return null;
+
+			// Get commit family here
+			List<Commit> children = db.getCommitChildren(parent);
+			
+			if(children.size() == 1) {
+				if(!isMergeCommit(children.get(0).getCommit_id())) {
+					buildNetwork(parent, children.get(0).getCommit_id());
+				}
+				parent = children.get(0).getCommit_id();
+				if(isMergeCommit(parent))
+					return parent;
+			}
+			
+			else if(children.size() > 1) {
+				String newParent = null;
+				for(Commit child: children) {
+					if(!isMergeCommit(child.getCommit_id())) {
+						buildNetwork(parent, child.getCommit_id());
+						newParent = recurseCommitSubStream(child.getCommit_id());
+					}
+					else {
+						newParent = child.getCommit_id();
+					}
+				}
+				parent = newParent;
+				if(isMergeCommit(parent))
+					return parent;
 			}
 		}
 		
-		if(children.size() >= 1) {
-			for(Commit child: children) {
-				if(!isMergeCommit(child.getCommit_id()))
-					buildNetwork(parent, child.getCommit_id());
-				traverseRepositoryCommits(child.getCommit_id());
-			}
-		}
+		return null;
 	}
 	
 	private boolean isMergeCommit(String commitID) {
