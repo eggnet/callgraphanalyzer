@@ -82,7 +82,9 @@ public class CallGraphAnalyzer
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
 						.getendChar(), comparator.newCommit.getCommit_date());
 				methodCalls = new HashSet<Method>();
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
+				if(newMethodChange != null)
+					recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), 
+							newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
@@ -92,7 +94,9 @@ public class CallGraphAnalyzer
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
 						.getMethod().getendChar(), comparator.oldCommit.getCommit_date());
 				methodCalls = new HashSet<Method>();
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0, methodCalls, comparator.oldCommit.getCommit_id());
+				if(newMethodChange != null)
+					recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), 
+							oldMethod.getPercentage(), 0, methodCalls, comparator.oldCommit.getCommit_id());
 			}
 		}
 		for (Relation r : this.Relations)

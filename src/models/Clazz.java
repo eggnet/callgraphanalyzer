@@ -417,7 +417,8 @@ public class Clazz
 
 	public void setSuperClazz(Clazz superClazz)
 	{
-		this.superClazz = superClazz;
+		if(!superClazz.getName().equals(this.name))
+			this.superClazz = superClazz;
 	}
 
 	public File getFile()
