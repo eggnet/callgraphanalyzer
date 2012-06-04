@@ -318,14 +318,16 @@ public class CallGraph {
 			// Get a list of the conflict classes
 			List<Clazz> conflictClazzes = getConflictingClazzes(existing);
 			
-			// Remove the old file, insert new and resolve new and conflicting
-			this.files.remove(fileName);
-			Parser parser = new Parser(this);
-			parser.parseFileFromString(fileName, file);
 			Resolver resolver = new Resolver(this);
-			
-			File newFile = files.get(fileName);
-			resolver.resolveFileFull(newFile);
+			this.files.remove(fileName);
+			if(file != null) {
+				// Remove the old file, insert new and resolve new and conflicting
+				Parser parser = new Parser(this);
+				parser.parseFileFromString(fileName, file);
+
+				File newFile = files.get(fileName);
+				resolver.resolveFileFull(newFile);
+			}
 			
 			for(Method method: conflictMethods) {
 				resolver.resolveMethod(method);

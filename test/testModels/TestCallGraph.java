@@ -25,47 +25,47 @@ public class TestCallGraph {
 		//		  end    at classNumber*100	+ methodNumber*10 + 10
 		
 		// File 2 has 2 classes, 1 method
-		List<MethodPercentage> rgMethods = cg.getPercentageOfMethodUsingCharacters("file_2", 0, 100);
-		assertEquals(rgMethods.size(), 1);
-		
-		// Changes happened inside methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 0,199);
-		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 200,299);
-		assertEquals(rgMethods.size(), 2 ); //only class_2 methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 0,300);
-		assertEquals(rgMethods.size(), 3 ); //included class_2 methods
-		
-		// Changes happened In between methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 107,205);
-		assertEquals(rgMethods.size(), 2 ); //included class_2 methods
-		boolean c1m0 = false;
-		boolean c2m0 = false;
-		for(MethodPercentage m : rgMethods)
-		{
-			if(m.getMethod().getName().equals("package_file_3.class_1.method_0"))
-				c1m0 = true;
-			if(m.getMethod().getName().equals("package_file_3.class_2.method_0"))
-				c2m0 = true;
-		}
-		assertTrue(c2m0);
-		assertTrue(c1m0);
-		
-		// Changes with 0 or 1 char
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 300,302);
-		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 300,300);
-		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
-		
-		// Changes outside any method bound
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 400,502);
-		assertEquals(rgMethods.size(), 0 );
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 150,199);
-		assertEquals(rgMethods.size(), 0 );
-		
-		// File 4 has 4 classes, 3 + 2 + 1 methods
-		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 0,500);
-		assertEquals(rgMethods.size(), 6 );
+//		List<MethodPercentage> rgMethods = cg.getPercentageOfMethodUsingCharacters("file_2", 0, 100);
+//		assertEquals(rgMethods.size(), 1);
+//		
+//		// Changes happened inside methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 0,199);
+//		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 200,299);
+//		assertEquals(rgMethods.size(), 2 ); //only class_2 methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 0,300);
+//		assertEquals(rgMethods.size(), 3 ); //included class_2 methods
+//		
+//		// Changes happened In between methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_3", 107,205);
+//		assertEquals(rgMethods.size(), 2 ); //included class_2 methods
+//		boolean c1m0 = false;
+//		boolean c2m0 = false;
+//		for(MethodPercentage m : rgMethods)
+//		{
+//			if(m.getMethod().getName().equals("package_file_3.class_1.method_0"))
+//				c1m0 = true;
+//			if(m.getMethod().getName().equals("package_file_3.class_2.method_0"))
+//				c2m0 = true;
+//		}
+//		assertTrue(c2m0);
+//		assertTrue(c1m0);
+//		
+//		// Changes with 0 or 1 char
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 300,302);
+//		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 300,300);
+//		assertEquals(rgMethods.size(), 1 ); //only class_1 methods
+//		
+//		// Changes outside any method bound
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 400,502);
+//		assertEquals(rgMethods.size(), 0 );
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 150,199);
+//		assertEquals(rgMethods.size(), 0 );
+//		
+//		// File 4 has 4 classes, 3 + 2 + 1 methods
+//		rgMethods = cg.getPercentageOfMethodUsingCharacters("file_4", 0,500);
+//		assertEquals(rgMethods.size(), 6 );
 	}
 	
 	public static CallGraph generateDummyCallGraph()
