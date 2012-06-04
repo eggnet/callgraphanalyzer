@@ -42,7 +42,7 @@ public class NetworkBuilder
 		if(parents.size() > 1) {
 			// We have found a merge
 			if(mergeStack.isEmpty() || !mergeStack.get(0).equals(parent)) {
-				mergeStack.add(0, parent);
+				mergeStack.add(parent);
 				return;
 			}
 			else if(!mergeStack.isEmpty() && mergeStack.get(0).equals(parent)) {
@@ -76,5 +76,6 @@ public class NetworkBuilder
 		System.out.println("Generating the relationships...");
 		cga.generateRelationships();
 		cga.exportRelations();
+		System.out.println();
 	}
 }
