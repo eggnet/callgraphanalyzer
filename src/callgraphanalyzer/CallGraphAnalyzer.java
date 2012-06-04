@@ -79,10 +79,11 @@ public class CallGraphAnalyzer
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
-						.getendChar(), comparator.newCommit.getCommit_date());
+//				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
+//						.getendChar(), comparator.newCommit.getId());
+				User u = db.getUserFromCommit()
 				methodCalls = new HashSet<Method>();
-				recurseMethods(new User(newMethodChange.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
+				recurseMethods(new User(.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
@@ -90,7 +91,7 @@ public class CallGraphAnalyzer
 					continue;
 				// get all methods this one is called by
 				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
-						.getMethod().getendChar(), comparator.oldCommit.getCommit_date());
+						.getMethod().getendChar(), comparator.oldCommit.getId());
 				methodCalls = new HashSet<Method>();
 				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0, methodCalls, comparator.oldCommit.getCommit_id());
 			}
@@ -112,7 +113,7 @@ public class CallGraphAnalyzer
 			db.addNode(r.getPersonOne().getUserEmail(), networkId);
 			db.addNode(r.getPersonTwo().getUserEmail(), networkId);
 			// Add the edge.
-			db.addEdge(r.getPersonOne().getUserEmail(), r.getPersonTwo().getUserEmail(), r.getWeight(), networkId);
+			db.addEdge(r.getPersonOne().getUserEmail(), r.getPersonTwo().getUserEmail(), r.getWeight(), r.getFuzzy(), networkId);
 		}
 	}
 	
@@ -148,7 +149,33 @@ public class CallGraphAnalyzer
 						calledMethod.getClazz().getFile().getFileName(),
 						currentMethod.getName(),
 						calledMethod.getName(),
-						percentage*(calledMethodChange.getWeight()/(currentDepth+1)));
+						percentage*(calledMethodChange.getWeight()/(currentDepth+1)),
+						false);
+				this.Relations.add(r);
+			}
+			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID);
+		}
+		methodCalls = new HashSet<Method>();
+		for (Method calledMethod : currentMethod.getFuzzyCalledBy())
+		{
+			if(methodCalls.contains(calledMethod))
+				 continue;
+			else
+				methodCalls.add(calledMethod);
+			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
+			for (WeightedChange calledMethodChange : calledChanges)
+			{
+				boolean isSelf = false;
+				if (changingUser.getUserEmail().equals(calledMethodChange.getOwnerId()))
+					isSelf = true;
+				Relation r = new Relation(new User(changingUser.getUserEmail()), 
+						new User(calledMethodChange.getOwnerId()),
+						isSelf,
+						calledMethod.getClazz().getFile().getFileName(),
+						currentMethod.getName(),
+						calledMethod.getName(),
+						percentage*(calledMethodChange.getWeight()/(currentDepth+1)),
+						true);
 				this.Relations.add(r);
 			}
 			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID);
