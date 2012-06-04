@@ -11,15 +11,24 @@ import parser.Resolver;
 
 public class CallGraph {
 	public class MethodPercentage{
-		public MethodPercentage(Method mt, float p)
+		public MethodPercentage(Method mt, float p, String commit)
 		{
 			this.method = mt;
 			this.percentage = p;
+			this.commit_id = commit;
 		}
 		
 		public Method getMethod() {
 			return method;
 		}
+		public String getCommit_id() {
+			return commit_id;
+		}
+
+		public void setCommit_id(String commit_id) {
+			this.commit_id = commit_id;
+		}
+
 		public void setMethod(Method method) {
 			this.method = method;
 		}
@@ -36,6 +45,7 @@ public class CallGraph {
 		
 		private Method method;
 		private float percentage;
+		private String commit_id;
 	}
 	
 	private Map<String, File> 	files;
@@ -109,7 +119,7 @@ public class CallGraph {
 	 * @param end
 	 * @return List of Method and percentage
 	 */
-	public List<MethodPercentage> getPercentageOfMethodUsingCharacters(String fileName, int start, int end) {
+	public List<MethodPercentage> getPercentageOfMethodUsingCharacters(String fileName, int start, int end, String commit_id) {
 		List<MethodPercentage> m = new ArrayList<MethodPercentage>();
 		
 		File file = containsFile(fileName);
@@ -153,7 +163,7 @@ public class CallGraph {
 					if(changedPartEnd >= changedPartStart && methodEnd > methodStart && changedPartEnd != -1 && changedPartStart != -1)
 					{
 						float percent = (changedPartEnd - changedPartStart + 1)*1.000f/(methodEnd - methodStart + 1)*1.000f;
-						MethodPercentage mp = new MethodPercentage(method, percent);
+						MethodPercentage mp = new MethodPercentage(method, percent, commit_id);
 						m.add(mp);
 					}
 				}

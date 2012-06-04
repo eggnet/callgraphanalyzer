@@ -241,7 +241,7 @@ public class CallGraphDb extends DbConnection
 	public void addEdge(String UserSource, String UserTarget, float weight, boolean isFuzzy, int NetworkId)
 	{
 		try {
-			String sql = "INSERT INTO edges (source, target, weight, network_id) VALUES (?, ?, ?, ?, ?);";
+			String sql = "INSERT INTO edges (source, target, weight, is_fuzzy, network_id) VALUES (?, ?, ?, ?, ?);";
 			PreparedStatement s = conn.prepareStatement(sql);
 			s.setString(1, UserSource);
 			s.setString(2, UserTarget);

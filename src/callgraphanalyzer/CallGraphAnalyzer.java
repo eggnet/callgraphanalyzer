@@ -79,21 +79,23 @@ public class CallGraphAnalyzer
 			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
 			{
 				// get all methods this one is called by
-//				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, newMethod.getMethod().getstartChar(), newMethod.getMethod()
-//						.getendChar(), comparator.newCommit.getId());
-				User u = db.getUserFromCommit()
+				User u = db.getUserFromCommit(newMethod.getCommit_id());
 				methodCalls = new HashSet<Method>();
-				recurseMethods(new User(.getOwnerId()), newMethod.getMethod(), newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
+				if(u != null)
+					recurseMethods(u, newMethod.getMethod(), 
+							newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
 			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
 			{
 				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
 					continue;
 				// get all methods this one is called by
-				Change newMethodChange = db.getLatestOwnerChange(modifiedFile, oldMethod.getMethod().getstartChar(), oldMethod
-						.getMethod().getendChar(), comparator.oldCommit.getId());
 				methodCalls = new HashSet<Method>();
-				recurseMethods(new User(newMethodChange.getOwnerId()), oldMethod.getMethod(), oldMethod.getPercentage(), 0, methodCalls, comparator.oldCommit.getCommit_id());
+				User u = db.getUserFromCommit(oldMethod.getCommit_id());
+				methodCalls = new HashSet<Method>();
+				if(u != null)
+					recurseMethods(u, oldMethod.getMethod(), 
+							oldMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
 		}
 		for (Relation r : this.Relations)
