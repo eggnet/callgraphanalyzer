@@ -3,7 +3,7 @@ package callgraphanalyzer;
 import java.text.SimpleDateFormat;
 import db.Resources;
 public class CallGraphResources extends Resources {
-	public static final int ANALYZER_MAX_DEPTH = 1;
+	public static final int ANALYZER_MAX_DEPTH = 3;
 	public static boolean isLiteral(String literal) {
 		if(literal.equals("String") || literal.equals("int") || literal.equals("long") ||
 				literal.equals("short") || literal.equals("byte") || literal.equals("double") ||
