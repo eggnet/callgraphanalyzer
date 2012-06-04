@@ -313,7 +313,7 @@ public class Comparator
 		for (diffObjectResult diff : deleteDiffs)
 		{
 			List<MethodPercentage> changedMethod = this.oldCallGraph
-					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
+					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end, this.oldCommit.getCommit_id());
 			for (MethodPercentage m : changedMethod)
 			{
 				// find if the method exists
@@ -338,7 +338,7 @@ public class Comparator
 		for (diffObjectResult diff : insertDiffs)
 		{
 			List<MethodPercentage> changedMethod = this.newCallGraph
-					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end);
+					.getPercentageOfMethodUsingCharacters(fileName, diff.start, diff.end, this.newCommit.getCommit_id());
 			for (MethodPercentage m : changedMethod)
 			{
 				// find if the method exists
