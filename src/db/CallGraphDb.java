@@ -156,9 +156,15 @@ public class CallGraphDb extends DbConnection
 	public int addNetworkRecord(String NewCommitId, String OldCommitId)
 	{
 		try {
-			String sql = "INSERT INTO networks (new_commit_id, old_commit_id, network_id) VALUES (?, ?, default);";
+			// delete duplicates
+			String sql = "DELETE FROM networks where new_commit_id=? and old_commit_id=?";
 			String[] parms = {NewCommitId, OldCommitId};
 			execPrepared(sql, parms);
+			
+			// add new network
+			sql = "INSERT INTO networks (new_commit_id, old_commit_id, network_id) VALUES (?, ?, default);";
+			execPrepared(sql, parms);
+			
 			// get the id generated;
 			sql = "SELECT network_id from networks where new_commit_id=? and old_commit_id=?;";
 			ResultSet rs = execPreparedQuery(sql, parms);

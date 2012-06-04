@@ -107,6 +107,7 @@ public class CallGraphAnalyzer
 	 */
 	public void exportRelations() 
 	{
+		// delete old network for same 2 commits if it exists, then
 		// add a record in the networks table
 		int networkId = db.addNetworkRecord(this.comparator.newCommit.getCommit_id(), this.comparator.oldCommit.getCommit_id());
 		for (Relation r : this.Relations)
