@@ -8,6 +8,7 @@ import java.util.List;
 
 import models.Change;
 import models.Commit;
+import models.User;
 
 
 public class CallGraphDb extends DbConnection
@@ -196,9 +197,15 @@ public class CallGraphDb extends DbConnection
 	public int addNetworkRecord(String NewCommitId, String OldCommitId)
 	{
 		try {
-			String sql = "INSERT INTO networks (new_commit_id, old_commit_id, network_id) VALUES (?, ?, default);";
+			// delete duplicates
+			String sql = "DELETE FROM networks where new_commit_id=? and old_commit_id=?";
 			String[] parms = {NewCommitId, OldCommitId};
 			execPrepared(sql, parms);
+			
+			// add new network
+			sql = "INSERT INTO networks (new_commit_id, old_commit_id, network_id) VALUES (?, ?, default);";
+			execPrepared(sql, parms);
+			
 			// get the id generated;
 			sql = "SELECT network_id from networks where new_commit_id=? and old_commit_id=?;";
 			ResultSet rs = execPreparedQuery(sql, parms);
@@ -278,20 +285,41 @@ public class CallGraphDb extends DbConnection
 	 * @param UserTarget
 	 * @param weight
 	 */
-	public void addEdge(String UserSource, String UserTarget, float weight, int NetworkId)
+	public void addEdge(String UserSource, String UserTarget, float weight, boolean isFuzzy, int NetworkId)
 	{
 		try {
-			String sql = "INSERT INTO edges (source, target, weight, network_id) VALUES (?, ?, ?, ?);";
+			String sql = "INSERT INTO edges (source, target, weight, is_fuzzy, network_id) VALUES (?, ?, ?, ?, ?);";
 			PreparedStatement s = conn.prepareStatement(sql);
 			s.setString(1, UserSource);
 			s.setString(2, UserTarget);
 			s.setFloat(3, weight);
-			s.setInt(4, NetworkId);
+			s.setBoolean(4, isFuzzy);
+			s.setInt(5, NetworkId);
 			s.execute();
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
+		}
+	}
+	
+	public User getUserFromCommit(String CommitId)
+	{
+		try {
+			User u = new User();
+			String sql = "SELECT author, author_email from commits where commit_id = ?";
+			String[] parms = {CommitId};
+			ResultSet rs = this.execPreparedQuery(sql, parms);
+			if (!rs.next())
+				return null;
+			u.setUserName(rs.getString("author"));
+			u.setUserEmail(rs.getString("author_email"));
+			return u;
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+			return null;
 		}
 	}
 }

@@ -9,13 +9,14 @@ public class Relation
 	private String  Callee;
 	private String  Caller;
 	private float	Weight;
+	private boolean isFuzzy;
 
 	public Relation()
 	{
 	}
 
 	public Relation(User personOne, User personTwo, boolean isSelf, String fileId, String callee, String caller,
-			float weight)
+			float weight, boolean fuzzy)
 	{
 		super();
 		PersonOne = personOne;
@@ -25,6 +26,7 @@ public class Relation
 		Callee = callee;
 		Caller = caller;
 		Weight = weight;
+		isFuzzy = fuzzy;
 	}
 
 	public float getWeight()
@@ -99,5 +101,15 @@ public class Relation
 	public void setCaller(String method)
 	{
 		Caller = method;
+	}
+	
+	public boolean getFuzzy()
+	{
+		return isFuzzy;
+	}
+	
+	public void setFuzzy(boolean fuzzy)
+	{
+		isFuzzy = fuzzy;
 	}
 }
