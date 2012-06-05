@@ -52,6 +52,8 @@ public class CallGraph {
 	private Map<String, Clazz> 	clazzes;
 	private Map<String, Method> methods;
 	
+	private String				commitID;
+	
 	public CallGraph() {
 		clazzes = new HashMap<String, Clazz>();
 		methods = new HashMap<String, Method>();
@@ -303,12 +305,55 @@ public class CallGraph {
 	 * replacement for an old file.
 	 * @param file
 	 */
+	
+	public void updateCallGraphByFiles(List<Pair<String,String>> changedFiles) {
+		List<Method> conflictMethods = new ArrayList<Method>();
+		List<Clazz> conflictClazzes = new ArrayList<Clazz>();
+		List<File> filesToResolve = new ArrayList<File>();
+		for(Pair<String,String> file: changedFiles) {
+			File existing = files.get(file.getFirst());
+			if(existing == null) {
+				Parser parser = new Parser(this);
+				parser.parseFileFromString(file.getFirst(), file.getSecond());
+				existing = files.get(file.getFirst());
+				filesToResolve.add(existing);
+			}
+			else {
+				conflictMethods.addAll(getConflictingMethods(existing));
+				conflictClazzes.addAll(getConflictingClazzes(existing));
+				
+				this.files.remove(file.getFirst());
+				if(file.getSecond() != null && !file.getSecond().equals("")) {
+					// Remove the old file, insert new and resolve new and conflicting
+					Parser parser = new Parser(this);
+					parser.parseFileFromString(file.getFirst(), file.getSecond());
+				}
+				
+			}
+		}
+		
+		Resolver resolver = new Resolver(this);
+		
+		for(File file: filesToResolve) {
+			resolver.resolveFileFull(file);
+		}
+		
+		for(Method method: conflictMethods) {
+			resolver.resolveMethod(method);
+		}
+		
+		for(Clazz clazz: conflictClazzes) {
+			resolver.resolveClazz(clazz);
+		}
+		
+	}
 	public void updateCallGraphByFile(String fileName, String file) {
 		File existing = files.get(fileName);
 		if(existing == null) {
 			Parser parser = new Parser(this);
 			parser.parseFileFromString(fileName, file);
 			Resolver resolver = new Resolver(this);
+			existing = files.get(fileName);
 			resolver.resolveFileFull(existing);
 		}
 		else {
@@ -320,7 +365,7 @@ public class CallGraph {
 			
 			Resolver resolver = new Resolver(this);
 			this.files.remove(fileName);
-			if(file != null) {
+			if(file != null && !file.equals("")) {
 				// Remove the old file, insert new and resolve new and conflicting
 				Parser parser = new Parser(this);
 				parser.parseFileFromString(fileName, file);
@@ -378,7 +423,7 @@ public class CallGraph {
 		List<Clazz> conflictingClazzes = new ArrayList<Clazz>();
 		for(Clazz clazz: file.getFileClazzes()) {
 			for(Clazz fileClazz: file.getFileClazzes()) {
-				if(clazz.getSuperClazz().equals(fileClazz)) {
+				if(clazz.getSuperClazz() != null && clazz.getSuperClazz().equals(fileClazz)) {
 					if(!conflictingClazzes.contains(clazz))
 						conflictingClazzes.add(clazz);
 					clazz.setSuperClazz(null);
@@ -416,5 +461,15 @@ public class CallGraph {
 
 	public void setFiles(Map<String, File> files) {
 		this.files = files;
+	}
+
+	public String getCommitID()
+	{
+		return commitID;
+	}
+
+	public void setCommitID(String commitID)
+	{
+		this.commitID = commitID;
 	}
 }

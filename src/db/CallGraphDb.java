@@ -147,6 +147,47 @@ public class CallGraphDb extends DbConnection
 		}
 	}
 	
+	public List<String> getFilesChanged(String oldCommit, String newCommit) {
+		try 
+		{
+			LinkedList<String> files = new LinkedList<String>();
+			String sql = "SELECT file_id FROM file_diffs " +
+					"WHERE old_commit_id=? AND new_commit_id=?"; 
+			String[] parms = {oldCommit, newCommit};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				if(!files.contains(rs.getString("file_id")))
+					files.add(rs.getString("file_id"));
+			}
+			return files;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public boolean parentHasChild(String parent, String child) {
+		try 
+		{
+			String sql = "SELECT parent, child FROM commit_family " +
+					"WHERE parent=? AND child=?"; 
+			String[] parms = {parent, child};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+				return true;
+			
+			return false;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	/**
 	 * Adds a new network record into the networks table for a pair of commits.
 	 * @param NewCommitId
