@@ -13,6 +13,7 @@ import models.Commit;
 import models.CallGraph.MethodPercentage;
 import models.DiffEntry;
 import models.DiffEntry.diff_types;
+import models.Pair;
 import parser.Parser;
 import parser.Resolver;
 import db.CallGraphDb;
@@ -113,7 +114,7 @@ public class Comparator
 	public Comparator(CallGraphDb db, String CommitIDOne, String CommitIDTwo)
 	{
 		this.db = db;
-
+		
 		// Figure out which commit is newer
 		Commit first = db.getCommit(CommitIDOne);
 		Commit second = db.getCommit(CommitIDTwo);
@@ -134,7 +135,9 @@ public class Comparator
 
 		// check and create our owners.
 		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
+		this.newCallGraph.setCommitID(CommitIDTwo);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		this.oldCallGraph.setCommitID(CommitIDOne);
 
 		// get all the commits exist between the two commits and the newer
 		// commit
@@ -432,6 +435,56 @@ public class Comparator
 	public CompareResult getCompareResult()
 	{
 		return compareResult;
+	}
+	
+	public void forwardUpdateCallGraph(CallGraph cg, String newCommit) {
+		if(cg.getCommitID().equals(newCommit))
+			return;
+			
+		if(hasChild(cg.getCommitID(), newCommit)) {
+			List<String> files = db.getFilesChanged(cg.getCommitID(), newCommit);
+			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
+			for(String file: files) {
+				String rawFile = db.getRawFileFromDiffTree(file, newCommit);
+				//cg.updateCallGraphByFile(file, rawFile);
+				changedFiles.add(new Pair<String,String>(file, rawFile));
+			}
+			cg.updateCallGraphByFiles(changedFiles);
+		}
+		else {
+			buildCallGraph(cg, newCommit);
+		}
+		cg.setCommitID(newCommit);
+	}
+	
+	public void reverseUpdateCallGraph(CallGraph cg, String newCommit) {
+		if(cg.getCommitID().equals(newCommit))
+			return;
+		
+		if(hasChild(newCommit, cg.getCommitID())) {
+			List<String> files = db.getFilesChanged(newCommit, cg.getCommitID());
+			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
+			for(String file: files) {
+				String rawFile = db.getRawFileFromDiffTree(file, newCommit);
+				//cg.updateCallGraphByFile(file, rawFile);
+				changedFiles.add(new Pair<String,String>(file, rawFile));
+			}
+			cg.updateCallGraphByFiles(changedFiles);
+		}
+		else {
+			buildCallGraph(cg, newCommit);
+		}
+		cg.setCommitID(newCommit);
+	}
+	
+	private boolean hasChild(String parentID, String childID) {
+		return db.parentHasChild(parentID, childID);
+	}
+	
+	private void buildCallGraph(CallGraph cg, String CommitID) {
+		Map<String, String>	 commitFileTree = this.getFilesTreeForCommit(CommitID);
+		cg = generateCallGraph(commitFileTree);
+		cg.setCommitID(CommitID);
 	}
 
 }
