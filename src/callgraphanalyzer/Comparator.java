@@ -192,106 +192,61 @@ public class Comparator
 		return callGraph;
 	}
 
-	public boolean CompareCommits()
+	public boolean CompareCommits(String oldCommitID, String newCommitID)
 	{
-		Set<String> binaryFiles = db.getBinaryFiles();
 		this.compareResult.clear();
 
-		// For every file in the new commit tree
-		for (String newKey : newCommitFileTree.keySet())
+		// these two commit are consecutive, just got the diff and generated method
+		List<String> fileChanged = db.getFilesChanged(oldCommitID, newCommitID);
+		
+		for(String fileName : fileChanged)
 		{
-			// If the file exists in the old commit
-			if (oldCommitFileTree.containsKey(newKey))
+			List<DiffEntry> diffEntries = db.getDiffsFromTwoConsecutiveCommits(fileName, oldCommitID, newCommitID);
+			if(!diffEntries.isEmpty())
 			{
-				// File is still present, might be modified.
-				// Check if its a binary file, ignore
-				if (binaryFiles.contains(newKey))
+				// return the change sets from the two files
+				List<diffObjectResult> deleteObjects = new ArrayList<diffObjectResult>();
+				List<diffObjectResult> insertObjects = new ArrayList<diffObjectResult>();
+				
+				for(DiffEntry entry : diffEntries)
 				{
-					// check if this binary file has changed
-					String commitID = getCommitHasChangedBinaryFile(newKey);
-					if (!commitID.isEmpty())
-						this.compareResult.modifiedBinaryFiles.put(newKey,
-								commitID);
-					continue;
-				}
-				else // Non-binary files, use differ to compare them.
-				{
-					String oldCommitID = oldCommitFileTree.get(newKey);
-					String newCommitID = newCommitFileTree.get(newKey);
-					if(oldCommitID.equals(newCommitID))
-						continue;
-					
-					List<DiffEntry> diffEntries = db.getDiffsFromTwoConsecutiveCommits(newKey, oldCommitID, newCommitID);
-					if(diffEntries.isEmpty())
+					if(entry.getDiff_type() == diff_types.DIFF_MODIFYDELETE)
 					{
-						// Can't find diffs, they could be non consecutive commits, or there is no changes. Compare raw files instead.
-						String oldRaw = db.getRawFileFromDiffTree(newKey, oldCommitID);
-						String newRaw = db.getRawFileFromDiffTree(newKey, newCommitID);
-						
-						differ = new filediffer(oldRaw, newRaw);
-						differ.diffFilesLineMode();
-	
-						// The file was modified (+-) since the old commit.
-						if (differ.isModified())
-						{
-							// return the change sets from the two files
-							List<diffObjectResult> deleteObjects = differ
-									.getDeleteObjects();
-							List<diffObjectResult> insertObjects = differ
-									.getInsertObjects();
-	
-							// figure out which function has changed
-							getModifiedMethodsForFile(newKey, deleteObjects,
-									insertObjects);
-						}
+						diffObjectResult result = new diffObjectResult();
+						result.start 			= entry.getChar_start();
+						result.end 				= entry.getChar_end();
+						result.diffObject  		= new Diff(diff_match_patch.Operation.DELETE, entry.getDiff_text());
+						deleteObjects.add(result);
+						//System.out.println("Modified Delele File: " + fileName + " " + entry.getDiff_text());
 					}
-					else //Consecutive commits, create delete, insert objects
+					else if(entry.getDiff_type() == diff_types.DIFF_MODIFYINSERT)
 					{
-						// return the change sets from the two files
-						List<diffObjectResult> deleteObjects = new ArrayList<diffObjectResult>();
-						List<diffObjectResult> insertObjects = new ArrayList<diffObjectResult>();
-						
-						for(DiffEntry entry : diffEntries)
-						{
-							if(entry.getDiff_type() == diff_types.DIFF_MODIFYDELETE)
-							{
-								diffObjectResult result = new diffObjectResult();
-								result.start 			= entry.getChar_start();
-								result.end 				= entry.getChar_end();
-								result.diffObject  		= new Diff(diff_match_patch.Operation.DELETE, entry.getDiff_text());
-								deleteObjects.add(result);
-							}
-							else if(entry.getDiff_type() == diff_types.DIFF_MODIFYINSERT)
-							{
-								diffObjectResult result = new diffObjectResult();
-								result.start 			= entry.getChar_start();
-								result.end 				= entry.getChar_end();
-								result.diffObject  		= new Diff(diff_match_patch.Operation.INSERT, entry.getDiff_text());
-								insertObjects.add(result);
-							}
-						}
-						
-						// figure out which function has changed
-						getModifiedMethodsForFile(newKey, deleteObjects, insertObjects);
+						diffObjectResult result = new diffObjectResult();
+						result.start 			= entry.getChar_start();
+						result.end 				= entry.getChar_end();
+						result.diffObject  		= new Diff(diff_match_patch.Operation.INSERT, entry.getDiff_text());
+						insertObjects.add(result);
+						//System.out.println("Modified Insert File: " + fileName + " " + entry.getDiff_text());
+					}
+					else if(entry.getDiff_type() == diff_types.DIFF_ADD)
+					{
+						//System.out.println("Added File: " + fileName);
+					}
+					else if(entry.getDiff_type() == diff_types.DIFF_DELETE)
+					{
+						//System.out.println("Deleted File: " + fileName);
+					}
+					else if(entry.getDiff_type() == diff_types.DIFF_UNKNOWN)
+					{
+						//System.out.println("Unknown operation on File: " + fileName);
 					}
 				}
-			}
-			else
-			{
-				// The file was added (+) since the old commit.
-				this.compareResult.addedFiles.add(newKey);
-			}
-		}
-		for (String oldKey : oldCommitFileTree.keySet())
-		{
-			if (!newCommitFileTree.containsKey(oldKey))
-			{
-				// The file was deleted from the old tree
-				this.compareResult.deletedFiles.add(oldKey);
+				
+				// figure out which function has changed
+				getModifiedMethodsForFile(fileName, deleteObjects, insertObjects);
 			}
 		}
 
-		//print();
 		return true;
 	}
 

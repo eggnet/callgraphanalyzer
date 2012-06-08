@@ -138,7 +138,7 @@ public class NetworkBuilder
 		cga = new CallGraphAnalyzer();
 		
 		System.out.println("Comparing Commits...");
-		compare.CompareCommits();
+		compare.CompareCommits(initial, change);
 		cga.init(compare);
 		
 		System.out.println("Generating the relationships...");
