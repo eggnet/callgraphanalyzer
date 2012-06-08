@@ -19,7 +19,6 @@ import parser.Resolver;
 import db.CallGraphDb;
 import differ.diff_match_patch;
 import differ.diff_match_patch.Diff;
-import differ.filediffer;
 import differ.diffObjectResult;
 
 public class Comparator
@@ -84,14 +83,12 @@ public class Comparator
 	}
 
 	public CallGraphDb				db;
-	private filediffer				differ;
 	public CallGraph				newCallGraph;
 	public CallGraph				oldCallGraph;
 	public Map<String, String>		FileMap;
 	public Map<String, String>		newCommitFileTree;
 	public Map<String, String>		oldCommitFileTree;
 	public Map<String, String>		libraryFileTree;
-	public Map<String, Set<String>>	commitsInBetween;
 
 	private CompareResult			compareResult	= new CompareResult();
 
@@ -138,14 +135,6 @@ public class Comparator
 		this.newCallGraph.setCommitID(CommitIDTwo);
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		this.oldCallGraph.setCommitID(CommitIDOne);
-
-		// get all the commits exist between the two commits and the newer
-		// commit
-		this.commitsInBetween = db.getCommitsBeforeAndAfterChanges(
-				this.newCommit.getCommit_id(), this.oldCommit.getCommit_id(),
-				false, false);
-		this.commitsInBetween.put(first.getCommit_id(), db
-				.getChangedFilesFromCommit(first.getCommit_id()));
 	}
 
 	/**
@@ -217,7 +206,6 @@ public class Comparator
 						result.end 				= entry.getChar_end();
 						result.diffObject  		= new Diff(diff_match_patch.Operation.DELETE, entry.getDiff_text());
 						deleteObjects.add(result);
-						//System.out.println("Modified Delele File: " + fileName + " " + entry.getDiff_text());
 					}
 					else if(entry.getDiff_type() == diff_types.DIFF_MODIFYINSERT)
 					{
@@ -226,19 +214,18 @@ public class Comparator
 						result.end 				= entry.getChar_end();
 						result.diffObject  		= new Diff(diff_match_patch.Operation.INSERT, entry.getDiff_text());
 						insertObjects.add(result);
-						//System.out.println("Modified Insert File: " + fileName + " " + entry.getDiff_text());
 					}
 					else if(entry.getDiff_type() == diff_types.DIFF_ADD)
 					{
-						//System.out.println("Added File: " + fileName);
+						this.compareResult.addedFiles.add(fileName);
 					}
 					else if(entry.getDiff_type() == diff_types.DIFF_DELETE)
 					{
-						//System.out.println("Deleted File: " + fileName);
+						this.compareResult.deletedFiles.add(fileName);
 					}
 					else if(entry.getDiff_type() == diff_types.DIFF_UNKNOWN)
 					{
-						//System.out.println("Unknown operation on File: " + fileName);
+						System.out.println("ERROR! Unknown operation on File: " + fileName);
 					}
 				}
 				
@@ -366,20 +353,6 @@ public class Comparator
 				CommitFileTree.put(currentChangedFile, commit);
 			}
 		}
-	}
-
-	public String getCommitHasChangedBinaryFile(String file)
-	{
-		// If the file was committed sometime between newCommit and oldCommit,
-		// there is a change
-		// Search from the newest commit down
-		for (String commit : commitsInBetween.keySet())
-		{
-			Set<String> fileChanged = commitsInBetween.get(commit);
-			if (fileChanged.contains(file))
-				return commit;
-		}
-		return "";
 	}
 
 	public void print()
