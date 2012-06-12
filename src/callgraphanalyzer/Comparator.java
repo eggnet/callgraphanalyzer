@@ -136,6 +136,11 @@ public class Comparator
 		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
 		this.oldCallGraph.setCommitID(CommitIDOne);
 	}
+	
+	public void updateCGVariables(String oldCommit, String newCommit) {
+		this.oldCommit = db.getCommit(oldCommit);
+		this.newCommit = db.getCommit(newCommit);
+	}
 
 	/**
 	 * Generate Callgraph from a commitFileTree

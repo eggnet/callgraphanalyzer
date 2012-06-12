@@ -142,6 +142,9 @@ public class NetworkBuilder
 		//compare = new Comparator(db, initial, change);
 		cga = new CallGraphAnalyzer();
 		
+		// Update the comparator with the commits
+		compare.updateCGVariables(initial, change);
+		
 		System.out.println("Comparing Commits...");
 		compare.CompareCommits(initial, change);
 		cga.init(compare);
