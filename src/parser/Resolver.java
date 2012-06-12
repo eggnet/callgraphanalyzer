@@ -32,6 +32,7 @@ public class Resolver {
 		for(Clazz clazz: file.getFileClazzes()) {
 			resolveClazz(clazz);
 		}
+		resolveFileReturnTypesAndParameters(file);
 		resolveFileMethodCalls(file);
 	}
 	

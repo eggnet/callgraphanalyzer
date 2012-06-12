@@ -172,7 +172,7 @@ public class Comparator
 					.get(key)));
 		}
 
-		System.out.println("Resolving the CallGraph");
+		//System.out.println("Resolving the CallGraph");
 
 		Resolver resolver = new Resolver(callGraph);
 		resolver.resolveAll();
@@ -365,29 +365,32 @@ public class Comparator
 		return compareResult;
 	}
 	
-	public void forwardUpdateCallGraph(CallGraph cg, String newCommit) {
+	public CallGraph forwardUpdateCallGraph(CallGraph cg, String newCommit) {
 		if(cg.getCommitID().equals(newCommit))
-			return;
+			return cg;
 			
 		if(hasChild(cg.getCommitID(), newCommit)) {
 			List<String> files = db.getFilesChanged(cg.getCommitID(), newCommit);
 			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
 			for(String file: files) {
-				String rawFile = db.getRawFileFromDiffTree(file, newCommit);
-				//cg.updateCallGraphByFile(file, rawFile);
-				changedFiles.add(new Pair<String,String>(file, rawFile));
+				if(file.endsWith(".java")) {
+					String rawFile = db.getRawFileFromDiffTree(file, newCommit);
+					//cg.updateCallGraphByFile(file, rawFile);
+					changedFiles.add(new Pair<String,String>(file, rawFile));
+				}
 			}
 			cg.updateCallGraphByFiles(changedFiles);
 		}
 		else {
-			buildCallGraph(cg, newCommit);
+			cg = buildCallGraph(cg, newCommit);
 		}
 		cg.setCommitID(newCommit);
+		return cg;
 	}
 	
-	public void reverseUpdateCallGraph(CallGraph cg, String newCommit) {
+	public CallGraph reverseUpdateCallGraph(CallGraph cg, String newCommit) {
 		if(cg.getCommitID().equals(newCommit))
-			return;
+			return cg;
 		
 		if(hasChild(newCommit, cg.getCommitID())) {
 			List<String> files = db.getFilesChanged(newCommit, cg.getCommitID());
@@ -400,19 +403,21 @@ public class Comparator
 			cg.updateCallGraphByFiles(changedFiles);
 		}
 		else {
-			buildCallGraph(cg, newCommit);
+			cg = buildCallGraph(cg, newCommit);
 		}
 		cg.setCommitID(newCommit);
+		return cg;
 	}
 	
 	private boolean hasChild(String parentID, String childID) {
 		return db.parentHasChild(parentID, childID);
 	}
 	
-	private void buildCallGraph(CallGraph cg, String CommitID) {
+	private CallGraph buildCallGraph(CallGraph cg, String CommitID) {
 		Map<String, String>	 commitFileTree = this.getFilesTreeForCommit(CommitID);
 		cg = generateCallGraph(commitFileTree);
 		cg.setCommitID(CommitID);
+		return cg;
 	}
 
 }

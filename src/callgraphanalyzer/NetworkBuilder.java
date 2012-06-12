@@ -41,10 +41,13 @@ public class NetworkBuilder
 			List<Commit> children = db.getCommitChildren(parent);
 			
 			if(children.size() == 1) {
+				if(parent.equals("f788f2183525e2e0fe2ab7137c90a37e45ab214e")) {
+					int x = 0;
+				}
 				if(!isMergeCommit(children.get(0).getCommit_id())) {
-					compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommit_id());
+					compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommit_id());
 					buildNetwork(parent, children.get(0).getCommit_id());
-					compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommit_id());
+					compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommit_id());
 				}
 				parent = children.get(0).getCommit_id();
 			}
@@ -52,9 +55,9 @@ public class NetworkBuilder
 				String newParent = null;
 				for(Commit child: children) {
 					if(!isMergeCommit(child.getCommit_id())) {
-						compare.forwardUpdateCallGraph(compare.newCallGraph, child.getCommit_id());
+						compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, child.getCommit_id());
 						buildNetwork(parent, child.getCommit_id());
-						compare.forwardUpdateCallGraph(compare.oldCallGraph, child.getCommit_id());
+						compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, child.getCommit_id());
 						
 						newParent = recurseCommitSubStream(child.getCommit_id());
 						
@@ -63,8 +66,8 @@ public class NetworkBuilder
 							return;
 						
 						//Restore
-						compare.reverseUpdateCallGraph(compare.newCallGraph, parent);
-						compare.reverseUpdateCallGraph(compare.oldCallGraph, parent);
+						compare.newCallGraph = compare.reverseUpdateCallGraph(compare.newCallGraph, parent);
+						compare.oldCallGraph = compare.reverseUpdateCallGraph(compare.oldCallGraph, parent);
 					}
 					else {
 						newParent = child.getCommit_id();
@@ -72,8 +75,8 @@ public class NetworkBuilder
 				}
 				parent = newParent;
 				// Move call graphs up. They will probably rebuild here.
-				compare.forwardUpdateCallGraph(compare.newCallGraph, parent);
-				compare.forwardUpdateCallGraph(compare.oldCallGraph, parent);
+				compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, parent);
+				compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, parent);
 			}
 		}
 	}
@@ -88,9 +91,11 @@ public class NetworkBuilder
 			
 			if(children.size() == 1) {
 				if(!isMergeCommit(children.get(0).getCommit_id())) {
-					compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommit_id());
+					compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommit_id());
+					compare.newCallGraph.print();
 					buildNetwork(parent, children.get(0).getCommit_id());
-					compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommit_id());
+					compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommit_id());
+					compare.oldCallGraph.print();
 				}
 				parent = children.get(0).getCommit_id();
 				if(isMergeCommit(parent))
@@ -101,15 +106,15 @@ public class NetworkBuilder
 				String newParent = null;
 				for(Commit child: children) {
 					if(!isMergeCommit(child.getCommit_id())) {
-						compare.forwardUpdateCallGraph(compare.newCallGraph, child.getCommit_id());
+						compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, child.getCommit_id());
 						buildNetwork(parent, child.getCommit_id());
-						compare.forwardUpdateCallGraph(compare.oldCallGraph, child.getCommit_id());
+						compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, child.getCommit_id());
 						
 						newParent = recurseCommitSubStream(child.getCommit_id());
 						
 						//Restore
-						compare.reverseUpdateCallGraph(compare.newCallGraph, parent);
-						compare.reverseUpdateCallGraph(compare.oldCallGraph, parent);
+						compare.newCallGraph = compare.reverseUpdateCallGraph(compare.newCallGraph, parent);
+						compare.oldCallGraph = compare.reverseUpdateCallGraph(compare.oldCallGraph, parent);
 					}
 					else {
 						newParent = child.getCommit_id();
@@ -117,8 +122,8 @@ public class NetworkBuilder
 				}
 				parent = newParent;
 				// Move call graphs up. They will probably rebuild here.
-				compare.forwardUpdateCallGraph(compare.newCallGraph, parent);
-				compare.forwardUpdateCallGraph(compare.oldCallGraph, parent);
+				compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, parent);
+				compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, parent);
 				if(isMergeCommit(parent))
 					return parent;
 			}

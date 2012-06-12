@@ -322,13 +322,13 @@ public class CallGraph {
 				conflictMethods.addAll(getConflictingMethods(existing));
 				conflictClazzes.addAll(getConflictingClazzes(existing));
 				
-				this.files.remove(file.getFirst());
+				removeExistingFileDeep(existing, conflictMethods, conflictClazzes);
 				if(file.getSecond() != null && !file.getSecond().equals("")) {
 					// Remove the old file, insert new and resolve new and conflicting
 					Parser parser = new Parser(this);
 					parser.parseFileFromString(file.getFirst(), file.getSecond());
+					filesToResolve.add(this.files.get(file.getFirst()));
 				}
-				
 			}
 		}
 		
@@ -347,41 +347,18 @@ public class CallGraph {
 		}
 		
 	}
-	public void updateCallGraphByFile(String fileName, String file) {
-		File existing = files.get(fileName);
-		if(existing == null) {
-			Parser parser = new Parser(this);
-			parser.parseFileFromString(fileName, file);
-			Resolver resolver = new Resolver(this);
-			existing = files.get(fileName);
-			resolver.resolveFileFull(existing);
+	
+	private void removeExistingFileDeep(File file, List<Method> conflictMethods, List<Clazz> conflictClazzes) {
+		for(Clazz clazz: file.getFileClazzes()) {
+			for(Method method: clazz.getMethods()) {
+				this.methods.remove(method.getName());
+				conflictMethods.remove(method);
+			}
+			this.clazzes.remove(clazz.getName());
+			conflictClazzes.remove(clazz);
 		}
-		else {
-			// Get a list of the conflict methods
-			List<Method> conflictMethods = getConflictingMethods(existing);
-			
-			// Get a list of the conflict classes
-			List<Clazz> conflictClazzes = getConflictingClazzes(existing);
-			
-			Resolver resolver = new Resolver(this);
-			this.files.remove(fileName);
-			if(file != null && !file.equals("")) {
-				// Remove the old file, insert new and resolve new and conflicting
-				Parser parser = new Parser(this);
-				parser.parseFileFromString(fileName, file);
-
-				File newFile = files.get(fileName);
-				resolver.resolveFileFull(newFile);
-			}
-			
-			for(Method method: conflictMethods) {
-				resolver.resolveMethod(method);
-			}
-			
-			for(Clazz clazz: conflictClazzes) {
-				resolver.resolveClazz(clazz);
-			}
-		}
+		
+		this.files.remove(file.getFileName());
 	}
 	
 	private List<Method> getConflictingMethods(File file) {
@@ -407,11 +384,19 @@ public class CallGraph {
 				}
 				// Remove calls links
 				for(Method calls: method.getMethodCalls()) {
-					calls.getCalledBy().remove(method);
+					// Add to conflicting methods list
+					if(!conflictMethods.contains(calls))
+						conflictMethods.add(calls);
+					
+					calls.getCalledBy().clear();
 				}
 				// Remove fuzzy calls links
 				for(Method calls: method.getFuzzyCalls()) {
-					calls.getFuzzyCalledBy().remove(method);
+					// Add to conflicting methods list
+					if(!conflictMethods.contains(calls))
+						conflictMethods.add(calls);
+					
+					calls.getFuzzyCalledBy().clear();
 				}
 			}
 		}
