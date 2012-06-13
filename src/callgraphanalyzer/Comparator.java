@@ -319,49 +319,6 @@ public class Comparator
 		}
 	}
 
-	/**
-	 * Recursively get the files for a commit, going down from the given commit.
-	 * adding them to @see {@link #newCommitFileTree}
-	 * 
-	 * @param commitID
-	 * @return true when successful
-	 */
-	public Map<String, String> getFilesTreeForCommit(String commitID)
-	{
-		Map<String, String> CommitFileTree = new HashMap<String, String>();
-		Map<String, Set<String>> prevChanges = db.getCommitsBeforeChanges(
-				commitID, false, false);
-		Set<String> requiredFiles = db.getFileStructureFromCommit(commitID); // First
-																				// commit;
-		Iterator<String> i = db.getCommitChangedFiles(commitID).iterator();
-		addFilesFromCommit(i, requiredFiles, CommitFileTree, commitID);
-
-		for (String commit : prevChanges.keySet())
-		{
-			Iterator<String> iter = prevChanges.get(commit).iterator();
-			addFilesFromCommit(iter, requiredFiles, CommitFileTree, commit);
-		}
-		return CommitFileTree;
-	}
-
-	public void addFilesFromCommit(Iterator<String> i,
-			Set<String> requiredFiles, Map<String, String> CommitFileTree,
-			String commit)
-	{
-		String currentChangedFile;
-		while (i.hasNext())
-		{
-			currentChangedFile = i.next();
-			//System.out.println("Commit :" + commit + " changed file "
-					//+ currentChangedFile);
-			if (requiredFiles.contains(currentChangedFile)
-					&& !CommitFileTree.containsKey(currentChangedFile))
-			{
-				CommitFileTree.put(currentChangedFile, commit);
-			}
-		}
-	}
-
 	public void print()
 	{
 		//this.compareResult.print();
