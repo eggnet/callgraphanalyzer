@@ -75,9 +75,9 @@ public class CallGraphDb extends DbConnection
 		try 
 		{
 			LinkedList<Change> changes = new LinkedList<Change>();
-			String sql = "SELECT source_commit_id, file_id, owner_id, char_start, char_end, change_type FROM owners natural join commits where commit_id=?" +
-					"and (branch_id is NULL OR branch_id=?) and file_id=?;"; 
-			String[] parms = {CommitId, branchID, FileId};
+			String sql = "SELECT source_commit_id, file_id, owner_id, char_start, char_end, change_type FROM owners where commit_id=?" +
+					"and file_id=?;"; 
+			String[] parms = {CommitId, FileId};
 			ResultSet rs = execPreparedQuery(sql, parms);
 			if(!rs.next()) {
 				List<Commit> parents = getCommitParents(CommitId);
@@ -159,6 +159,50 @@ public class CallGraphDb extends DbConnection
 			while(rs.next())
 			{
 				if(!files.contains(rs.getString("file_id")))
+					files.add(rs.getString("file_id"));
+			}
+			return files;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<String> getFilesAdded(String commitID) {
+		try 
+		{
+			LinkedList<String> files = new LinkedList<String>();
+			String sql = "SELECT file_id, diff_type FROM file_diffs " +
+					"WHERE new_commit_id=?"; 
+			String[] parms = {commitID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				if(rs.getString("diff_type").equals("DIFF_ADD") && !files.contains(rs.getString("file_id")))
+					files.add(rs.getString("file_id"));
+			}
+			return files;
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<String> getFilesDeleted(String commitID) {
+		try 
+		{
+			LinkedList<String> files = new LinkedList<String>();
+			String sql = "SELECT file_id, diff_type FROM file_diffs " +
+					"WHERE new_commit_id=?"; 
+			String[] parms = {commitID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				if(rs.getString("diff_type").equals("DIFF_DELETE") && !files.contains(rs.getString("file_id")))
 					files.add(rs.getString("file_id"));
 			}
 			return files;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.Set;
 import models.CallGraph;
 import models.Commit;
 import models.CallGraph.MethodPercentage;
+import models.CommitFamily;
 import models.DiffEntry;
 import models.DiffEntry.diff_types;
 import models.Pair;
@@ -86,9 +88,6 @@ public class Comparator
 	public CallGraph				newCallGraph;
 	public CallGraph				oldCallGraph;
 	public Map<String, String>		FileMap;
-	public Map<String, String>		newCommitFileTree;
-	public Map<String, String>		oldCommitFileTree;
-	public Map<String, String>		libraryFileTree;
 
 	private CompareResult			compareResult	= new CompareResult();
 
@@ -112,28 +111,9 @@ public class Comparator
 	{
 		this.db = db;
 		
-		// Figure out which commit is newer
-		Commit first = db.getCommit(CommitIDOne);
-		Commit second = db.getCommit(CommitIDTwo);
-		if (first.getCommit_date().compareTo(second.getCommit_date()) > 0)
-		{
-			this.newCommit = first;
-			this.oldCommit = second;
-			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
-			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo);
-		}
-		else
-		{
-			this.newCommit = second;
-			this.oldCommit = first;
-			this.newCommitFileTree = this.getFilesTreeForCommit(CommitIDTwo);
-			this.oldCommitFileTree = this.getFilesTreeForCommit(CommitIDOne);
-		}
-
-		// check and create our owners.
-		this.newCallGraph = generateCallGraph(this.newCommitFileTree);
+		this.newCallGraph = generateCallGraphAtCommit(CommitIDTwo);
 		this.newCallGraph.setCommitID(CommitIDTwo);
-		this.oldCallGraph = generateCallGraph(this.oldCommitFileTree);
+		this.oldCallGraph = generateCallGraphAtCommit(CommitIDOne);
 		this.oldCallGraph.setCommitID(CommitIDOne);
 	}
 	
@@ -141,49 +121,71 @@ public class Comparator
 		this.oldCommit = db.getCommit(oldCommit);
 		this.newCommit = db.getCommit(newCommit);
 	}
-
-	/**
-	 * Generate Callgraph from a commitFileTree
-	 * 
-	 * @param commitFileTree
-	 *            map of file name and path from a commit
-	 * @return CallGraph a resolved CallGraph
-	 */
-	public CallGraph generateCallGraph(Map<String, String> commitFileTree)
-	{	
+	
+	public CallGraph generateCallGraphAtCommit(String commitID) {
 		CallGraph callGraph = new CallGraph();
 		Parser parser = new Parser(callGraph);
-
-		for (String key : commitFileTree.keySet())
-		{
-			if (!key.endsWith(".java")) // Currently don't care about non-java
-										// files in our callgraph
-				continue;
-			parser.parseFileFromString(key, db.getRawFileFromDiffTree(key, commitFileTree
-					.get(key)));
+		
+		List<CommitFamily> commits = db.getCommitPathToRoot(commitID);
+		List<CommitFamily> path = reversePath(commits);
+		List<String> files = new LinkedList<String>();
+		
+		if(path.isEmpty()) {
+			// It's the initial commit
+			files.addAll(db.getFilesAdded(commitID));
+			files.removeAll(db.getFilesDeleted(commitID));
 		}
 		
-		// Get Java util
+		for(CommitFamily commitF: path) {
+			files.addAll(db.getFilesAdded(commitF.getChildId()));
+			files.removeAll(db.getFilesDeleted(commitF.getChildId()));
+		}
+		
+		for(String file: files) {
+			if(!file.endsWith(".java"))
+				continue;
+			parser.parseFileFromString(file, db.getRawFileFromDiffTree(file, commitID));
+		}
+		
+		// Get the Java util library
 		CallGraphDb libraryDB = new CallGraphDb();
 		libraryDB.connect("JavaLibraries");
 		libraryDB.setBranchName("master");
-		this.libraryFileTree = this.getFilesTreeForCommit("e436a78a73f967d47aebd02ac58677255bbec125");
 		
-		for (String key : libraryFileTree.keySet())
-		{
-			if (!key.endsWith(".java")) // Currently don't care about non-java
-				continue;
-			parser.parseFileFromString(key, libraryDB.getRawFileFromDiffTree(key, libraryFileTree
-					.get(key)));
+		commits = libraryDB.getCommitPathToRoot("e436a78a73f967d47aebd02ac58677255bbec125");
+		path = reversePath(commits);
+		files = new LinkedList<String>();
+		
+		if(path.isEmpty()) {
+			// It's the initial commit
+			files.addAll(libraryDB.getFilesAdded(commitID));
+			files.removeAll(libraryDB.getFilesDeleted(commitID));
 		}
-
-		//System.out.println("Resolving the CallGraph");
-
+		
+		for(CommitFamily commitF: path) {
+			files.addAll(libraryDB.getFilesAdded(commitF.getChildId()));
+			files.removeAll(libraryDB.getFilesDeleted(commitF.getChildId()));
+		}
+		
+		for(String file: files) {
+			if(!file.endsWith(".java"))
+				continue;
+			parser.parseFileFromString(file, libraryDB.getRawFileFromDiffTree(file, commitID));
+		}
+		
 		Resolver resolver = new Resolver(callGraph);
 		resolver.resolveAll();
-
-		//callGraph.print();
+		
 		return callGraph;
+	}
+	
+	private List<CommitFamily> reversePath(List<CommitFamily> path) {
+		List<CommitFamily> returnPath = new ArrayList<CommitFamily>();
+		
+		for(CommitFamily CF: path)
+			returnPath.add(0, CF);
+		
+		return returnPath;
 	}
 
 	public boolean CompareCommits(String oldCommitID, String newCommitID)
@@ -419,8 +421,7 @@ public class Comparator
 	}
 	
 	private CallGraph buildCallGraph(CallGraph cg, String CommitID) {
-		Map<String, String>	 commitFileTree = this.getFilesTreeForCommit(CommitID);
-		cg = generateCallGraph(commitFileTree);
+		cg = generateCallGraphAtCommit(CommitID);
 		cg.setCommitID(CommitID);
 		return cg;
 	}
