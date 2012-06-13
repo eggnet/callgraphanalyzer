@@ -76,7 +76,7 @@ public class CallGraphDb extends DbConnection
 		{
 			LinkedList<Change> changes = new LinkedList<Change>();
 			String sql = "SELECT source_commit_id, file_id, owner_id, char_start, char_end, change_type FROM owners natural join commits where commit_id=?" +
-					"and (branch_id is NULL OR branch_id=?) and file_id=? order by commit_date, commit_id, char_start;"; 
+					"and (branch_id is NULL OR branch_id=?) and file_id=?;"; 
 			String[] parms = {CommitId, branchID, FileId};
 			ResultSet rs = execPreparedQuery(sql, parms);
 			if(!rs.next()) {
