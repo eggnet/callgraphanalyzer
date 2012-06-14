@@ -39,7 +39,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 import callgraphanalyzer.CallGraphResources;
 
 import callgraphanalyzer.Mappings;
