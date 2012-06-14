@@ -75,26 +75,37 @@ public class CallGraphAnalyzer
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
 			System.out.println("FILE NAME :  " + modifiedFile);
-			// For each method in the new methods.
-			for (MethodPercentage newMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods)
+			
+			// Get user
+			User newUser = null;
+			User oldUser = null;
+			Set<MethodPercentage> newChangedMethods = compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods;
+			Set<MethodPercentage> oldChangedMethods = compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods;
+			
+			if(!newChangedMethods.isEmpty())
+				newUser = db.getUserFromCommit(newChangedMethods.iterator().next().getCommit_id());
+			
+			if(!oldChangedMethods.isEmpty())
+				oldUser = db.getUserFromCommit(oldChangedMethods.iterator().next().getCommit_id());
+			
+			// For each method in the new methods
+			for (MethodPercentage newMethod : newChangedMethods)
 			{
 				// get all methods this one is called by
-				User u = db.getUserFromCommit(newMethod.getCommit_id());
 				methodCalls = new HashSet<Method>();
-				if(u != null)
-					recurseMethods(u, newMethod.getMethod(), 
+				if(newUser != null)
+					recurseMethods(newUser, newMethod.getMethod(), 
 							newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
-			for (MethodPercentage oldMethod : compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods)
+			for (MethodPercentage oldMethod : oldChangedMethods)
 			{
-				if (compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods.contains(oldMethod))
+				if (newChangedMethods.contains(oldMethod))
 					continue;
+				
 				// get all methods this one is called by
 				methodCalls = new HashSet<Method>();
-				User u = db.getUserFromCommit(oldMethod.getCommit_id());
-				methodCalls = new HashSet<Method>();
-				if(u != null)
-					recurseMethods(u, oldMethod.getMethod(), 
+				if(oldUser != null)
+					recurseMethods(oldUser, oldMethod.getMethod(), 
 							oldMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
 		}
