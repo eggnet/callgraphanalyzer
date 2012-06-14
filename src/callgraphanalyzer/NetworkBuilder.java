@@ -92,10 +92,8 @@ public class NetworkBuilder
 			if(children.size() == 1) {
 				if(!isMergeCommit(children.get(0).getCommit_id())) {
 					compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommit_id());
-					compare.newCallGraph.print();
 					buildNetwork(parent, children.get(0).getCommit_id());
 					compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommit_id());
-					compare.oldCallGraph.print();
 				}
 				parent = children.get(0).getCommit_id();
 				if(isMergeCommit(parent))
