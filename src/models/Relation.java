@@ -60,7 +60,7 @@ public class Relation
 	}
 	
 	public void print() {
-		System.out.println("("+PersonOne.getUserEmail()+", "+PersonTwo.getUserEmail()+", Weight: " + Weight + " Callee: " + Callee + ", Caller: " + Caller + ")");
+		System.out.println("("+PersonOne.getUserEmail()+", "+PersonTwo.getUserEmail()+", Weight: " + Weight + " Callee: " + Callee + ", Caller: " + Caller + ", is_fuzzy: " + isFuzzy + ")");
 	}
 
 	public boolean isIsSelf()

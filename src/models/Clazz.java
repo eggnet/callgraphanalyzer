@@ -417,6 +417,10 @@ public class Clazz
 
 	public void setSuperClazz(Clazz superClazz)
 	{
+		if(superClazz == null) {
+			this.superClazz = null;
+			return;
+		}
 		if(!superClazz.getName().equals(this.name))
 			this.superClazz = superClazz;
 	}
