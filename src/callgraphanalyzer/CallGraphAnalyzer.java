@@ -97,17 +97,6 @@ public class CallGraphAnalyzer
 					recurseMethods(newUser, newMethod.getMethod(), 
 							newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
 			}
-			for (MethodPercentage oldMethod : oldChangedMethods)
-			{
-				if (newChangedMethods.contains(oldMethod))
-					continue;
-				
-				// get all methods this one is called by
-				methodCalls = new HashSet<Method>();
-				if(oldUser != null)
-					recurseMethods(oldUser, oldMethod.getMethod(), 
-							oldMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
-			}
 		}
 		for (Relation r : this.Relations)
 			r.print();
@@ -144,13 +133,13 @@ public class CallGraphAnalyzer
 	{
 		if (currentDepth == CallGraphResources.ANALYZER_MAX_DEPTH)
 			return;
-		List<Change> changes = db.getAllOwnersForFileAtCommit(currentMethod.getClazz().getFile().getFileName(), commitID);
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
 			if (methodCalls.contains(calledMethod))
 				continue;
 			else
 				methodCalls.add(calledMethod);
+			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID);
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{
@@ -176,6 +165,7 @@ public class CallGraphAnalyzer
 				 continue;
 			else
 				methodCalls.add(calledMethod);
+			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID);
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{
