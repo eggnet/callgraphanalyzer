@@ -312,7 +312,7 @@ public class Comparator
 		}
 
 		// Insert to modifiedMethod map
-		if (!this.compareResult.modifiedFileMethodMap.containsKey(fileName))
+		if (!this.compareResult.modifiedFileMethodMap.containsKey(fileName) && (!oldMethods.isEmpty()||!newMethods.isEmpty()))
 		{
 			ModifiedMethod mm = new ModifiedMethod(oldMethods, newMethods);
 			this.compareResult.modifiedFileMethodMap.put(fileName, mm);
