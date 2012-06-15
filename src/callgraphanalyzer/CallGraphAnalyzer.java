@@ -6,6 +6,7 @@ import java.util.Set;
 
 import models.CallGraph;
 import models.CallGraph.MethodPercentage;
+import models.CommitFamily;
 import models.WeightedChange;
 import models.Change;
 import models.Method;
@@ -133,13 +134,17 @@ public class CallGraphAnalyzer
 	{
 		if (currentDepth == CallGraphResources.ANALYZER_MAX_DEPTH)
 			return;
+		
+		//Get commit path from this commit to root
+		List<CommitFamily> commitPath = db.getCommitPathToRoot(commitID);
+		
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
 			if (methodCalls.contains(calledMethod))
 				continue;
 			else
 				methodCalls.add(calledMethod);
-			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID);
+			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID, commitPath);
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{
@@ -165,7 +170,7 @@ public class CallGraphAnalyzer
 				 continue;
 			else
 				methodCalls.add(calledMethod);
-			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID);
+			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID, commitPath);
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{

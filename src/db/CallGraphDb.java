@@ -97,11 +97,8 @@ public class CallGraphDb extends DbConnection
 	 * @param CommitId
 	 * @return
 	 */
-	public List<Change> getAllOwnersForFileAtCommit(String FileId, String CommitId)
+	public List<Change> getAllOwnersForFileAtCommit(String FileId, String CommitId, List<CommitFamily> commitPath)
 	{
-		// Get commit path to the root from this commit
-		List<CommitFamily> commitPath = this.getCommitPathToRoot(CommitId);
-		
 		// get all the onwer entries for this file since this commit
 		Map<String, List<Change>> commitMap = getAllFileOwnerChangesBefore(FileId, CommitId);
 		
