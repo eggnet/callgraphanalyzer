@@ -144,7 +144,7 @@ public class Comparator
 		for(String file: files) {
 			if(!file.endsWith(".java"))
 				continue;
-			parser.parseFileFromString(file, db.getRawFileFromDiffTree(file, commitID));
+			parser.parseFileFromString(file, db.getRawFileFromDiffTree(file, commitID, commits));
 		}
 		
 		// Get the Java util library
@@ -170,7 +170,7 @@ public class Comparator
 		for(String file: files) {
 			if(!file.endsWith(".java"))
 				continue;
-			parser.parseFileFromString(file, libraryDB.getRawFileFromDiffTree(file, commitID));
+			parser.parseFileFromString(file, libraryDB.getRawFileFromDiffTree(file, commitID, commits));
 		}
 		
 		Resolver resolver = new Resolver(callGraph);
@@ -333,12 +333,15 @@ public class Comparator
 		if(cg.getCommitID().equals(newCommit))
 			return cg;
 			
+		
 		if(hasChild(cg.getCommitID(), newCommit)) {
+			
+			List<CommitFamily> commitPath = db.getCommitPathToRoot(newCommit);
 			List<String> files = db.getFilesChanged(cg.getCommitID(), newCommit);
 			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
 			for(String file: files) {
 				if(file.endsWith(".java")) {
-					String rawFile = db.getRawFileFromDiffTree(file, newCommit);
+					String rawFile = db.getRawFileFromDiffTree(file, newCommit, commitPath);
 					//cg.updateCallGraphByFile(file, rawFile);
 					changedFiles.add(new Pair<String,String>(file, rawFile));
 				}
@@ -357,10 +360,11 @@ public class Comparator
 			return cg;
 		
 		if(hasChild(newCommit, cg.getCommitID())) {
+			List<CommitFamily> commitPath = db.getCommitPathToRoot(newCommit);
 			List<String> files = db.getFilesChanged(newCommit, cg.getCommitID());
 			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
 			for(String file: files) {
-				String rawFile = db.getRawFileFromDiffTree(file, newCommit);
+				String rawFile = db.getRawFileFromDiffTree(file, newCommit, commitPath);
 				//cg.updateCallGraphByFile(file, rawFile);
 				changedFiles.add(new Pair<String,String>(file, rawFile));
 			}
