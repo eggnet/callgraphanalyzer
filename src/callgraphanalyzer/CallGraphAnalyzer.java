@@ -1,7 +1,9 @@
 package callgraphanalyzer;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import models.CallGraph;
@@ -72,31 +74,27 @@ public class CallGraphAnalyzer
 		// For each modifiedFile, for each generate an owner for the method and
 		// the % they own.
 		CompareResult compareResult = comparator.getCompareResult();
-		Set<Method> methodCalls;
+		
+		// Get user and commitpath
+		String newCommitID 			  = comparator.newCommit.getCommit_id();
+		User newUser 				  = db.getUserFromCommit(newCommitID);
+		List<CommitFamily> commitPath = db.getCommitPathToRoot(newCommitID);
+		
+		//Cache for ownership for repeated file
+		Map<String, List<Change>> ownershipCache = new HashMap<String, List<Change>>();
+
 		for (String modifiedFile : compareResult.modifiedFileMethodMap.keySet())
 		{
 			System.out.println("FILE NAME :  " + modifiedFile);
-			
-			// Get user
-			User newUser = null;
-			User oldUser = null;
 			Set<MethodPercentage> newChangedMethods = compareResult.modifiedFileMethodMap.get(modifiedFile).newMethods;
-			Set<MethodPercentage> oldChangedMethods = compareResult.modifiedFileMethodMap.get(modifiedFile).oldMethods;
 			
-			if(!newChangedMethods.isEmpty())
-				newUser = db.getUserFromCommit(newChangedMethods.iterator().next().getCommit_id());
-			
-			if(!oldChangedMethods.isEmpty())
-				oldUser = db.getUserFromCommit(oldChangedMethods.iterator().next().getCommit_id());
-			
-			// For each method in the new methods
 			for (MethodPercentage newMethod : newChangedMethods)
 			{
 				// get all methods this one is called by
-				methodCalls = new HashSet<Method>();
+				Set<Method> methodCalls = new HashSet<Method>();
 				if(newUser != null)
 					recurseMethods(newUser, newMethod.getMethod(), 
-							newMethod.getPercentage(), 0, methodCalls, comparator.newCommit.getCommit_id());
+							newMethod.getPercentage(), 0, methodCalls, newCommitID, commitPath, ownershipCache);
 			}
 		}
 		for (Relation r : this.Relations)
@@ -130,13 +128,10 @@ public class CallGraphAnalyzer
 	 * @param currentDepth
 	 * @param methodCalls
 	 */
-	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth, Set<Method> methodCalls, String commitID)
+	public void recurseMethods(User changingUser, Method currentMethod, float percentage, int currentDepth, Set<Method> methodCalls, String commitID, List<CommitFamily> commitPath, Map<String, List<Change>> ownershipCache)
 	{
 		if (currentDepth == CallGraphResources.ANALYZER_MAX_DEPTH)
 			return;
-		
-		//Get commit path from this commit to root
-		List<CommitFamily> commitPath = db.getCommitPathToRoot(commitID);
 		
 		for (Method calledMethod : currentMethod.getCalledBy())
 		{
@@ -144,7 +139,21 @@ public class CallGraphAnalyzer
 				continue;
 			else
 				methodCalls.add(calledMethod);
-			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID, commitPath);
+			
+			//Check the cache first
+			List<Change> changes = null;
+			String fileName = calledMethod.getClazz().getFile().getFileName();
+			if(ownershipCache.containsKey(fileName))
+			{
+				changes = ownershipCache.get(fileName);
+			}
+			else
+			{
+				changes = db.getAllOwnersForFileAtCommit(fileName, commitID, commitPath);
+				ownershipCache.put(fileName, changes);
+			}
+			
+			//Calculate weights
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{
@@ -161,8 +170,10 @@ public class CallGraphAnalyzer
 						false);
 				this.Relations.add(r);
 			}
-			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID);
+			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID, commitPath, ownershipCache);
 		}
+		
+		// Fuzzy Called by methods
 		methodCalls = new HashSet<Method>();
 		for (Method calledMethod : currentMethod.getFuzzyCalledBy())
 		{
@@ -170,7 +181,21 @@ public class CallGraphAnalyzer
 				 continue;
 			else
 				methodCalls.add(calledMethod);
-			List<Change> changes = db.getAllOwnersForFileAtCommit(calledMethod.getClazz().getFile().getFileName(), commitID, commitPath);
+			
+			//Check the cache first
+			List<Change> changes = null;
+			String fileName = calledMethod.getClazz().getFile().getFileName();
+			if(ownershipCache.containsKey(fileName))
+			{
+				changes = ownershipCache.get(fileName);
+			}
+			else
+			{
+				changes = db.getAllOwnersForFileAtCommit(fileName, commitID, commitPath);
+				ownershipCache.put(fileName, changes);
+			}
+			
+			// set weight
 			Set<WeightedChange> calledChanges = calledMethod.getClazz().getFile().getMethodWeights(changes, calledMethod);
 			for (WeightedChange calledMethodChange : calledChanges)
 			{
@@ -187,7 +212,7 @@ public class CallGraphAnalyzer
 						true);
 				this.Relations.add(r);
 			}
-			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID);
+			recurseMethods(changingUser, calledMethod, percentage, currentDepth + 1, methodCalls, commitID, commitPath, ownershipCache);
 		}
 	}
 }
