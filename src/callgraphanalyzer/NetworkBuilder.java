@@ -60,8 +60,8 @@ public class NetworkBuilder
 					traverseCommitTree(child);
 					
 					//Restore
-					compare.newCallGraph = compare.reverseUpdateCallGraph(compare.newCallGraph, parent.getCommitID());
-					compare.oldCallGraph = compare.reverseUpdateCallGraph(compare.oldCallGraph, parent.getCommitID());
+					compare.newCallGraph = compare.batchReverseUpdate(compare.newCallGraph, this.ct, parent.getCommitID());
+					compare.oldCallGraph = compare.batchReverseUpdate(compare.oldCallGraph, this.ct, parent.getCommitID());
 				}
 				parent = null;
 			}

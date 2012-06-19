@@ -50,6 +50,38 @@ public class CommitTree
 		
 		return false;
 	}
+	
+	public Node get(String commitID) {
+		return get(this.root, commitID);
+	}
+	
+	private Node get(Node parent, String commitID) {
+		while(parent != null) {
+			if(parent.getCommitID().equals(commitID))
+				return parent;
+			
+			if(parent.getChildren().size() == 1) {
+				parent = parent.getChildren().get(0);
+			}
+			
+			else if(parent.getChildren().size() > 1) {
+				Node current = null;
+				for(Node child: parent.getChildren()) {
+					current = get(child, commitID);
+					
+					if(current != null)
+						return current;
+				}
+				parent = null;
+			}
+			
+			else {
+				parent = null;
+			}
+		}
+		
+		return null;
+	}
 
 	public Node getRoot()
 	{

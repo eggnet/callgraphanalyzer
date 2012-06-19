@@ -26,6 +26,7 @@ public class TreeBuilder
 	}
 	
 	public CommitTree generateCommitTree() {
+		System.out.println("Building the commit tree.");
 		List<CommitFamily> commitFamily = loadCommitFamily();
 		
 		recurseChildren(commitTree.getRoot(), commitFamily);

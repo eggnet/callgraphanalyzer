@@ -13,8 +13,10 @@ import models.CallGraph;
 import models.Commit;
 import models.CallGraph.MethodPercentage;
 import models.CommitFamily;
+import models.CommitTree;
 import models.DiffEntry;
 import models.DiffEntry.diff_types;
+import models.Node;
 import models.Pair;
 import parser.Parser;
 import parser.Resolver;
@@ -355,25 +357,30 @@ public class Comparator
 		return cg;
 	}
 	
-	public CallGraph reverseUpdateCallGraph(CallGraph cg, String newCommit) {
-		if(cg.getCommitID().equals(newCommit))
-			return cg;
+	public CallGraph batchReverseUpdate(CallGraph cg, CommitTree ct, String revertCommit) {
+		Node currentNode = ct.get(cg.getCommitID());
+		List<String> filesChanged = new ArrayList<String>();
 		
-		if(hasChild(newCommit, cg.getCommitID())) {
-			List<CommitFamily> commitPath = db.getCommitPathToRoot(newCommit);
-			List<String> files = db.getFilesChanged(newCommit, cg.getCommitID());
-			List<Pair<String,String>> changedFiles = new ArrayList<Pair<String,String>>();
-			for(String file: files) {
-				String rawFile = db.getRawFileFromDiffTree(file, newCommit, commitPath);
-				//cg.updateCallGraphByFile(file, rawFile);
-				changedFiles.add(new Pair<String,String>(file, rawFile));
+		// Get all the files that have changed
+		while(currentNode != null && !currentNode.getCommitID().equals(revertCommit)) {
+			for(String file: db.getFilesChanged(currentNode.getParent().getCommitID(), currentNode.getCommitID())) {
+				if(!filesChanged.contains(file) && file.endsWith(".java")) {
+					filesChanged.add(file);
+				}
 			}
-			cg.updateCallGraphByFiles(changedFiles);
+			currentNode = currentNode.getParent();
 		}
-		else {
-			cg = buildCallGraph(cg, newCommit);
+		
+		List<Pair<String, String>> rawChanged = new ArrayList<Pair<String, String>>();
+		List<CommitFamily> commitPath = db.getCommitPathToRoot(revertCommit);
+		for(String file: filesChanged) {
+			String rawFile = db.getRawFileFromDiffTree(file, revertCommit, commitPath);
+			rawChanged.add(new Pair<String, String>(file, rawFile));
 		}
-		cg.setCommitID(newCommit);
+		
+		cg.updateCallGraphByFiles(rawChanged);
+		
+		cg.setCommitID(revertCommit);
 		return cg;
 	}
 	
