@@ -3,6 +3,7 @@ package db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -372,6 +373,34 @@ public class CallGraphDb extends DbConnection
 			return u;
 		}
 		catch(SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<CommitFamily> getCommitFamilyFromCommit(String commitID)
+	{
+		try {
+			String sql = "SELECT parent, child FROM commit_family NATURAL JOIN commits WHERE " +
+					"(branch_id=? or branch_id is NULL) and " +
+					"commit_date >= " +
+					"(SELECT commit_date from commits where commit_id=? and (branch_id=? OR branch_id is NULL) limit 1)" +
+					" AND commit_id=child ORDER BY commit_date desc;";
+
+			List<CommitFamily> rawFamilyList = new ArrayList<CommitFamily>();
+			String[] parms = {this.branchID,commitID, this.branchID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			while(rs.next())
+			{
+				String parentId = rs.getString("parent");
+				String childId  = rs.getString("child");
+				rawFamilyList.add(new CommitFamily(parentId, childId));
+			}
+			
+			return rawFamilyList;
+		}
+		catch (SQLException e)
 		{
 			e.printStackTrace();
 			return null;

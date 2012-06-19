@@ -3,6 +3,7 @@ package callgraphanalyzer;
 import java.util.List;
 
 import models.Change;
+import models.CommitTree;
 
 import db.CallGraphDb;
 public class Main {
@@ -16,7 +17,7 @@ public class Main {
 		try {
 			if (args.length < 4 )
 			{
-				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_range_start] [commit_range_end]");
+				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_range_start]");
 				throw new ArrayIndexOutOfBoundsException();
 			}
 			else
@@ -25,7 +26,11 @@ public class Main {
 				{
 					db.connect(args[0]);
 					db.setBranchName(args[1]);
-					NetworkBuilder networkBuilder = new NetworkBuilder(db, args[2], args[3]);
+					
+					TreeBuilder tb = new TreeBuilder(db, args[2]);
+					CommitTree ct = tb.generateCommitTree();
+					
+					NetworkBuilder networkBuilder = new NetworkBuilder(db, ct, args[2]);
 					networkBuilder.buildAllNetworks();
 				} 
 				catch (Exception e) 
