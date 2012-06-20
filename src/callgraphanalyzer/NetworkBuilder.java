@@ -42,6 +42,10 @@ public class NetworkBuilder
 					buildNetwork(parent.getCommitID(), children.get(0).getCommitID());
 					compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommitID());
 				}
+				else {
+					compare.newCallGraph = compare.forwardUpdateCallGraph(compare.newCallGraph, children.get(0).getCommitID());
+					compare.oldCallGraph = compare.forwardUpdateCallGraph(compare.oldCallGraph, children.get(0).getCommitID());
+				}
 				parent = children.get(0);
 			}
 			
