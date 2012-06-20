@@ -175,6 +175,8 @@ public class Comparator
 			parser.parseFileFromString(file, libraryDB.getRawFileFromDiffTree(file, commitID, commits));
 		}
 		
+		libraryDB.close();
+		
 		Resolver resolver = new Resolver(callGraph);
 		resolver.resolveAll();
 		

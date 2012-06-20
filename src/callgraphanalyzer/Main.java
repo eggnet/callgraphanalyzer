@@ -15,7 +15,7 @@ public class Main {
 		System.out.println();
 		CallGraphDb db = new CallGraphDb();
 		try {
-			if (args.length < 4 )
+			if (args.length < 3 )
 			{
 				System.out.println("Retry: callGraphAnalyzer [dbname] [branchname] [commit_range_start]");
 				throw new ArrayIndexOutOfBoundsException();
@@ -32,6 +32,8 @@ public class Main {
 					
 					NetworkBuilder networkBuilder = new NetworkBuilder(db, ct, args[2]);
 					networkBuilder.buildAllNetworks();
+					
+					db.close();
 				} 
 				catch (Exception e) 
 				{
