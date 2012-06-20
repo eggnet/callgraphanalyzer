@@ -9,6 +9,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import db.util.ISetter;
+import db.util.ISetter.StringSetter;
+import db.util.ISetter.IntSetter;
+import db.util.ISetter.BooleanSetter;
+import db.util.ISetter.FloatSetter;
+import db.util.PreparedStatementExecutionItem;
+
 import models.Change;
 import models.Commit;
 import models.CommitFamily;
@@ -255,16 +262,24 @@ public class CallGraphDb extends DbConnection
 		try {
 			// delete duplicates
 			String sql = "DELETE FROM networks where new_commit_id=? and old_commit_id=?";
-			String[] parms = {NewCommitId, OldCommitId};
-			execPrepared(sql, parms);
+			ISetter[] params = {new StringSetter(1,NewCommitId), new StringSetter(2,OldCommitId)};
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
 			
 			// add new network
 			sql = "INSERT INTO networks (new_commit_id, old_commit_id, network_id) VALUES (?, ?, default);";
-			execPrepared(sql, parms);
+			ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
 			
 			// get the id generated;
 			sql = "SELECT network_id from networks where new_commit_id=? and old_commit_id=?;";
-			ResultSet rs = execPreparedQuery(sql, parms);
+			ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+			
+			ResultSet rs = ei.getResult();
 			if (!rs.next())
 				return -1;
 			else
@@ -284,20 +299,14 @@ public class CallGraphDb extends DbConnection
 	 */
 	public void addNode(String UserId, int NetworkId)
 	{
-		try {
-			if (nodeExists(UserId))
-				return;
-			String sql = "INSERT INTO nodes (id, label, network_id) VALUES (?, ?, ?);";
-			PreparedStatement s = conn.prepareStatement(sql);
-			s.setString(1, UserId);
-			s.setString(2, UserId);
-			s.setInt(3, NetworkId);
-			s.execute();
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
+		if (nodeExists(UserId))
+			return;
+		String sql = "INSERT INTO nodes (id, label, network_id) VALUES (?, ?, ?);";
+		ISetter[] params = {new StringSetter(1,UserId), new StringSetter(2,UserId), new IntSetter(3,NetworkId)};
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
+
 	}
 	
 	public boolean nodeExists(String UserId)
@@ -343,20 +352,16 @@ public class CallGraphDb extends DbConnection
 	 */
 	public void addEdge(String UserSource, String UserTarget, float weight, boolean isFuzzy, int NetworkId)
 	{
-		try {
-			String sql = "INSERT INTO edges (source, target, weight, is_fuzzy, network_id) VALUES (?, ?, ?, ?, ?);";
-			PreparedStatement s = conn.prepareStatement(sql);
-			s.setString(1, UserSource);
-			s.setString(2, UserTarget);
-			s.setFloat(3, weight);
-			s.setBoolean(4, isFuzzy);
-			s.setInt(5, NetworkId);
-			s.execute();
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
+		String sql = "INSERT INTO edges (source, target, weight, is_fuzzy, network_id) VALUES (?, ?, ?, ?, ?);";
+		ISetter[] params = {
+				new StringSetter(1, UserSource), 
+				new StringSetter(2, UserTarget), 
+				new FloatSetter(3, weight),
+				new BooleanSetter(4, isFuzzy),
+				new IntSetter(5, NetworkId)};
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
 	}
 	
 	public User getUserFromCommit(String CommitId)
