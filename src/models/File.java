@@ -123,6 +123,8 @@ public class File
 	public Set<WeightedChange> getMethodWeights(List<Change> changes, Method method )
 	{
 		Set<WeightedChange> weights = new HashSet<WeightedChange>();
+		if(changes == null || method == null)
+			return weights;
 		for (Change change : changes)
 		{
 			float weight = getMethodWeight(change, method);
