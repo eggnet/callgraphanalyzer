@@ -411,4 +411,23 @@ public class CallGraphDb extends DbConnection
 			return null;
 		}
 	}
+	
+	public boolean isCacheCommit(String commitID) {
+		try {
+			String sql = "SELECT count(*) FROM file_caches WHERE commit_id=?";
+			String[] parms = {commitID};
+			ResultSet rs = execPreparedQuery(sql, parms);
+			if(rs.next())
+				return rs.getInt("count") > 0;
+				
+			return false;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	
 }

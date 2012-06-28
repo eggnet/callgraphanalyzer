@@ -2,9 +2,11 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import parser.Parser;
 import parser.Resolver;
@@ -110,6 +112,16 @@ public class CallGraph {
 		}
 		
 		return clazzes;
+	}
+	
+	public List<Method> getAllMethods() {
+		List<Method> methods = new ArrayList<Method>();
+		
+		for(Map.Entry<String, Method> entry: this.methods.entrySet()) {
+			methods.add(entry.getValue());
+		}
+		
+		return methods;
 	}
 	
 	/**
@@ -307,22 +319,31 @@ public class CallGraph {
 	 */
 	
 	public void updateCallGraphByFiles(List<Pair<String,String>> changedFiles) {
-		List<Method> conflictMethods = new ArrayList<Method>();
-		List<Clazz> conflictClazzes = new ArrayList<Clazz>();
-		List<File> filesToResolve = new ArrayList<File>();
+		Set<Method> conflictMethods = new HashSet<Method>();
+		Set<Clazz> conflictClazzes = new HashSet<Clazz>();
+		Set<File> filesToResolve = new HashSet<File>();
 		for(Pair<String,String> file: changedFiles) {
 			File existing = files.get(file.getFirst());
 			if(existing == null) {
-				Parser parser = new Parser(this);
-				parser.parseFileFromString(file.getFirst(), file.getSecond());
-				existing = files.get(file.getFirst());
-				filesToResolve.add(existing);
+				if(file.getSecond() != null && !file.getSecond().equals("")) {
+					Parser parser = new Parser(this);
+					parser.parseFileFromString(file.getFirst(), file.getSecond());
+					existing = files.get(file.getFirst());
+					filesToResolve.add(existing);
+				}
 			}
-			else {
-				conflictMethods.addAll(getConflictingMethods(existing));
-				conflictClazzes.addAll(getConflictingClazzes(existing));
+			else {		
+				if(file.getSecond() != null && !file.getSecond().equals("")) {
+					conflictMethods.addAll(getConflictingMethods(existing));
+					conflictClazzes.addAll(getConflictingClazzes(existing));
+				}
+				else {
+					getConflictingMethods(existing);
+					getConflictingClazzes(existing);
+				}
 				
 				removeExistingFileDeep(existing, conflictMethods, conflictClazzes);
+				
 				if(file.getSecond() != null && !file.getSecond().equals("")) {
 					// Remove the old file, insert new and resolve new and conflicting
 					Parser parser = new Parser(this);
@@ -345,13 +366,12 @@ public class CallGraph {
 		for(Clazz clazz: conflictClazzes) {
 			resolver.resolveClazz(clazz);
 		}
-		
 	}
 	
-	private void removeExistingFileDeep(File file, List<Method> conflictMethods, List<Clazz> conflictClazzes) {
+	private void removeExistingFileDeep(File file, Set<Method> conflictMethods, Set<Clazz> conflictClazzes) {
 		for(Clazz clazz: file.getFileClazzes()) {
 			for(Method method: clazz.getMethods()) {
-				this.methods.remove(method.getName());
+				this.methods.remove(method.getUnresolvedName());
 				conflictMethods.remove(method);
 			}
 			this.clazzes.remove(clazz.getName());
@@ -359,6 +379,28 @@ public class CallGraph {
 		}
 		
 		this.files.remove(file.getFileName());
+	}
+	
+	private List<Method> cleanConflictMethods(List<Method> conflictMethods) {
+		List<Method> methods = new ArrayList<Method>();
+		for(Method method: conflictMethods) {
+			if(this.methods.containsKey(method.getName())) {
+				methods.add(method);
+			}
+		}
+		
+		return methods;
+	}
+	
+	private List<Clazz> cleanConflictClazzes(List<Clazz> conflictClazzes) {
+		List<Clazz> clazzes = new ArrayList<Clazz>();
+		for(Clazz clazz: conflictClazzes) {
+			if(this.clazzes.containsKey(clazz.getName())) {
+				clazzes.add(clazz);
+			}
+		}
+		
+		return clazzes;
 	}
 	
 	private List<Method> getConflictingMethods(File file) {
@@ -372,7 +414,8 @@ public class CallGraph {
 					if(!conflictMethods.contains(calledBy))
 						conflictMethods.add(calledBy);
 					// Remove the link
-					calledBy.getMethodCalls().clear();
+					if(!calledBy.equals(method))
+						calledBy.getMethodCalls().clear();
 				}
 				// Do this for fuzzy called by
 				for(Method calledBy: method.getFuzzyCalledBy()) {
@@ -380,7 +423,8 @@ public class CallGraph {
 					if(!conflictMethods.contains(calledBy))
 						conflictMethods.add(calledBy);
 					// Remove the link
-					calledBy.getFuzzyCalls().clear();
+					if(!calledBy.equals(method))
+						calledBy.getFuzzyCalls().clear();
 				}
 				// Remove calls links
 				for(Method calls: method.getMethodCalls()) {
@@ -388,7 +432,8 @@ public class CallGraph {
 					if(!conflictMethods.contains(calls))
 						conflictMethods.add(calls);
 					
-					calls.getCalledBy().clear();
+					if(!calls.equals(method))
+						calls.getCalledBy().clear();
 				}
 				// Remove fuzzy calls links
 				for(Method calls: method.getFuzzyCalls()) {
@@ -396,7 +441,8 @@ public class CallGraph {
 					if(!conflictMethods.contains(calls))
 						conflictMethods.add(calls);
 					
-					calls.getFuzzyCalledBy().clear();
+					if(!calls.equals(method))
+						calls.getFuzzyCalledBy().clear();
 				}
 			}
 		}
@@ -406,7 +452,7 @@ public class CallGraph {
 	
 	private List<Clazz> getConflictingClazzes(File file) {
 		List<Clazz> conflictingClazzes = new ArrayList<Clazz>();
-		for(Clazz clazz: file.getFileClazzes()) {
+		for(Clazz clazz: this.getAllClazzes()) {
 			for(Clazz fileClazz: file.getFileClazzes()) {
 				if(clazz.getSuperClazz() != null && clazz.getSuperClazz().equals(fileClazz)) {
 					if(!conflictingClazzes.contains(clazz))
@@ -417,6 +463,11 @@ public class CallGraph {
 					if(!conflictingClazzes.contains(clazz))
 						conflictingClazzes.add(clazz);
 					clazz.getInterfaces().clear();
+				}
+				if(clazz.getImplementedBy().contains(fileClazz)) {
+					if(!conflictingClazzes.contains(clazz))
+						conflictingClazzes.add(clazz);
+					clazz.getImplementedBy().remove(fileClazz);
 				}
 			}
 		}

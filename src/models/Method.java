@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 public class Method {
 	private String		 		name;
+	private String				unresolvedName;
 	private Clazz 				clazz;
 	
 	private int					startChar;
@@ -189,5 +190,15 @@ public class Method {
 
 	public void setFuzzyCalledBy(List<Method> fuzzyCalledBy) {
 		this.fuzzyCalledBy = fuzzyCalledBy;
+	}
+
+	public String getUnresolvedName()
+	{
+		return unresolvedName;
+	}
+
+	public void setUnresolvedName(String unresolvedName)
+	{
+		this.unresolvedName = unresolvedName;
 	}
 }

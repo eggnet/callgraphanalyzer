@@ -336,7 +336,6 @@ public class Comparator
 	public CallGraph forwardUpdateCallGraph(CallGraph cg, String newCommit) {
 		if(cg.getCommitID().equals(newCommit))
 			return cg;
-			
 		
 		if(hasChild(cg.getCommitID(), newCommit)) {
 			
@@ -346,7 +345,6 @@ public class Comparator
 			for(String file: files) {
 				if(file.endsWith(".java")) {
 					String rawFile = db.getRawFileFromDiffTree(file, newCommit, commitPath);
-					//cg.updateCallGraphByFile(file, rawFile);
 					changedFiles.add(new Pair<String,String>(file, rawFile));
 				}
 			}
