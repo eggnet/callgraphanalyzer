@@ -2,6 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +61,23 @@ public class Method {
 		fuzzyCalls 		= new ArrayList<Method>();
 		fuzzyCalledBy 	= new ArrayList<Method>();
 		this.unresolvedCalls = new ArrayList<String>();
+	}
+	
+	public void destroy() {
+		this.name = null;
+		this.unresolvedName = null;
+		this.clazz = null;
+		this.returnType = null;
+		
+		this.methodCalls = null;
+		this.calledBy = null;
+		
+		this.fuzzyCalls = null;
+		this.fuzzyCalledBy = null;
+		
+		this.unresolvedCalls = null;
+		
+		this.node = null;
 	}
 	
 	public void addFuzzyCalledBy(Method m) {
@@ -200,5 +218,41 @@ public class Method {
 	public void setUnresolvedName(String unresolvedName)
 	{
 		this.unresolvedName = unresolvedName;
+	}
+	
+	public void clean() {
+		try {
+		Iterator<Method> itr = methodCalls.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		}
+		catch (Exception e) {
+			int x = 0;
+			x = x + x;
+		}
+		
+		Iterator<Method> itr = calledBy.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		
+		itr = fuzzyCalls.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		
+		itr = fuzzyCalledBy.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
 	}
 }
