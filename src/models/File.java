@@ -40,6 +40,14 @@ public class File
 		this.fileClazzes = fileClazzes;
 		this.fileInterfaces = fileInterfaces;
 	}
+	
+	public void destroy() {
+		this.fileName = null;
+		this.fileImports = null;
+		this.filePackage = null;
+		this.fileClazzes = null; 
+		this.fileInterfaces = null;
+	}
 
 	public void print()
 	{
@@ -231,5 +239,21 @@ public class File
 	public void setEndChar(int endChar)
 	{
 		this.endChar = endChar;
+	}
+	
+	public void clean() {
+		Iterator<Clazz> itr = fileClazzes.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		
+		itr = fileInterfaces.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
 	}
 }

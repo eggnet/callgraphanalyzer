@@ -1,6 +1,7 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -62,6 +63,25 @@ public class Clazz
 		variables = new ArrayList<Mapping>();
 
 		invocations = new ArrayList<MethodInvocation>();
+	}
+	
+	public void destroy() {
+		this.file = null;
+		this.name = null;
+		
+		this.methods = null;
+		
+		this.interfaces = null;
+		this.implementedBy = null;
+		
+		this.unresolvedInterfaces = null;
+		
+		this.superClazz = null;
+		this.unresolvedSuperClazz = null;
+		this.genericTypes = null;
+		
+		this.variables = null;
+		this.invocations = null;
 	}
 
 	/**
@@ -311,9 +331,6 @@ public class Clazz
 			System.out.println("");
 		System.out.println("    Unresolved Super Class: "
 				+ unresolvedSuperClazz);
-		System.out.println("    Sub Classes: ");
-		//for (Clazz clazz : subClazzes)
-			//System.out.println("      " + clazz.getName());
 		System.out.println("    Generic Parameters: ");
 		for (String s : genericTypes)
 			System.out.println("      " + s);
@@ -392,6 +409,10 @@ public class Clazz
 
 	public List<Method> getMethods()
 	{
+		if(methods == null) {
+			int x = 0;
+			x = x + x;
+		}
 		return methods;
 	}
 
@@ -513,5 +534,32 @@ public class Clazz
 	public void setEndChar(int endChar)
 	{
 		this.endChar = endChar;
+	}
+	
+	public void clean() {
+		Iterator<Clazz> itr = interfaces.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		
+		itr = implementedBy.iterator();
+		while(itr.hasNext()) {
+			if(itr.next().getName() == null) {
+				itr.remove();
+			}
+		}
+		
+		Iterator<Method> mitr = methods.iterator();
+		while(mitr.hasNext()) {
+			if(mitr.next().getName() == null) {
+				mitr.remove();
+			}
+		}
+		
+		if(superClazz != null && superClazz.getName() == null) {
+			superClazz = null;
+		}
 	}
 }
