@@ -431,56 +431,50 @@ public class CallGraph {
 		file.destroy();
 	}
 	
-	private void destroyFile(File file) {
-		for(Clazz clazz: file.getFileClazzes()) {
-			for(Method method: clazz.getMethods()) {
-				method.destroy();
-			}
-			clazz.destroy();
-		}
-		file.destroy();
-	}
-	
 	private List<Method> getConflictingMethods(File file) {
 		// Get a list of the conflict methods
 		List<Method> conflictMethods = new ArrayList<Method>();
 		for(Clazz clazz: file.getFileClazzes()) {
 			for(Method method: clazz.getMethods()) {
-				// Do this for called by
-				for(Method calledBy: method.getCalledBy()) {
-					// Add to conflicting methods list
-					if(!conflictMethods.contains(calledBy))
-						conflictMethods.add(calledBy);
-					// Remove the link
-					if(!calledBy.equals(method) && calledBy.getName() != null)
-						calledBy.getMethodCalls().clear();
+				try {
+					for(Method calledBy: method.getCalledBy()) {
+						// Add to conflicting methods list
+						if(!conflictMethods.contains(calledBy))
+							conflictMethods.add(calledBy);
+						// Remove the link
+						if(!calledBy.equals(method) && calledBy.getName() != null)
+							calledBy.getMethodCalls().clear();
+					}
+					// Do this for fuzzy called by
+					for(Method calledBy: method.getFuzzyCalledBy()) {
+						// Add to conflicting methods list
+						if(!conflictMethods.contains(calledBy))
+							conflictMethods.add(calledBy);
+						// Remove the link
+						if(!calledBy.equals(method) && calledBy.getName() != null)
+							calledBy.getFuzzyCalls().clear();
+					}
+					// Remove calls links
+					for(Method calls: method.getMethodCalls()) {
+						// Add to conflicting methods list
+						if(!conflictMethods.contains(calls))
+							conflictMethods.add(calls);
+
+						if(!calls.equals(method) && calls.getName() != null)
+							calls.getCalledBy().clear();
+					}
+					// Remove fuzzy calls links
+					for(Method calls: method.getFuzzyCalls()) {
+						// Add to conflicting methods list
+						if(!conflictMethods.contains(calls))
+							conflictMethods.add(calls);
+
+						if(!calls.equals(method) && calls.getName() != null)
+							calls.getFuzzyCalledBy().clear();
+					}
 				}
-				// Do this for fuzzy called by
-				for(Method calledBy: method.getFuzzyCalledBy()) {
-					// Add to conflicting methods list
-					if(!conflictMethods.contains(calledBy))
-						conflictMethods.add(calledBy);
-					// Remove the link
-					if(!calledBy.equals(method) && calledBy.getName() != null)
-						calledBy.getFuzzyCalls().clear();
-				}
-				// Remove calls links
-				for(Method calls: method.getMethodCalls()) {
-					// Add to conflicting methods list
-					if(!conflictMethods.contains(calls))
-						conflictMethods.add(calls);
-					
-					if(!calls.equals(method) && calls.getName() != null)
-						calls.getCalledBy().clear();
-				}
-				// Remove fuzzy calls links
-				for(Method calls: method.getFuzzyCalls()) {
-					// Add to conflicting methods list
-					if(!conflictMethods.contains(calls))
-						conflictMethods.add(calls);
-					
-					if(!calls.equals(method) && calls.getName() != null)
-						calls.getFuzzyCalledBy().clear();
+				catch (Exception e) {
+					System.err.println("Tried to access a garbage method");
 				}
 			}
 		}

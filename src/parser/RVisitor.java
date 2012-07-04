@@ -768,7 +768,7 @@ public class RVisitor extends ASTVisitor
 					.getSuperClazz())
 			{
 				result.add(superClass.getName());
-				result.addAll(getInterfaces(superClass));
+				result.addAll(getInterfaces(new ArrayList<String>(), superClass));
 			}
 		}
 
@@ -782,14 +782,14 @@ public class RVisitor extends ASTVisitor
 	 * @param clazz
 	 * @return
 	 */
-	private List<String> getInterfaces(Clazz clazz)
+	private List<String> getInterfaces(List<String> interfaces, Clazz clazz)
 	{
-		List<String> interfaces = new ArrayList<String>();
-
 		for (Clazz inter : clazz.getInterfaces())
 		{
-			interfaces.add(inter.getName());
-			interfaces.addAll(getInterfaces(inter));
+			if(!interfaces.contains(inter.getName())) {
+				interfaces.add(inter.getName());
+				interfaces.addAll(getInterfaces(interfaces, inter));
+			}
 		}
 
 		return interfaces;

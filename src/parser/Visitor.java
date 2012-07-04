@@ -13,6 +13,7 @@ import models.Mapping;
 import models.Method;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
@@ -55,9 +56,17 @@ public class Visitor extends ASTVisitor {
 	private Clazz currentClazz;
 	private Method currentMethod;
 	
+	private boolean inAnonymous;
+	private boolean inMethod;
+	private boolean inInner;
+	
 	public Visitor(CallGraph callGraph, String fileName, int fileLength) {
 		this.callGraph = callGraph;
 		clazzStack = new Stack<Clazz>();
+		
+		inAnonymous = false;
+		inMethod = false;
+		inInner = false;
 		
 		file = new File();
 		file.setFileName(fileName);
@@ -97,6 +106,11 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public boolean visit(TypeDeclaration node) {
+		if(inMethod) {
+			inInner = true;
+			return super.visit(node);
+		}
+		
 		Clazz clazz = new Clazz();
 		currentClazz = clazz;
 		clazzStack.push(clazz);
@@ -131,6 +145,10 @@ public class Visitor extends ASTVisitor {
 	 */
 	@Override
 	public void endVisit(TypeDeclaration node) {
+		if(inMethod) {
+			inInner = false;
+			return;
+		}
 		// Add it to the current file
 		clazzStack.peek().setFile(file);
 		// Add to call graph
@@ -142,12 +160,31 @@ public class Visitor extends ASTVisitor {
 		file.addClazz(clazzStack.pop());
 	}
 	
+	@Override
+	public boolean visit(AnonymousClassDeclaration node) {
+		this.inAnonymous = true;
+		return super.visit(node);
+	}
+	
+	@Override
+	public void endVisit(AnonymousClassDeclaration node) {
+		this.inAnonymous = false;
+	}
+	
 	/**
 	 * This function overrides what to do when we reach
 	 * a method declaration inside a class.
 	 */
 	@Override
 	public boolean visit(MethodDeclaration node) {
+		if(inAnonymous)
+			return super.visit(node);
+		
+		if(inMethod)
+			return super.visit(node);
+		else
+			inMethod = true;
+		
 		// Get the method's parameter
 		List<SingleVariableDeclaration> parametersList =  node.parameters();
 		List<String> parameters = new ArrayList<String>();
@@ -167,6 +204,10 @@ public class Visitor extends ASTVisitor {
 		if(currentMethod == null) {
 			Method m = new Method();
 			currentMethod = m;
+		}
+		else {
+			currentMethod = null;
+			return super.visit(node);
 		}
 		currentMethod.setName(uniqueMethod);
 		currentMethod.setUnresolvedName(uniqueMethod);
@@ -204,15 +245,15 @@ public class Visitor extends ASTVisitor {
 	@Override
 	public void endVisit(MethodDeclaration node) {
 		
-		// TODO @bradens @jordanell handle inline class declarations
-		if (currentMethod == null) 
+		if (currentMethod == null || this.inAnonymous || this.inInner) 
 			return;
 		// Add method to the call graph
 		callGraph.addMethod(currentMethod);
 		// Add method to the current class
 		clazzStack.peek().addMethod(currentMethod);
-		// Must set to null incase we have variable declarations in between
+		// Must set to null in case we have variable declarations in between
 		currentMethod = null;
+		inMethod = false;
 	}
 	
 	@Override
