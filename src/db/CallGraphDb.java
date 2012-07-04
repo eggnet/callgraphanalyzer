@@ -22,6 +22,7 @@ public class CallGraphDb extends TechnicalDb
 	 * Adds a new network record into the networks table for a pair of commits.
 	 * @param NewCommitId
 	 * @param OldCommitId
+	 * @return network_id that was generated for this insert. -1 if there is exception
 	 */
 	public int addNetworkRecord(String NewCommitId, String OldCommitId)
 	{
@@ -58,10 +59,11 @@ public class CallGraphDb extends TechnicalDb
 		}
 	}
 	
-	/**
-	 * Adds a node record into the nodes table for a given User/UserfullName
+	/***
+	 * Adds a node record into the nodes table for a given User/NetWorkId
+	 * Node(id,label,network_id) is (UserId,UserId,NetworkId)
 	 * @param UserId
-	 * @param UserFullName
+	 * @param NetworkId
 	 */
 	public void addNode(String UserId, int NetworkId)
 	{
@@ -74,12 +76,21 @@ public class CallGraphDb extends TechnicalDb
 		ei.waitUntilExecuted();
 	}
 	
+	/**
+	 * Check if a user already exists in Nodes table
+	 * @param UserId
+	 * @return true if exist, false ow
+	 */
 	public boolean nodeExists(String UserId)
 	{
 		try {
 			String sql = "SELECT * FROM nodes WHERE id=?;";
-			String[] parms = {UserId};
-			ResultSet rs = execPreparedQuery(sql, parms);
+			ISetter[] params = {new StringSetter(1,UserId)};
+			
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+			ResultSet rs = ei.getResult();
 			return rs.next();
 		}
 		catch (SQLException e)

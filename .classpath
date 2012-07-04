@@ -16,6 +16,6 @@
 	<classpathentry kind="lib" path="libs/postgresql-9.1-902.jdbc4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="/libs/differ/differ.jar"/>
-	<classpathentry kind="lib" path="/libs/database/database.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
