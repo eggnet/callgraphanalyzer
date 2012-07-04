@@ -431,16 +431,6 @@ public class CallGraph {
 		file.destroy();
 	}
 	
-	private void destroyFile(File file) {
-		for(Clazz clazz: file.getFileClazzes()) {
-			for(Method method: clazz.getMethods()) {
-				method.destroy();
-			}
-			clazz.destroy();
-		}
-		file.destroy();
-	}
-	
 	private List<Method> getConflictingMethods(File file) {
 		// Get a list of the conflict methods
 		List<Method> conflictMethods = new ArrayList<Method>();
@@ -484,7 +474,7 @@ public class CallGraph {
 					}
 				}
 				catch (Exception e) {
-					System.out.println("Tried to access a garbage method");
+					System.err.println("Tried to access a garbage method");
 				}
 			}
 		}
